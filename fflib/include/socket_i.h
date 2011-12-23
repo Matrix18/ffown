@@ -1,11 +1,15 @@
 #ifndef _SOCKET_I_
 #define _SOCKET_I_
 
+#include <string>
+using namespace std;
+
 class socket_i
 {
 public:
     virtual ~socket_i(){}
 
+    virtual int socket() = 0;
     virtual int handle_epoll_read()  = 0;
     virtual int handle_epoll_write() = 0;
     virtual int handle_epoll_error() = 0;
