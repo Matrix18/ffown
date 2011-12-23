@@ -1,5 +1,5 @@
-#ifndef _EPOLL_T_
-#define _EPOLL_T_
+#ifndef _EPOLL_IMPL_H_
+#define _EPOLL_IMPL_H_
 
 #include "epoll_i.h"
 
