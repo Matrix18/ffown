@@ -3,8 +3,8 @@
 
 #include "epoll_i.h"
 
-#define CREATE_EPOLL_SIZE  10
-#define EPOLL_EVENTS_SIZE  128
+#define CREATE_EPOLL_SIZE  10000
+#define EPOLL_EVENTS_SIZE  10000
 
 class epoll_impl_t: public epoll_i
 {

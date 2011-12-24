@@ -3,7 +3,7 @@
 
 #include "acceptor_i.h"
 
-#define LISTEN_BACKLOG 256
+#define LISTEN_BACKLOG 1024
 
 class epoll_i;
 class socket_i;
