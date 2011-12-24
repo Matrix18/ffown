@@ -61,6 +61,11 @@ int socket_impl_t::handle_epoll_read()
     return socket_broken();
 }
 
+int socket_impl_t::handle_epoll_error()
+{
+    return socket_broken();
+}
+
 int socket_impl_t::handle_epoll_write()
 {
     int ret = 0;

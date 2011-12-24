@@ -38,7 +38,7 @@ int epoll_impl_t::open()
             else
             {
                 // ! just ignore this, read event can handle socket error 
-                //!  fd_ptr->handle_epoll_error();
+                fd_ptr->handle_epoll_error();
             }
         }
     }while(nfds > 0);

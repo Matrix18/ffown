@@ -10,6 +10,7 @@ socket_controller_impl_t::socket_controller_impl_t()
 
 int socket_controller_impl_t::handle_error(socket_i* sp_)
 {
+    //! cout <<"socket_controller_impl_t::handle_error \n";
     delete sp_;
     return 0;
 }
@@ -26,6 +27,8 @@ int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
 
 int socket_controller_impl_t::handle_write_completed(socket_i* sp_)
 {
+    //! cout <<"socket_controller_impl_t::handle_write_completed \n";
     sp_->close();
+    delete sp_;
     return 0;
 }

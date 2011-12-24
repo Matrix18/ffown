@@ -28,6 +28,7 @@ public:
 
     virtual int handle_epoll_read();
     virtual int handle_epoll_write();
+    virtual int handle_epoll_error();
 
    virtual void async_send(const string& buff_);
    virtual void async_recv();
