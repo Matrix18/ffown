@@ -1,23 +1,29 @@
 #ifndef _ACCEPTOR_IMPL_H_
 #define _ACCEPTOR_IMPL_H_
 
-#include "socket_i.h"
+#include "acceptor_i.h"
 
-class acceptor_impl_t: public socket_i
+#define LISTEN_BACKLOG 256
+
+class epoll_i;
+
+class acceptor_impl_t: public acceptor_i
 {
 public:
-    int socket() {return m_listen_fd;}
-    int handle_epoll_write(){ return -1; }
+    acceptor_impl_t(epoll_i*);
+    ~acceptor_impl_t();
+    int   open(const string& address_);
+    void close();
 
+    int socket() {return m_listen_fd;}
     int handle_epoll_read();
     int handle_epoll_error();
 
-    void close(){};
-    void async_send(const string& buff_){}
-    void async_recv(){}
+    
 
 private:
-    int m_listen_fd;
+    int                 m_listen_fd;
+    epoll_i*          m_epoll;
 };
 #endif
 

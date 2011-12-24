@@ -14,8 +14,8 @@ public:
 
     int open();
     int close();
-    int register_read_event(socket_i*);
-    int register_write_event(socket_i*);
+    int register_read_event(epoll_fd_i*);
+    int register_write_event(epoll_fd_i*);
 
 private:
     int m_efd;

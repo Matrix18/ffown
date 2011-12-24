@@ -4,17 +4,13 @@
 #include <string>
 using namespace std;
 
-class socket_i
+#include "epoll_fd_i.h"
+
+class socket_i: public epoll_fd_i
 {
 public:
     virtual ~socket_i(){}
 
-    virtual int socket() = 0;
-    virtual int handle_epoll_read()  = 0;
-    virtual int handle_epoll_write() = 0;
-    virtual int handle_epoll_error() = 0;
-
-    virtual void close() = 0;
     virtual void async_send(const string& buff_) = 0;
     virtual void async_recv() = 0;
 
