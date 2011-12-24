@@ -8,7 +8,7 @@ using namespace std;
 #include "socket_i.h"
 
 class epoll_i;
-class socket_event_handler_i;
+class socket_controller_i;
 
 #define  RECV_BUFFER_SIZE 8096
 

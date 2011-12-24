@@ -11,6 +11,7 @@ using namespace std;
 
 #include "epoll_i.h"
 #include "detail/acceptor_impl.h"
+#include "detail/socket_impl.h"
 #include "utility/strtool.h"
 
 acceptor_impl_t::acceptor_impl_t(epoll_i* e_):
@@ -21,7 +22,7 @@ acceptor_impl_t::acceptor_impl_t(epoll_i* e_):
 
 acceptor_impl_t::~acceptor_impl_t()
 {
-    close();
+    this->close();
 }
 
 int acceptor_impl_t::open(const string& address_)
@@ -100,6 +101,8 @@ int acceptor_impl_t::handle_epoll_read()
         return -1;
     }
 
+    socket_i* socket = create_socket(new_fd);
+    socket->open();
     return 0;
 }
 
@@ -107,4 +110,9 @@ int acceptor_impl_t::handle_epoll_error()
 {
     m_epoll->del_fd(this);
     return 0;
+}
+
+socket_i* acceptor_impl_t::create_socket(int new_fd_)
+{
+    return new socket_impl_t(m_epoll, NULL, new_fd_);
 }
