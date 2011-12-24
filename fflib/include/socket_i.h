@@ -11,6 +11,7 @@ class socket_i: public epoll_fd_i
 public:
     virtual ~socket_i(){}
 
+    virtual void open() = 0;
     virtual void async_send(const string& buff_) = 0;
     virtual void async_recv() = 0;
 

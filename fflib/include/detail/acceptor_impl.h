@@ -6,6 +6,7 @@
 #define LISTEN_BACKLOG 256
 
 class epoll_i;
+class socket_i;
 
 class acceptor_impl_t: public acceptor_i
 {
@@ -19,7 +20,8 @@ public:
     int handle_epoll_read();
     int handle_epoll_error();
 
-    
+protected:
+    virtual socket_i* create_socket(int);
 
 private:
     int                 m_listen_fd;
