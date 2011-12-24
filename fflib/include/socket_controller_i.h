@@ -14,7 +14,7 @@ public:
     virtual int handle_open(socket_i*)                          {return 0;}
     virtual int check_pre_send(socket_i*, const string& buff_)  {return 0;}
 
-    virtual int handle_error(socket_i*)                         {return 0;}
+    virtual int handle_error(socket_i*)                                  = 0;
     virtual int handle_read(socket_i*, char* buff, size_t len)  = 0;
 
 };

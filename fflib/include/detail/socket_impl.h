@@ -24,14 +24,19 @@ public:
     virtual int socket() { return m_fd; }
     virtual void close();
     virtual void open();
+    virtual int set_nonblock();
 
     virtual int handle_epoll_read();
     virtual int handle_epoll_write();
-    virtual int handle_epoll_error();
 
    virtual void async_send(const string& buff_);
    virtual void async_recv();
 
+private:
+    int socket_broken();
+    bool is_open() { return m_fd > 0; }
+
+    int do_send(const string& msg, string& left_);
 private:
     epoll_i*                            m_epoll;
     socket_controller_i*         m_sc;

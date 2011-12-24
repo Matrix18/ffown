@@ -1,2 +1,2 @@
 #!/bin/sh
-g++ -Wall -I./include src/*.cpp -o app_test
+g++ -Wall -I./include src/*.cpp -o app_test -lpthread

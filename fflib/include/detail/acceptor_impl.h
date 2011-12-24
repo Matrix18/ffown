@@ -18,7 +18,6 @@ public:
 
     int socket() {return m_listen_fd;}
     int handle_epoll_read();
-    int handle_epoll_error();
 
 protected:
     virtual socket_i* create_socket(int);
