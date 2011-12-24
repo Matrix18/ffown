@@ -88,6 +88,7 @@ int socket_impl_t::handle_epoll_write()
         }
     }
 
+    m_sc->handle_write_completed(this);
     return 0;
 }
 
@@ -115,6 +116,11 @@ void socket_impl_t::async_send(const string& buff_)
     else if (ret > 0)
     {
         m_send_buffer.push_back(left_buff);
+    }
+    else
+    {
+        //! send ok
+        m_sc->handle_write_completed(this);
     }
 }
 
@@ -146,6 +152,7 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
         nleft    -= nwritten;
         buffer += nwritten;
     }
+
     return 0;
 }
 

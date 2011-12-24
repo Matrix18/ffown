@@ -16,6 +16,7 @@ public:
 
     virtual int handle_error(socket_i*)                                  = 0;
     virtual int handle_read(socket_i*, char* buff, size_t len)  = 0;
+    virtual int handle_write_completed(socket_i*)  {return 0;}
 
 };
 #endif

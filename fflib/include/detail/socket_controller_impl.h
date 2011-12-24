@@ -14,7 +14,7 @@ public:
     socket_controller_impl_t();
     virtual int handle_error(socket_i*);
     virtual int handle_read(socket_i*, char* buff, size_t len);
-
+    virtual int handle_write_completed(socket_i*);
 private:
 };
 #endif
