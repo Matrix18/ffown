@@ -38,6 +38,7 @@ int epoll_impl_t::open()
             else
             {
                 // ! just ignore this, read event can handle socket error 
+                //! how to trigger this event! !!! headache!!!!
                 fd_ptr->handle_epoll_error();
             }
         }
