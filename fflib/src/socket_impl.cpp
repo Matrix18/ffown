@@ -28,6 +28,7 @@ void socket_impl_t::close()
 {
     if (m_fd > 0)
     {
+        m_epoll->unregister_fd(this);
         ::close(m_fd);
     }
     m_fd = -1;
@@ -58,12 +59,13 @@ int socket_impl_t::handle_epoll_read()
         }
     }
 
-    return socket_broken();
+    this->close();
+    return -1;
 }
 
 int socket_impl_t::handle_epoll_error()
 {
-    return socket_broken();
+    return m_sc->handle_error(this);
 }
 
 int socket_impl_t::handle_epoll_write()
@@ -164,11 +166,4 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
 void socket_impl_t::async_recv()
 {
     m_epoll->register_fd(this);
-}
-
-int socket_impl_t::socket_broken()
-{
-    m_epoll->unregister_fd(this);
-    this->close();
-    return m_sc->handle_error(this);
 }

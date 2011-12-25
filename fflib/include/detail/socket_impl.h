@@ -34,7 +34,6 @@ public:
    virtual void async_recv();
 
 private:
-    int socket_broken();
     bool is_open() { return m_fd > 0; }
 
     int do_send(const string& msg, string& left_);
