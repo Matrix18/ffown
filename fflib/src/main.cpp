@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
     task_queue_group_t tg;
     thread_t thread;
-    thread.create_thread(task_queue_group_t::gen_task(&tg), 100);
+    thread.create_thread(task_queue_group_t::gen_task(&tg), 4);
 
     epoll_impl_t epoll(&tg);
     acceptor_impl_t acceptor(&epoll);
