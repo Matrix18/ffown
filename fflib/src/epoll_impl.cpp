@@ -67,8 +67,7 @@ int epoll_impl_t::register_fd(epoll_fd_i* fd_ptr_)
     ee.data.ptr  = fd_ptr_;
     ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLET;;
 
-    int ret = ::epoll_ctl(m_efd, EPOLL_CTL_ADD, fd_ptr_->socket(), &ee);
-    return ret;
+    return ::epoll_ctl(m_efd, EPOLL_CTL_ADD, fd_ptr_->socket(), &ee);
 }
 
 int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
@@ -82,6 +81,16 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
     //! fd_ptr_->handle_epoll_error();
     m_wait_del.push_back(fd_ptr_);
     return ret;
+}
+
+int epoll_impl_t::mod_fd(epoll_fd_i* fd_ptr_)
+{
+    struct epoll_event ee = { 0, { 0 } };
+
+    ee.data.ptr  = fd_ptr_;
+    ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLET;;
+
+    return ::epoll_ctl(m_efd, EPOLL_CTL_MOD, fd_ptr_->socket(), &ee);
 }
 
 void epoll_impl_t::trigger_socket_error()

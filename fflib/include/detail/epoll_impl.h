@@ -22,7 +22,7 @@ public:
     virtual int close();
     virtual int register_fd(epoll_fd_i*);
     virtual int unregister_fd(epoll_fd_i*);
-
+    virtual int mod_fd(epoll_fd_i*);
 private:
     void trigger_socket_error();
 private:

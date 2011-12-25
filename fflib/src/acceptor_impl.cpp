@@ -88,7 +88,12 @@ int acceptor_impl_t::open(const string& address_)
 
 void acceptor_impl_t::close()
 {
-    ::close(m_listen_fd);
+    if (m_listen_fd > 0)
+    {
+        assert(0 == m_epoll->unregister_fd(this));
+        ::close(m_listen_fd);
+        m_listen_fd = -1;
+    }
 }
 
 int acceptor_impl_t::handle_epoll_read()
@@ -101,12 +106,15 @@ int acceptor_impl_t::handle_epoll_read()
     {
         if ((new_fd = ::accept(m_listen_fd, (struct sockaddr *)&addr, &addrlen)) == -1)
         {
-            if (errno == EINTR)
+            if (errno == EWOULDBLOCK)
             {
-                continue;
+                return 0;
             }
-            else if (errno == EWOULDBLOCK)
+            else if (errno == EINTR || errno == EMFILE || errno == ECONNABORTED || errno == ENFILE ||
+                        errno == EPERM || errno == ENOBUFS || errno == ENOMEM)
             {
+                perror("accept");//! if too many open files occur, need to restart epoll event
+                m_epoll->mod_fd(this);
                 return 0;
             }
             perror("accept");
@@ -119,7 +127,13 @@ int acceptor_impl_t::handle_epoll_read()
     return 0;
 }
 
+int acceptor_impl_t::handle_epoll_error()
+{
+    return 0;
+}
+
 socket_i* acceptor_impl_t::create_socket(int new_fd_)
 {
     return new socket_impl_t(m_epoll, new socket_controller_impl_t(), new_fd_);
 }
+

@@ -10,8 +10,9 @@ public:
 
     virtual int open()  = 0;
     virtual int close() = 0;
-    virtual int register_fd(epoll_fd_i*)   = 0;
-    virtual int unregister_fd(epoll_fd_i*)                       = 0;
+    virtual int register_fd(epoll_fd_i*)      = 0;
+    virtual int unregister_fd(epoll_fd_i*)  = 0;
+    virtual int mod_fd(epoll_fd_i*)           = 0;
 };
 
 #endif
