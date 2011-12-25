@@ -1,5 +1,5 @@
-#ifndef _THREAD_I_
-#define _THREAD_I_
+#ifndef _THREAD_H_
+#define _THREAD_H_
 
 #include<pthread.h>
 #include <list>
@@ -28,7 +28,7 @@ class task_queue_t
 
 public:
     task_queue_t():
-        m_flag(false)
+        m_flag(true)
     {
         //! 初始化锁变量和条件变量
         pthread_mutex_init(&m_mutex, NULL);
@@ -92,10 +92,19 @@ private:
 class task_queue_group_t
 {
     typedef vector<task_queue_t*>    task_queue_vt_t;
-public:
-    void run(void* pd_ = NULL)
+    static void task_func(void* pd_)
     {
-        (void)pd_;
+        task_queue_group_t* t = (task_queue_group_t*)pd_;
+        t->run();
+    }
+public:
+    static task_t gen_task(task_queue_group_t* p)
+    {
+        return task_t(&task_func, p);
+    }
+public:
+    void run()
+    {
         task_queue_t* p = new task_queue_t();
         m_tqs.push_back(p);
         task_t task_func;
@@ -143,8 +152,8 @@ class thread_t
         return 0;
     }
 public:
-    thread_t();
-    ~thread_t();
+    thread_t(){}
+    ~thread_t(){}
 
     int create_thread(task_t func, int num)
     {

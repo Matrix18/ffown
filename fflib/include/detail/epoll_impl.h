@@ -5,6 +5,7 @@
 using namespace std;
 
 #include "epoll_i.h"
+#include "utility/thread.h"
 
 #define CREATE_EPOLL_SIZE  10000
 #define EPOLL_EVENTS_SIZE  10000
@@ -13,9 +14,8 @@ using namespace std;
 
 class epoll_impl_t: public epoll_i
 {
-    typedef list<epoll_fd_i*> fd_list_t;
 public:
-    epoll_impl_t();
+    epoll_impl_t(task_queue_group_t* tqg_);
     ~epoll_impl_t();
 
     virtual int event_loop();
@@ -23,11 +23,10 @@ public:
     virtual int register_fd(epoll_fd_i*);
     virtual int unregister_fd(epoll_fd_i*);
     virtual int mod_fd(epoll_fd_i*);
+
 private:
-    void trigger_socket_error();
-private:
-    int                  m_efd;
-    fd_list_t          m_wait_del;
+    int                             m_efd;
+    task_queue_group_t* m_task_queue;
 };
 
 #endif

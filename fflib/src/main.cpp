@@ -24,17 +24,17 @@ int main(int argc, char* argv[])
     }
     char buff[128];
     snprintf(buff, sizeof(buff), "tcp://%s:%s", argv[1], argv[2]);
-    pthread_t ntid;
 
     int ret = 0;
-    epoll_impl_t epoll;
 
-    ret = pthread_create(&ntid, NULL, thr_fn, &epoll);
-    
+    task_queue_group_t tg;
+    thread_t thread;
+    thread.create_thread(task_queue_group_t::gen_task(&tg), 100);
+
+    epoll_impl_t epoll(&tg);
     acceptor_impl_t acceptor(&epoll);
     ret = acceptor.open(string(buff));
-
-    if (ret)
+     if (ret)
     {
         cout <<"acceptor open failed:" << buff <<"\n";
         return 1;
@@ -44,7 +44,15 @@ int main(int argc, char* argv[])
         cout <<"acceptor open ok, wait to listen\n";
     }
 
-    pthread_join(ntid, NULL);
+    epoll.event_loop();
+    thread.join_all();
+
+    //! pthread_t ntid;
+    //! ret = pthread_create(&ntid, NULL, thr_fn, &epoll);
+ 
+   
+
+    //! pthread_join(ntid, NULL);
     
 	return 0;
 }
