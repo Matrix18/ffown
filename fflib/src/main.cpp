@@ -8,13 +8,6 @@ using namespace std;
 #include<pthread.h>
 #include<stdio.h>
 
-void *thr_fn(void *arg)
-{
-    epoll_impl_t* p = (epoll_impl_t*)arg;
-    p->event_loop();
-    return NULL;
-}
-
 int main(int argc, char* argv[])
 {
     if (argc != 3)
@@ -47,13 +40,6 @@ int main(int argc, char* argv[])
     epoll.event_loop();
     thread.join_all();
 
-    //! pthread_t ntid;
-    //! ret = pthread_create(&ntid, NULL, thr_fn, &epoll);
- 
-   
-
-    //! pthread_join(ntid, NULL);
-    
 	return 0;
 }
 
