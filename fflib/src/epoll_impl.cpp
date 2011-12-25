@@ -57,7 +57,7 @@ int epoll_impl_t::register_fd(epoll_fd_i* fd_ptr_)
     struct epoll_event ee = { 0, { 0 } };
 
     ee.data.ptr  = fd_ptr_;
-    ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLET;;
+    ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLRDHUP | EPOLLHUP | EPOLLET;;
 
     int ret = ::epoll_ctl(m_efd, EPOLL_CTL_ADD, fd_ptr_->socket(), &ee);
     return ret;
