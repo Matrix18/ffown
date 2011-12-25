@@ -29,6 +29,5 @@ int socket_controller_impl_t::handle_write_completed(socket_i* sp_)
 {
     //! cout <<"socket_controller_impl_t::handle_write_completed \n";
     sp_->close();
-    delete sp_;
     return 0;
 }

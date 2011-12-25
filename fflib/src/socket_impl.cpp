@@ -1,9 +1,10 @@
-#include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "detail/socket_impl.h"
 #include "epoll_i.h"
 #include "socket_controller_i.h"
+#include "utility/socket_op.h"
 
 socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_):
     m_epoll(e_),
@@ -14,12 +15,11 @@ socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_):
 
 socket_impl_t::~socket_impl_t()
 {
-    this->close();
 }
 
 void socket_impl_t::open()
 {
-    this->set_nonblock();
+    socket_op_t::set_nonblock(m_fd);
     m_sc->handle_open(this);
     async_recv();
 }
@@ -28,22 +28,10 @@ void socket_impl_t::close()
 {
     if (m_fd > 0)
     {
-        m_epoll->unregister_fd(this);
+        assert(0 == m_epoll->unregister_fd(this));
         ::close(m_fd);
+        m_fd = -1;
     }
-    m_fd = -1;
-}
-
-int socket_impl_t::set_nonblock()
-{
-    int flags;
-    flags = fcntl(m_fd, F_GETFL, 0);
-    if ((flags = fcntl(m_fd, F_SETFL, flags | O_NONBLOCK)) < 0)
-    {
-        return -1;
-    }
-
-    return 0;
 }
 
 int socket_impl_t::handle_epoll_read()
@@ -94,7 +82,12 @@ int socket_impl_t::handle_epoll_write()
     int ret = 0;
     string left_buff;
 
-    while (false == m_send_buffer.empty())
+    if (true == m_send_buffer.empty())
+    {
+        return 0;
+    }
+
+    do
     {
         const string& msg = m_send_buffer.front();
         ret = do_send(msg, left_buff);
@@ -114,7 +107,7 @@ int socket_impl_t::handle_epoll_write()
         {
             m_send_buffer.pop_front();
         }
-    }
+    } while (false == m_send_buffer.empty());
 
     m_sc->handle_write_completed(this);
     return 0;
@@ -168,6 +161,7 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
             }
             else if (EWOULDBLOCK == errno)
             {
+                assert(0);
                 left_buff_.assign(buff_.c_str() + (buff_.size() - nleft), nleft);
                 return 1;
             }

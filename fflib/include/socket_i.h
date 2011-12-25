@@ -12,7 +12,6 @@ public:
     virtual ~socket_i(){}
 
     virtual void open() = 0;
-    virtual int set_nonblock() = 0;
     virtual void async_send(const string& buff_) = 0;
     virtual void async_recv() = 0;
 

@@ -14,6 +14,7 @@ using namespace std;
 #include "detail/socket_impl.h"
 #include "detail/socket_controller_impl.h"
 #include "utility/strtool.h"
+#include "utility/socket_op.h"
 
 acceptor_impl_t::acceptor_impl_t(epoll_i* e_):
     m_listen_fd(-1),
@@ -73,6 +74,7 @@ int acceptor_impl_t::open(const string& address_)
         return -1;
     }
 
+    socket_op_t::set_nonblock(m_listen_fd);
     if (::listen(m_listen_fd, LISTEN_BACKLOG) == -1)
     {
         perror("acceptor_impl_t::open when listen");
@@ -95,15 +97,25 @@ int acceptor_impl_t::handle_epoll_read()
     socklen_t addrlen = sizeof(addr);
 
     int new_fd = -1;
-    if ((new_fd = ::accept(m_listen_fd, (struct sockaddr *)&addr, &addrlen)) == -1)
+    do
     {
-        perror("accept");
-        return -1;
-    }
+        if ((new_fd = ::accept(m_listen_fd, (struct sockaddr *)&addr, &addrlen)) == -1)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            else if (errno == EWOULDBLOCK)
+            {
+                return 0;
+            }
+            perror("accept");
+            return -1;
+        }
 
-    socket_i* socket = create_socket(new_fd);
-    socket->open();
-
+        socket_i* socket = create_socket(new_fd);
+        socket->open();
+    } while (true);
     return 0;
 }
 

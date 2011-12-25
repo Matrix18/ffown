@@ -1,5 +1,6 @@
 
 #include <sys/epoll.h>
+#include <errno.h>
 
 #include "epoll_fd_i.h"
 #include "detail/epoll_impl.h"
@@ -21,7 +22,12 @@ int epoll_impl_t::open()
 
     do
     {
-        nfds  = epoll_wait(m_efd, ev_set, EPOLL_EVENTS_SIZE, -1);
+        nfds  = epoll_wait(m_efd, ev_set, EPOLL_EVENTS_SIZE, EPOLL_WAIT_TIME);
+        if (nfds < 0 && EINTR == errno)
+        {
+            continue;
+        }
+
         for (i = 0; i < nfds; ++i)
         {
             epoll_event& cur_ev = ev_set[i];
@@ -42,7 +48,9 @@ int epoll_impl_t::open()
                 fd_ptr->close();
             }
         }
-    }while(nfds > 0);
+
+        trigger_socket_error();
+    }while(nfds >= 0);
 
     return 0;
 }
@@ -71,6 +79,17 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
     int ret = ::epoll_ctl(m_efd, EPOLL_CTL_DEL, fd_ptr_->socket(), &ee);
 
     //! trigger socket error handle logic, when post epoll err, epoll will not post any other events
-    fd_ptr_->handle_epoll_error();
+    //! fd_ptr_->handle_epoll_error();
+    m_wait_del.push_back(fd_ptr_);
     return ret;
+}
+
+void epoll_impl_t::trigger_socket_error()
+{
+    fd_list_t::iterator it = m_wait_del.begin();
+    for (; it != m_wait_del.end(); ++it)
+    {
+        (*it)->handle_epoll_error();
+    }
+    m_wait_del.clear();
 }
