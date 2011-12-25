@@ -50,17 +50,38 @@ int socket_impl_t::handle_epoll_read()
 {
     if (is_open())
     {
-        int len = ::read(m_fd, m_recv_buffer, sizeof(m_recv_buffer));
-
-        if (len > 0)
+        int nread = 0;
+        do
         {
-            m_sc->handle_read(this, m_recv_buffer, size_t(len));
-            return 0;
-        }
+            nread = ::read(m_fd, m_recv_buffer, sizeof(m_recv_buffer));
+            if (nread > 0)
+            {
+                m_sc->handle_read(this, m_recv_buffer, size_t(nread));
+            }
+            else if (0 == nread) //! eof
+            {
+                this->close();
+                return -1;
+            }
+            else
+            {
+                if (errno == EINTR)
+                {
+                    continue;
+                }
+                else if (errno == EWOULDBLOCK)
+                {
+                    break;
+                }
+                else
+                {
+                    this->close();
+                    return -1;
+                }
+            }
+        } while(1);
     }
-
-    this->close();
-    return -1;
+    return 0;
 }
 
 int socket_impl_t::handle_epoll_error()

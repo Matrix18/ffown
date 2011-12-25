@@ -39,7 +39,7 @@ int epoll_impl_t::open()
             {
                 // ! just ignore this, read event can handle socket error 
                 //! how to trigger this event! !!! headache!!!!
-                fd_ptr->handle_epoll_error();
+                fd_ptr->close();
             }
         }
     }while(nfds > 0);
@@ -69,5 +69,8 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
 
     ee.data.ptr  = (void*)0;
     int ret = ::epoll_ctl(m_efd, EPOLL_CTL_DEL, fd_ptr_->socket(), &ee);
+
+    //! trigger socket error handle logic, when post epoll err, epoll will not post any other events
+    fd_ptr_->handle_epoll_error();
     return ret;
 }
