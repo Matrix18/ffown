@@ -15,7 +15,7 @@ epoll_impl_t::~epoll_impl_t()
 {
 }
 
-int epoll_impl_t::open()
+int epoll_impl_t::event_loop()
 {
     int i = 0, nfds = 0;
     struct epoll_event ev_set[EPOLL_EVENTS_SIZE];

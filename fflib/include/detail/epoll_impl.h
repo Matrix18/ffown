@@ -18,7 +18,7 @@ public:
     epoll_impl_t();
     ~epoll_impl_t();
 
-    virtual int open();
+    virtual int event_loop();
     virtual int close();
     virtual int register_fd(epoll_fd_i*);
     virtual int unregister_fd(epoll_fd_i*);

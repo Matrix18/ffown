@@ -1,5 +1,6 @@
 #include "detail/acceptor_impl.h"
 #include "detail/epoll_impl.h"
+#include "utility/thread.h"
 
 #include <iostream>
 using namespace std;
@@ -10,7 +11,7 @@ using namespace std;
 void *thr_fn(void *arg)
 {
     epoll_impl_t* p = (epoll_impl_t*)arg;
-    p->open();
+    p->event_loop();
     return NULL;
 }
 
