@@ -15,6 +15,7 @@ socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_):
 
 socket_impl_t::~socket_impl_t()
 {
+    delete m_sc;
 }
 
 void socket_impl_t::open()
