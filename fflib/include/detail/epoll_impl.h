@@ -7,7 +7,7 @@ using namespace std;
 #include "epoll_i.h"
 #include "utility/thread.h"
 
-#define CREATE_EPOLL_SIZE  10000
+#define CREATE_EPOLL_SIZE  4096
 #define EPOLL_EVENTS_SIZE  10000
 //! 1s
 #define EPOLL_WAIT_TIME     1000 
