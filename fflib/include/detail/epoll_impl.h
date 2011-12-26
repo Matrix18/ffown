@@ -8,9 +8,9 @@ using namespace std;
 #include "utility/thread.h"
 
 #define CREATE_EPOLL_SIZE  4096
-#define EPOLL_EVENTS_SIZE  10000
+#define EPOLL_EVENTS_SIZE  128
 //! 1s
-#define EPOLL_WAIT_TIME     1000 
+#define EPOLL_WAIT_TIME    -1 
 
 class epoll_impl_t: public epoll_i
 {
