@@ -42,9 +42,10 @@ int socket_impl_t::handle_epoll_read()
         int nread = 0;
         do
         {
-            nread = ::read(m_fd, m_recv_buffer, sizeof(m_recv_buffer));
+            nread = ::read(m_fd, m_recv_buffer, sizeof(m_recv_buffer) - 1);
             if (nread > 0)
             {
+                m_recv_buffer[nread] = '\0';
                 m_sc->handle_read(this, m_recv_buffer, size_t(nread));
             }
             else if (0 == nread) //! eof
