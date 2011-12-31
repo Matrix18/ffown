@@ -15,7 +15,7 @@ using namespace std;
 class epoll_impl_t: public epoll_i
 {
 public:
-    epoll_impl_t(task_queue_group_t* tqg_);
+    epoll_impl_t(task_queue_i* tqg_);
     ~epoll_impl_t();
 
     virtual int event_loop();
@@ -26,7 +26,7 @@ public:
 
 private:
     int                             m_efd;
-    task_queue_group_t* m_task_queue;
+    task_queue_i*            m_task_queue;
 };
 
 #endif

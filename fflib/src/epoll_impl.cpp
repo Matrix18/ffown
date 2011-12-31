@@ -5,7 +5,7 @@
 #include "epoll_fd_i.h"
 #include "detail/epoll_impl.h"
 
-epoll_impl_t::epoll_impl_t(task_queue_group_t* tqg_):
+epoll_impl_t::epoll_impl_t(task_queue_i* tqg_):
     m_efd(-1),
     m_task_queue(tqg_)
 {

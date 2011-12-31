@@ -20,9 +20,9 @@ int main(int argc, char* argv[])
 
     int ret = 0;
 
-    task_queue_group_t tg;
+    task_queue_pool_t tg;
     thread_t thread;
-    thread.create_thread(task_queue_group_t::gen_task(&tg), 2);
+    thread.create_thread(task_queue_pool_t::gen_task(&tg), 200);
 
     epoll_impl_t epoll(&tg);
     acceptor_impl_t acceptor(&epoll);
