@@ -17,7 +17,7 @@ CROSS=
 CP=/bin/cp
 RM=-/bin/rm -rf
 LN=/bin/ln -s 
-CFLAGS=-g -O2 -Wall
+CFLAGS=-g  -Wall
 LDFLAGS= -lpthread
 #链接库名
 LIB_NAME=

@@ -1,13 +1,20 @@
 #include "detail/socket_controller_impl.h"
 #include "socket_i.h"
+#include "utility/strtool.h"
 
 #include <string.h>
+#include <assert.h>
+#include <stdlib.h>
 #include <iostream>
 using namespace std;
 
 socket_controller_impl_t::socket_controller_impl_t():
     m_head_end_flag(false),
     m_body_size(0)
+{
+}
+
+socket_controller_impl_t::~socket_controller_impl_t()
 {
 }
 
@@ -26,14 +33,15 @@ int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
     {
         if (false == m_head_end_flag)
         {
-            char* pos = ::strstr(buff, "\r\n");
+            
+            char* pos = ::strstr(buff_begin, "\r\n");
             if (NULL == pos)
             {
-                m_head.append(buff, left);
+                m_head.append(buff_begin, left);
                 return 0;
             }
 
-            m_head.append(buff, pos - buff);
+            m_head.append(buff_begin, pos - buff);
             if (parse_msg_head())
             {
                 sp_->async_send("ERROR\r\n");
@@ -41,11 +49,12 @@ int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
             }
     
             m_head_end_flag = true;
-            left -= (pos + 2 - buff);
+            left -= (pos + 2 - buff_begin);
             buff_begin = pos + 2;
         }
 
-        append_msg_body(buff_begin, left);
+        int consume = append_msg_body(sp_, buff_begin, left);
+        buff_begin += consume;
     }
     while (left > 0);
     //! const char* data = "HTTP/1.0 200 OK\r\nConnection: Close\r\nContent-type: text/html\r\nContent-length: 10\r\n\r\nHelloWorld";
@@ -65,10 +74,18 @@ int socket_controller_impl_t::handle_write_completed(socket_i* sp_)
 
 int socket_controller_impl_t::parse_msg_head()
 {
+    vector<string> vt;
+    strtool::split(m_head, vt, " ");
+    if (vt.size() != 3)
+    {
+        return -1;
+    }
+
+    m_body_size = atoi(vt[2].c_str());;
     return 0;
 }
 
-int socket_controller_impl_t::append_msg_body(char* buff_begin_, size_t& left_)
+int socket_controller_impl_t::append_msg_body(socket_i* sp_, char* buff_begin_, size_t& left_)
 {
     size_t tmp        = m_body_size > left_ ? left_: m_body_size;
     left_               -= tmp;
@@ -78,9 +95,11 @@ int socket_controller_impl_t::append_msg_body(char* buff_begin_, size_t& left_)
     if (m_body_size == 0)
     {
         //! msg dispatcher
+        sp_->async_send(m_message.get_body());
+
         m_head_end_flag = false;
         m_head.clear();
         m_message.clear();
     }
-    return 0;
+    return tmp;
 }

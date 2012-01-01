@@ -2,6 +2,7 @@
 #define _THREAD_H_
 
 #include<pthread.h>
+#include<stdio.h>
 #include <list>
 #include <vector>
 using namespace std;
@@ -13,7 +14,8 @@ class task_queue_t: public task_queue_i
 public:
     task_queue_t():
         m_flag(true),
-        m_tasklist(new task_list_t())
+        m_index(0),
+        m_tasklist(&m_tasklist_cache[m_index])
     {
         //! 初始化锁变量和条件变量
         pthread_mutex_init(&m_mutex, NULL);
@@ -23,7 +25,6 @@ public:
     {
         pthread_mutex_destroy(&m_mutex);
         pthread_cond_destroy(&m_cond);
-        delete m_tasklist;
     }
     void close()
     {
@@ -32,7 +33,7 @@ public:
     }
 
     void produce(const task_t& task_)
-    {
+    {        
         pthread_mutex_lock(&m_mutex);
         //! 条件满足唤醒等待线程
         if (m_tasklist->empty())
@@ -47,7 +48,6 @@ public:
     int   comsume(task_t& task_)
     {
         pthread_mutex_lock(&m_mutex);
-
         //! 当没有作业时，就等待直到条件满足被唤醒
         while (m_tasklist->empty())
         {
@@ -61,12 +61,12 @@ public:
 
         task_ = m_tasklist->front();
         m_tasklist->pop_front();
-    
+
         pthread_mutex_unlock(&m_mutex);
         return 0;
     }
 
-    task_list_t* comsume_all(task_list_t* p)
+    task_list_t* comsume_all()
     {
         pthread_mutex_lock(&m_mutex);
 
@@ -82,15 +82,18 @@ public:
         }
 
         task_list_t* tmp = m_tasklist;
-        m_tasklist = p;
+        m_tasklist = &m_tasklist_cache[(++m_index) % 2];
         pthread_mutex_unlock(&m_mutex);
+
         return tmp;
     }
 private:
-    volatile bool         m_flag;
-    task_list_t*            m_tasklist;
+    volatile bool                     m_flag;
+    int                                    m_index;
+    task_list_t                         m_tasklist_cache[2];
+    task_list_t* volatile                       m_tasklist;
     //! 定义一个锁变量和条件变量
-    pthread_mutex_t m_mutex;
+    pthread_mutex_t              m_mutex;
     pthread_cond_t m_cond;
 };
 
@@ -112,8 +115,9 @@ public:
     {
         pthread_mutex_init(&m_mutex, NULL);
     }
+
     int   comsume(task_t& task_){ return -1; }
-    task_list_t*   comsume_all(task_list_t* ){ return NULL; }
+    task_list_t*   comsume_all(){ return NULL; }
     void run()
     {
         task_queue_t* p = new task_queue_t();
@@ -122,8 +126,7 @@ public:
         m_tqs.push_back(p);
         pthread_mutex_unlock(&m_mutex);
 
-        task_list_t* tasklist= new task_list_t();
-        tasklist = p->comsume_all(tasklist);
+        task_list_t* tasklist = p->comsume_all();
         while (tasklist)
         {
             for(task_list_t::iterator it = tasklist->begin(); it != tasklist->end(); ++it)
@@ -131,9 +134,8 @@ public:
                 (*it).run();
             }
             tasklist->clear();
-            tasklist = p->comsume_all(tasklist);
+            tasklist = p->comsume_all();
         }
-        delete tasklist;
     }
 
     ~task_queue_pool_t()
@@ -144,6 +146,7 @@ public:
             delete (*it);
         }
         m_tqs.clear();
+        pthread_mutex_destroy(&m_mutex);
     }
 
     void close()
