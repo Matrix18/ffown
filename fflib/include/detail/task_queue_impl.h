@@ -1,13 +1,12 @@
-#ifndef _THREAD_H_
-#define _THREAD_H_
+#ifndef _TASK_QUEUE_IMPL_H_
+#define _TASK_QUEUE_IMPL_H_
 
 #include<pthread.h>
-#include<stdio.h>
 #include <list>
-#include <vector>
 using namespace std;
 
 #include "task_queue_i.h"
+#include "lock.h"
 
 class task_queue_t: public task_queue_i
 {
@@ -15,75 +14,65 @@ public:
     task_queue_t():
         m_flag(true),
         m_index(0),
-        m_tasklist(&m_tasklist_cache[m_index])
+        m_tasklist(&m_tasklist_cache[m_index]),
+        m_cond(m_mutex)
     {
-        //! 初始化锁变量和条件变量
-        pthread_mutex_init(&m_mutex, NULL);
-        pthread_cond_init(&m_cond, NULL);
     }
     ~task_queue_t()
     {
-        pthread_mutex_destroy(&m_mutex);
-        pthread_cond_destroy(&m_cond);
     }
     void close()
     {
         m_flag = false;
-        pthread_cond_broadcast(&m_cond);
+        m_cond.broadcast();
     }
 
     void produce(const task_t& task_)
     {        
-        pthread_mutex_lock(&m_mutex);
+        lock_guard_t lock(m_mutex);
         //! 条件满足唤醒等待线程
         if (m_tasklist->empty())
         {
-            pthread_cond_signal(&m_cond);
+            m_cond.signal();
         }
         m_tasklist->push_back(task_);
-
-        pthread_mutex_unlock(&m_mutex);
     }
 
     int   comsume(task_t& task_)
     {
-        pthread_mutex_lock(&m_mutex);
+        lock_guard_t lock(m_mutex);
         //! 当没有作业时，就等待直到条件满足被唤醒
         while (m_tasklist->empty())
         {
             if (false == m_flag)
             {
-                pthread_mutex_unlock(&m_mutex);
                 return -1;
             }
-            pthread_cond_wait(&m_cond, &m_mutex);
+            m_cond.wait();
         }
 
         task_ = m_tasklist->front();
         m_tasklist->pop_front();
 
-        pthread_mutex_unlock(&m_mutex);
         return 0;
     }
 
     task_list_t* comsume_all()
     {
-        pthread_mutex_lock(&m_mutex);
+        lock_guard_t lock(m_mutex);
 
         //! 当没有作业时，就等待直到条件满足被唤醒
         while (m_tasklist->empty())
         {
             if (false == m_flag)
             {
-                pthread_mutex_unlock(&m_mutex);
                 return NULL;
             }
-            pthread_cond_wait(&m_cond, &m_mutex);
+            m_cond.wait();
         }
 
         task_list_t* tmp = m_tasklist;
         m_tasklist = &m_tasklist_cache[(++m_index) % 2];
-        pthread_mutex_unlock(&m_mutex);
 
         return tmp;
     }
@@ -91,10 +80,10 @@ private:
     volatile bool                     m_flag;
     int                                    m_index;
     task_list_t                         m_tasklist_cache[2];
-    task_list_t* volatile                       m_tasklist;
-    //! 定义一个锁变量和条件变量
-    pthread_mutex_t              m_mutex;
-    pthread_cond_t m_cond;
+    task_list_t* volatile            m_tasklist;
+
+    mutex_t                            m_mutex;
+    condition_var_t                 m_cond;
 };
 
 class task_queue_pool_t: public task_queue_i
@@ -169,44 +158,4 @@ private:
 };
 
 
-class thread_t
-{
-    static void* thread_func(void* p_)
-    {
-        task_t* t = (task_t*)p_;
-        t->run();
-        delete  t;
-        return 0;
-    }
-public:
-    thread_t(){}
-    ~thread_t(){}
-
-    int create_thread(task_t func, int num)
-    {
-        for (int i = 0; i < num; ++i)
-        {
-            pthread_t ntid;
-            task_t* t = new task_t(func.func, func.data);
-            if (0 == ::pthread_create(&ntid, NULL, thread_func, t))
-            {
-                m_tid_list.push_back(ntid);
-            }
-        }
-        return 0;
-    }
-    int join_all()
-    {
-        list<pthread_t>::iterator it = m_tid_list.begin();
-        for (; it != m_tid_list.end(); ++it)
-        {
-            pthread_join((*it), NULL);
-        }
-        m_tid_list.clear();
-        return 0;
-    }
-
-private:
-    list<pthread_t> m_tid_list;
-};
 #endif

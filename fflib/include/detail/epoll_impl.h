@@ -5,7 +5,7 @@
 using namespace std;
 
 #include "epoll_i.h"
-#include "utility/thread.h"
+#include "task_queue_i.h"
 
 #define CREATE_EPOLL_SIZE  4096
 #define EPOLL_EVENTS_SIZE  128

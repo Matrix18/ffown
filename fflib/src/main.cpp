@@ -1,6 +1,6 @@
 #include "detail/acceptor_impl.h"
 #include "detail/epoll_impl.h"
-#include "utility/thread.h"
+#include "thread.h"
 
 #include <iostream>
 using namespace std;
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     }
 
     epoll.event_loop();
-    thread.join_all();
+    thread.join();
 
 	return 0;
 }
