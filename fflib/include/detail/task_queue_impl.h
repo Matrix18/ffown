@@ -27,6 +27,19 @@ public:
         m_cond.broadcast();
     }
 
+    void multi_produce(const task_list_t& task_)
+    {
+        lock_guard_t lock(m_mutex);
+        //! 条件满足唤醒等待线程
+        if (m_tasklist->empty())
+        {
+            m_cond.signal();
+        }
+        for(task_list_t::const_iterator it = task_.begin(); it != task_.end(); ++it)
+        {
+            m_tasklist->push_back(*it);
+        }
+    }
     void produce(const task_t& task_)
     {        
         lock_guard_t lock(m_mutex);
@@ -107,6 +120,7 @@ public:
 
     int   comsume(task_t& task_){ return -1; }
     task_list_t*   comsume_all(){ return NULL; }
+
     void run()
     {
         task_queue_t* p = new task_queue_t();
@@ -151,7 +165,11 @@ public:
     {
         m_tqs[(long)(task_.data) % m_tqs.size()]->produce(task_);
     }
-
+    void multi_produce(const task_list_t& task_)
+    {
+        static unsigned int i = 0;
+        m_tqs[i++ % m_tqs.size()]->multi_produce(task_);
+    }
 private:
     pthread_mutex_t       m_mutex;
     task_queue_vt_t         m_tqs;

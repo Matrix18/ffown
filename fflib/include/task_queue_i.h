@@ -29,6 +29,7 @@ public:
     virtual ~task_queue_i(){}
     virtual void close() = 0;
     virtual void produce(const task_t& task_) =0;
+    virtual void multi_produce(const task_list_t& task_) =0;
     virtual int   comsume(task_t& task_) = 0;
     virtual task_list_t* comsume_all() = 0;
 };
