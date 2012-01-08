@@ -9,11 +9,13 @@ using namespace std;
 
 class epoll_i;
 class socket_controller_i;
+class mutex_t;
 
 #define  RECV_BUFFER_SIZE 8096
 
 class socket_impl_t: public socket_i
 {
+    static mutex_t&   get_mutex(socket_i*);
 public:
     typedef list<string>    send_buffer_t;
 
