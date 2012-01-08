@@ -5,6 +5,9 @@ import wx
 import  wx.html
 import os 
 
+
+g_panel = None
+
 class ff_app(wx.PySimpleApp):
     def __init__(self):
         wx.PySimpleApp.__init__(self)
@@ -43,7 +46,28 @@ class ff_html_frame(wx.Frame):
     def __init__(self, parent, title): 
         wx.Frame.__init__(self, parent, -1, title, size=(800,600)) 
         self.CreateStatusBar()
-        self.html_apnel = ff_html_panel(self,-1)
+        g_panel = ff_html_panel(self,-1)
+
+class BlueTagHandler(wx.html.HtmlWinTagHandler):
+    def __init__(self):
+        wx.html.HtmlWinTagHandler.__init__(self)
+
+    def GetSupportedTags(self):
+        return "INPUT"
+
+    def HandleTag(self, tag):
+        
+        if tag.HasParam("type"):
+            t = tag.GetParam("type")
+            print("XXXXXX:", t)
+        labelOne = wx.StaticText(g_panel, wx.ID_ANY, 'Input 1')
+        inputTxtOne = wx.TextCtrl(g_panel, wx.ID_ANY, '')
+
+        self.GetParser().GetContainer().InsertCell(wx.html.HtmlColourCell("XXXX"))
+        self.ParseInner(tag)
+        return True
+
+wx.html.HtmlWinParser_AddTagHandler(BlueTagHandler)
 
 app = ff_app()
 # create a window/frame, no parent, -1 is default ID, title, size
