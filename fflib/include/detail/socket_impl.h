@@ -6,6 +6,7 @@
 using namespace std;
 
 #include "socket_i.h"
+#include "lock.h"
 
 class epoll_i;
 class socket_controller_i;
@@ -15,7 +16,6 @@ class mutex_t;
 
 class socket_impl_t: public socket_i
 {
-    static mutex_t&   get_mutex(socket_i*);
 public:
     typedef list<string>    send_buffer_t;
 
@@ -43,7 +43,7 @@ private:
     socket_controller_i*         m_sc;
     int                                   m_fd;
 
-    char                                m_recv_buffer[RECV_BUFFER_SIZE];
     send_buffer_t                  m_send_buffer;
+    mutex_t                          m_mutex;
 };
 #endif

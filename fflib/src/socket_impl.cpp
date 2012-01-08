@@ -5,13 +5,8 @@
 #include "epoll_i.h"
 #include "socket_controller_i.h"
 #include "utility/socket_op.h"
+#include "utility/singleton.h"
 #include "lock.h"
-
-mutex_t& socket_impl_t::get_mutex(socket_i* p_)
-{
-    static mutex_t g_mutex[1000];
-    return g_mutex[(long)p_ % 1000];
-}
 
 socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_):
     m_epoll(e_),
@@ -49,11 +44,12 @@ int socket_impl_t::handle_epoll_read()
         int nread = 0;
         do
         {
-            nread = ::read(m_fd, m_recv_buffer, sizeof(m_recv_buffer) - 1);
+            char recv_buffer[RECV_BUFFER_SIZE];
+            nread = ::read(m_fd, recv_buffer, sizeof(recv_buffer) - 1);
             if (nread > 0)
             {
-                m_recv_buffer[nread] = '\0';
-                m_sc->handle_read(this, m_recv_buffer, size_t(nread));
+                recv_buffer[nread] = '\0';
+                m_sc->handle_read(this, recv_buffer, size_t(nread));
             }
             else if (0 == nread) //! eof
             {
@@ -97,7 +93,7 @@ int socket_impl_t::handle_epoll_write()
     }
 
     {
-        lock_guard_t lock(socket_impl_t::get_mutex(this));
+        lock_guard_t lock(m_mutex);
         do
         {
             const string& msg = m_send_buffer.front();
@@ -131,7 +127,7 @@ void socket_impl_t::async_send(const string& buff_)
         return;
     }
 
-    lock_guard_t lock(socket_impl_t::get_mutex(this));
+    lock_guard_t lock(m_mutex);
     //! socket buff is full, cache the data
     if (false == m_send_buffer.empty())
     {
