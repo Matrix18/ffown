@@ -1,6 +1,7 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
+from PyQt4.QtNetwork import *
 
 example = """
            <script>function message() { return "Clicked!"; }</script>
@@ -17,6 +18,14 @@ example = """
                    frameborder="0"
                    align="center"></iframe>
 """
+class NetworkAccessMgr(QNetworkAccessManager):
+    def __init__(self):
+        QNetworkAccessManager.__init__(self)
+    def createRequest (self, operation, request, data = None):
+        print(request.url())
+        return QNetworkAccessManager.createRequest(self, operation, request, data)
+
+        
 class BrowserScreen(QWebView):
     def __init__(self):
         QWebView.__init__(self)
@@ -58,8 +67,10 @@ def run_loop():
     os.chdir("./html")
     app = QApplication(sys.argv)
 
+    network_access = NetworkAccessMgr()
     browser = BrowserScreen()
     pjs = PythonJS()
+    browser.page().setNetworkAccessManager(network_access);
     browser.page().mainFrame().addToJavaScriptWindowObject("python", pjs)
 
     QObject.connect(pjs, SIGNAL("contentChanged(const QString &)"),
