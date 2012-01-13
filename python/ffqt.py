@@ -2,6 +2,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
 from PyQt4.QtNetwork import *
+import os
 
 example = """
            <script>function message() { return "Clicked!"; }</script>
@@ -30,9 +31,6 @@ class BrowserScreen(QWebView):
     def __init__(self):
         QWebView.__init__(self)
 
-        self.resize(800, 600)
-        self.show()
-
         html_content = "<h2>404 Page Not found ./index.htm</h2>"
         
         try:
@@ -41,9 +39,17 @@ class BrowserScreen(QWebView):
         except:
             pass
         
-        self.setHtml(html_content)
+        #self.setHtml(html_content)
+        self.load(QUrl.fromLocalFile(os.getcwd() + "/index.html"))
+        self.show()
+
         self.createTrayIcon()
         self.trayIcon.show()
+        self.resize(800, 600)
+        self.setWindowIcon(QIcon("images/own.ico"))
+        print("Xx",self.windowTitle())
+        self.setWindowTitle("ffownXXX")
+        self.show()
     def createTrayIcon(self):
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setIcon(QIcon("images/xm.ico"))
@@ -67,10 +73,10 @@ def run_loop():
     os.chdir("./html")
     app = QApplication(sys.argv)
 
-    network_access = NetworkAccessMgr()
+    #network_access = NetworkAccessMgr()
     browser = BrowserScreen()
     pjs = PythonJS()
-    browser.page().setNetworkAccessManager(network_access);
+    #browser.page().setNetworkAccessManager(network_access);
     browser.page().mainFrame().addToJavaScriptWindowObject("python", pjs)
 
     QObject.connect(pjs, SIGNAL("contentChanged(const QString &)"),
