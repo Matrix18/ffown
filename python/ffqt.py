@@ -47,8 +47,7 @@ class BrowserScreen(QWebView):
         self.trayIcon.show()
         self.resize(800, 600)
         self.setWindowIcon(QIcon("images/own.ico"))
-        print("Xx",self.windowTitle())
-        self.setWindowTitle("ffownXXX")
+        self.setWindowTitle("FFOWN")
         self.show()
     def createTrayIcon(self):
         self.trayIcon = QSystemTrayIcon(self)
