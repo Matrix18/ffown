@@ -75,7 +75,6 @@ class PythonJS(QObject):
             search_ret = eval(urllib.urlopen(search_url).read())
             self.url = search_ret
         dest = self.url[random.randint(0, 100) % len(self.url)]
-        print(dest)
         return dest
 
 def run_loop():
