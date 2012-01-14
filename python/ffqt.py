@@ -3,6 +3,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
 from PyQt4.QtNetwork import *
 import os
+import urllib
+import random
 
 example = """
            <script>function message() { return "Clicked!"; }</script>
@@ -57,6 +59,7 @@ class BrowserScreen(QWebView):
             QSystemTrayIcon.MessageIcon(0), 15 * 1000)
 
 class PythonJS(QObject):
+    url = []
     __pyqtSignals__ = ("contentChanged(const QString &)")
     @pyqtSignature("QString")
     def alert(self, msg):
@@ -65,6 +68,15 @@ class PythonJS(QObject):
     @pyqtSignature("", result="QString")
     def message(self):
         return "Click!"
+    @pyqtSignature("", result="QString")
+    def get_image_url(self):
+        if len(self.url) == 0:
+            search_url = 'http://ffown.sinaapp.com/get_image_url.php'
+            search_ret = eval(urllib.urlopen(search_url).read())
+            self.url = search_ret
+        dest = self.url[random.randint(0, 100) % len(self.url)]
+        print(dest)
+        return dest
 
 def run_loop():
     import sys

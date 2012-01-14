@@ -1,6 +1,7 @@
 <html>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 <head>
+<script type="text/javascript" src="./js/jquery.js" ></script> 
 <title>test page</title>
 </head>
 
@@ -9,11 +10,24 @@ Here is some  <b>formatted</b>   <i><u>text</u></i>
 loaded from a  <font color="red"> string </font>
 <a href="http://www.baidu.com"> link examlpe</a>
 <img src="./images/a.jpg" />
-<input type="submit" value="button"/>
+<input type="submit" value="next picture" onClick=bton_onclik() />
 <table>
 <tr>
-<td width=100>a</td><td>b</td>
+<td id="out" width=100>a</td><td>b</td>
 </tr>
 </table>
 </body>
 </html>
+
+<script>
+var index = 0;
+function bton_onclik()
+{
+	var url = python.get_image_url();
+	//alert('<img src=./download/' + index + '.jpeg />');
+	$("#out").html('<img src='+url+' />');
+	index = index + 1;
+}
+
+</script>
+
