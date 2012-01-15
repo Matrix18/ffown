@@ -7,35 +7,6 @@ import urllib
 import random
 import traceback
 
-example = """
-           <script>function message() { return "Clicked!"; }</script>
-           <h1>QtWebKit + Python sample program</h1>
-           <input type="button" value="Click JavaScript!" 
-                  onClick="alert('[javascript] ' + message())"/>
-           <input type="button" value="Click Python!" 
-                  onClick="python.alert('[python] ' +
-                                        python.message())"/>
-           <br />
-           <iframe src="http://www.baidu.com/"
-                   width="100%" height="100%"
-                   scrolling="true"
-                   frameborder="0"
-                   align="center"></iframe>
-"""
-class NetworkAccessMgr(QNetworkAccessManager):
-    def __init__(self):
-        QNetworkAccessManager.__init__(self)
-    def createRequest (self, operation, request, data = None):
-        print(request.url())
-        return QNetworkAccessManager.createRequest(self, operation, request, data)
-
-        
-class WebPage(QWebPage):
-    def __init__(self):
-	QWebPage.__init__(self)
-    def chooseFile(self, p, old):
-	return "Xxx"+old
-
 class BrowserScreen(QWebView):
     def __init__(self):
         QWebView.__init__(self)
@@ -59,13 +30,6 @@ class BrowserScreen(QWebView):
 class PythonJS(QObject):
     url = []
     __pyqtSignals__ = ("contentChanged(const QString &)")
-    @pyqtSignature("QString")
-    def alert(self, msg):
-        self.emit(SIGNAL('contentChanged(const QString &)'), msg)
-
-    @pyqtSignature("", result="QString")
-    def message(self):
-        return "Click!"
     @pyqtSignature("", result="QString")
     def get_image_url(self):
         if len(self.url) == 0:
@@ -96,10 +60,8 @@ def run_loop():
     os.chdir("./html")
     app = QApplication(sys.argv)
 
-    #network_access = NetworkAccessMgr()
     browser = BrowserScreen()
     pjs = PythonJS()
-    #browser.page().setNetworkAccessManager(network_access);
     browser.page().mainFrame().addToJavaScriptWindowObject("python", pjs)
 
     QObject.connect(pjs, SIGNAL("contentChanged(const QString &)"),
