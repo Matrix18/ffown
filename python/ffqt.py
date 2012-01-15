@@ -32,18 +32,9 @@ class NetworkAccessMgr(QNetworkAccessManager):
 class BrowserScreen(QWebView):
     def __init__(self):
         QWebView.__init__(self)
-
-        html_content = "<h2>404 Page Not found ./index.htm</h2>"
-        
-        try:
-            a = file("./index.html")
-            html_content = a.read()
-        except:
-            pass
         
         #self.setHtml(html_content)
-        self.load(QUrl.fromLocalFile(os.getcwd() + "/index.html"))
-        self.show()
+        self.load(QUrl.fromLocalFile(os.getcwd() + "/tunneler.html"))
 
         self.createTrayIcon()
         self.trayIcon.show()
