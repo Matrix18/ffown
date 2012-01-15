@@ -34,7 +34,7 @@ class BrowserScreen(QWebView):
         QWebView.__init__(self)
         
         #self.setHtml(html_content)
-        self.load(QUrl.fromLocalFile(os.getcwd() + "/tunneler.html"))
+        self.load(QUrl.fromLocalFile(os.getcwd() + "/index.html"))
 
         self.createTrayIcon()
         self.trayIcon.show()

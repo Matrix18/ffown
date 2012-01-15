@@ -16,6 +16,17 @@ loaded from a  <font color="red"> string </font>
 <td id="out" width=100>a</td><td>b</td>
 </tr>
 </table>
+<!-- first try HTML5 playback: if serving as XML, expand `controls` to `controls="controls"` and autoplay likewise -->
+<!-- warning: playback does not work on iOS3 if you include the poster attribute! fixed in iOS4.0 -->
+<video height="360" width="480" controls=autopaly>
+    <source src="./video/VfE_html5.mp4" />
+</video>
+
+<!-- you *must* offer a download link as they may be able to play the file locally. customise this bit all you want -->
+<p>	<strong>Download Video:</strong>
+	Closed Format:	<a href="http://clips.vorwaerts-gmbh.de/VfE_html5.mp4">"MP4"</a>
+</p>
+
 </body>
 </html>
 
