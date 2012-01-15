@@ -5,6 +5,7 @@ from PyQt4.QtNetwork import *
 import os
 import urllib
 import random
+import traceback
 
 example = """
            <script>function message() { return "Clicked!"; }</script>
@@ -29,6 +30,12 @@ class NetworkAccessMgr(QNetworkAccessManager):
         return QNetworkAccessManager.createRequest(self, operation, request, data)
 
         
+class WebPage(QWebPage):
+    def __init__(self):
+	QWebPage.__init__(self)
+    def chooseFile(self, p, old):
+	return "Xxx"+old
+
 class BrowserScreen(QWebView):
     def __init__(self):
         QWebView.__init__(self)
@@ -67,6 +74,21 @@ class PythonJS(QObject):
             self.url = search_ret
         dest = self.url[random.randint(0, 100) % len(self.url)]
         return dest
+    @pyqtSignature("QString", result="QString")
+    def readfile(self, path):
+	ret = ""
+	try:
+	    f = open(path, "r")
+	    ret = f.read()
+	    f.close()
+	except:
+		ret = "file not exist!" + path
+		traceback.print_exc()
+	return ret
+    @pyqtSignature("QString", result="QString")
+    def select_file(self, ext = "*"):
+	ret = QFileDialog.getOpenFileName(None, "", ext, "FileDialog")
+        return ret
 
 def run_loop():
     import sys
