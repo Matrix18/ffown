@@ -4,6 +4,31 @@
 <head>
 
     <title>ffown</title>
+    <script type="text/javascript" src="./js/highlighter/scripts/shCore.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushBash.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushCpp.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushCSharp.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushCss.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushDelphi.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushDiff.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushGroovy.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushJava.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushJScript.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushPhp.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushPlain.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushPython.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushRuby.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushScala.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushSql.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushVb.js"></script>
+	<script type="text/javascript" src="./js/highlighter/scripts/shBrushXml.js"></script>
+	<link type="text/css" rel="stylesheet" href="./js/highlighter/styles/shCore.css"/>
+	<link type="text/css" rel="stylesheet" href="./js/highlighter/styles/shThemeDefault.css"/>
+	<script type="text/javascript">
+		SyntaxHighlighter.config.clipboardSwf = './js/highlighter/scripts/clipboard.swf';
+		SyntaxHighlighter.all();
+	</script>
+
     <link href="./js/lib/ligerUI/skins/Aqua/css/ligerui-all.css" rel="stylesheet" type="text/css" />
     <script src="./js/lib/jquery/jquery-1.3.2.min.js" type="text/javascript"></script> 
     <script src="./js/lib/ligerUI/js/core/base.js" type="text/javascript"></script>
@@ -44,7 +69,7 @@
                 return false;
             }
             });
-        });    
+        });
     </script> 
     <style type="text/css"> 
         body{ padding:5px; margin:0; padding-bottom:15px;}
@@ -85,7 +110,20 @@
         <div position="center" title="opened files">
             <div id="navtab1" style="width: 100%;overflow:hidden; border:1px solid #A3C0E8; ">
                 <div  title="我的主页1" showClose="true">
-                    <p id="maingrid2" style="margin:10px; height:300px;">我的主页1 </p>
+                    <!-- <IFRAME id=HtmlEdit style="WIDTH: 100%; HEIGHT: 296px" marginWidth=0 marginHeight=0 designMode="on" >
+                    </IFRAME>
+                    !-->
+                    <pre class="brush: cpp;">
+                    <textarea cols="50" rows="10" id="contactus" name="contactus">
+                    
+                    int test()
+                    {
+                        printf("C++ web editor");
+                    	return 0;
+                    }
+                    
+                    </textarea>
+                    </pre>
                 </div>
                 <div  title="我的主页2" showClose="true">
                     <div id="maingrid2" style="margin:10px; height:300px;">我的主页2</div>
