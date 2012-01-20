@@ -79,6 +79,12 @@
         #layout1{  width:100%;margin:0; padding:0;  }  
     	.l-page-top{ height:50px; background:#ffffff; margin-bottom:1px;}
     	h4{ margin:20px;}
+    	#f_div{
+            left:100px;
+            top:10;
+            position:absolute;
+            z-index:4;
+        }
     </style>
 </head>
 
@@ -125,11 +131,14 @@
             </div>
         </div>  
     </div> 
-<iframe  id="ffframe" name="ffframe" frameborder=0  scrolling="auto" width="100%" height="600">xxx</iframe>
+
+<div id="f_div">
+<iframe  id="ffframe" name="ffframe" frameborder=0  scrolling="auto" width="800px" height="600">xxx</iframe>
+</div>
 </body>
 </html>
 
-<SCRIPT language="javascript">
+<SCRIPT language="javascript" defer=true>
 
 var editor =  document.getElementById("ffframe").contentWindow;//contentWindow后面不能加上document，会出错
 
