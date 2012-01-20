@@ -39,12 +39,14 @@
     <script src="./js/lib/ligerUI/js/plugins/ligerTab.js" type="text/javascript"></script>
     <script src="./js/lib/ligerUI/js/plugins/ligerDrag.js" type="text/javascript"></script>
     <script src="./js/lib/ligerUI/js/plugins/ligerMenu.js" type="text/javascript"></script>
+
     <script type="text/javascript">
         var tab = null;
         var accordion = null;
         var tree = null;
         $(function ()
         {
+            //go();
             var menu;
             var actionNodeID;
             function itemclick(item, i)
@@ -70,7 +72,8 @@
             }
             });
         });
-    </script> 
+    </script>
+    
     <style type="text/css"> 
         body{ padding:5px; margin:0; padding-bottom:15px;}
         #layout1{  width:100%;margin:0; padding:0;  }  
@@ -107,23 +110,14 @@
             </ul>
         </div>
         </div>
+        
         <div position="center" title="opened files">
             <div id="navtab1" style="width: 100%;overflow:hidden; border:1px solid #A3C0E8; ">
+                
                 <div  title="我的主页1" showClose="true">
-                    <!-- <IFRAME id=HtmlEdit style="WIDTH: 100%; HEIGHT: 296px" marginWidth=0 marginHeight=0 designMode="on" >
-                    </IFRAME>
-                    !-->
-                    <pre class="brush: cpp;">
-                    <textarea cols="50" rows="10" id="contactus" name="contactus">
+                    <!-- !-->
                     
-                    int test()
-                    {
-                        printf("C++ web editor");
-                    	return 0;
-                    }
                     
-                    </textarea>
-                    </pre>
                 </div>
                 <div  title="我的主页2" showClose="true">
                     <div id="maingrid2" style="margin:10px; height:300px;">我的主页2</div>
@@ -131,6 +125,28 @@
             </div>
         </div>  
     </div> 
+<iframe  id="pic" name="pic" frameborder=0  scrolling="auto" width="145" height="175">xxx</iframe>
 </body>
 </html>
 
+<SCRIPT language="javascript">
+
+var editor =  document.getElementById("pic").contentWindow;//contentWindow后面不能加上document，会出错
+
+editor.document.designMode = 'On';
+editor.document.contentEditable = true;
+editor.document.open();
+editor.document.writeln('<html><body><pre class="brush: cpp;"> void foo(){} </pre></body></html>');
+editor.document.close(); 
+editor.focus();
+
+if(document.selection){
+    var range = editor.document.selection.createRange();
+    range.pasteHTML('abc');
+}
+else{
+    editor.document.designMode = 'On'; // Moz, Op, Saf 
+    editor.document.execCommand('g');
+}
+ 
+</script>
