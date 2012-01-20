@@ -36,7 +36,7 @@
             });
 
             $("#layout1").ligerLayout({ leftWidth: 200});
-            $("#navtab1").ligerTab({ dblClickToClose: false });
+            $("#navtab1").ligerTab({ dblClickToClose: false});
             $("#tree").ligerTree({ checkbox: false, onContextmenu: function (node, e)
             {
                 actionNodeID = node.data.text;
@@ -49,7 +49,7 @@
     <style type="text/css"> 
         body{ padding:5px; margin:0; padding-bottom:15px;}
         #layout1{  width:100%;margin:0; padding:0;  }  
-    	.l-page-top{ height:50px; background:#f8f8f8; margin-bottom:1px;}
+    	.l-page-top{ height:50px; background:#ffffff; margin-bottom:1px;}
     	h4{ margin:20px;}
     </style>
 </head>
@@ -58,7 +58,7 @@
         <div class="l-page-top"> <img src="./images/logo.jpg"  height="50px"/> </div>
         <div id="layout1">
         <div position="left" title="浏览器">
-             <!--简易模式-->     
+             <!--简易模式-->
             <div style="width:200px; height:300px; margin:10px; float:left;  border:0px solid #ccc; overflow:auto;  ">
             <ul id="tree">
                 <li>
@@ -84,8 +84,8 @@
         </div>
         <div position="center" title="opened files">
             <div id="navtab1" style="width: 100%;overflow:hidden; border:1px solid #A3C0E8; ">
-                <div  title="我的主页2" showClose="true">
-                    <div id="maingrid2" style="margin:10px; height:300px;">我的主页2</div>
+                <div  title="我的主页1" showClose="true">
+                    <p id="maingrid2" style="margin:10px; height:300px;">我的主页1 </p>
                 </div>
                 <div  title="我的主页2" showClose="true">
                     <div id="maingrid2" style="margin:10px; height:300px;">我的主页2</div>
