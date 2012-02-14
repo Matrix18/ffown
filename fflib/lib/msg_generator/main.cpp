@@ -157,15 +157,16 @@ int msg_dispather_t<T, R>::dispath(const string& json_, socket_ptr_t sock_)
 
     const json_value_t& val = document.MemberBegin()->name;
     const char* func_name   = val.GetString();
-    reg_func_t func         = m_reg_func[func_name];
+    typename map<string, reg_func_t>::const_iterator it = m_reg_func.find(func_name);
 
-    if (NULL == func)
+    if (it == m_reg_func.end())
     {
         char buff[512];
         snprintf(buff, sizeof(buff), "msg not supported<%s>", func_name);
         throw msg_exception_t(buff);
         return -1;
     }
+    reg_func_t func = it->second;
 
     (this->*func)(document.MemberBegin()->value, sock_);
     return 0;
