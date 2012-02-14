@@ -3,21 +3,13 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <iostream>
 using namespace std;
 
 #include "rapidjson/document.h"     // rapidjson's DOM-style API
 #include "rapidjson/prettywriter.h" // for stringify JSON
 #include "rapidjson/filestream.h"   // wrapper of C stream for prettywriter as output
-using namespace rapidjson;
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <iostream>
-#include <map>
-#include <vector>
-using namespace std;
-
+//! using namespace rapidjson;
 
 struct student_t
 {
