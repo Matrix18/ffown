@@ -22,8 +22,8 @@ public:
     void handle(const student_t& s_,  socket_ptr_t sock_)
     {
         cout  << "msg_handler_t::handle:\n";
-        //! cout  << "age:" << int(s_.age) << " grade:" << s_.grade << " friends:"<< s_.friends.size() << " name:"
-        //!       << s_.name << " mybook:" << s_.mybook.pages << " " << s_.mybook.contents << " note:" << s_.note.size() <<"\n";
+        cout  << "age:" << int(s_.age) << " grade:" << s_.grade << " friends:"<< s_.friends.size() << " name:"
+              << s_.name << " mybook:" << s_.mybook.pages << " " << s_.mybook.contents << " note:" << s_.note.size() <<"\n";
     }
 };
 

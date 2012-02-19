@@ -174,6 +174,21 @@ class field_def_t:
                prefix, self.val_type, convert_to_fetch_op(self.val_type), \
                prefix, self.name, \
                prefix)
+        else:
+            ret += \
+        '''
+    %sif (false == %s.IsObject())
+    %s{
+        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
+        %sthrow msg_exception_t(buff);
+    %s}
+    %s%s;
+        ''' % (prefix, self.name, \
+               prefix, \
+               prefix, self.parent.get_name(), self.name, self.type, \
+               prefix, \
+               prefix, \
+               prefix, convert_to_fetch_op(self.key_type, 'this->%s' %(self.name), self.name))
         return ret
 
 class struct_def_t:

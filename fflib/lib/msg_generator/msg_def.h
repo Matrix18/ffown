@@ -45,13 +45,30 @@ struct student_t {
             return 0;
         }
     };
-    float grade;
-    map<string, int8> note;
-    int8 age;
-    vector<book_t> friends;
+    book_t mybook;
     string name;
+    float grade;
+    int8 age;
+    map<string, int8> note;
+    vector<string> friends;
     int parse(const json_value_t& jval_) {
         char buff[128];
+        const json_value_t& mybook = jval_["mybook"];
+        if (false == mybook.IsObject())
+        {
+            snprintf(buff, sizeof(buff), "student_t::mybook[book_t] field needed");
+            throw msg_exception_t(buff);
+        }
+        this->mybook.parse(mybook);
+        
+        const json_value_t& name = jval_["name"];
+        if (false == name.IsString())
+        {
+            snprintf(buff, sizeof(buff), "student_t::name[string] field needed");
+            throw msg_exception_t(buff);
+        }
+        this->name = name.GetString();
+        
         const json_value_t& grade = jval_["grade"];
         if (false == grade.IsDouble())
         {
@@ -59,6 +76,14 @@ struct student_t {
             throw msg_exception_t(buff);
         }
         this->grade = grade.GetDouble();
+        
+        const json_value_t& age = jval_["age"];
+        if (false == age.IsNumber())
+        {
+            snprintf(buff, sizeof(buff), "student_t::age[int8] field needed");
+            throw msg_exception_t(buff);
+        }
+        this->age = age.GetInt();
         
         const json_value_t& note = jval_["note"];
         if (false == note.IsObject())
@@ -86,14 +111,6 @@ struct student_t {
             this->note[key_val] = tmp_val;
         }
         
-        const json_value_t& age = jval_["age"];
-        if (false == age.IsNumber())
-        {
-            snprintf(buff, sizeof(buff), "student_t::age[int8] field needed");
-            throw msg_exception_t(buff);
-        }
-        this->age = age.GetInt();
-        
         const json_value_t& friends = jval_["friends"];
         if (false == friends.IsArray())
         {
@@ -103,23 +120,15 @@ struct student_t {
         for (rapidjson::SizeType i = 0; i < friends.Size(); i++)
         {
             const json_value_t& val = friends[i];
-            if (false == val.IsObject())
+            if (false == val.IsString())
             {
                 snprintf(buff, sizeof(buff), "student_t::friends field at[%u] must array", i);
                 throw msg_exception_t(buff);
             }
-            book_t tmp_val;
-            tmp_val.parse(val);
+            string tmp_val;
+            tmp_val = val.GetString();
 		    this->friends.push_back(tmp_val);
         }
-        
-        const json_value_t& name = jval_["name"];
-        if (false == name.IsString())
-        {
-            snprintf(buff, sizeof(buff), "student_t::name[string] field needed");
-            throw msg_exception_t(buff);
-        }
-        this->name = name.GetString();
         
         return 0;
     }

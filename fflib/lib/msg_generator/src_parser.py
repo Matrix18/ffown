@@ -43,28 +43,34 @@ class src_parser_t:
                 parent_struct.add_field(field)
                 index = index + 1
             else:
-                field_type = ''
-                field_name = ''
-                key_type   = ''
-                val_type   = ''
-                if -1 != cur_word.find('array'):
+                if -1 == cur_word.find('dictionary') and  -1 == cur_word.find('{') and -1 == cur_word.find('array') :
                     field_name = self.all_words[index + 1].split(';')[0]
-                    word_split = cur_word.split('<')
-                    field_type = word_split[0]
-                    key_type = word_split[1].split('>')[0]
-                    field = field_def_t(field_name, field_type, key_type, '')
+                    field = field_def_t(field_name, cur_word, '', '')
                     parent_struct.add_field(field)
                     index = index + 1
-                elif -1 != cur_word.find('dictionary'):
-                    field_name = self.all_words[index + 1].split(';')[0]
-                    word_split = cur_word.split('<')
-                    field_type = word_split[0]
-                    key_val_type = word_split[1].split('>')
-                    key_type = key_val_type[0].split(',')[0]
-                    val_type = key_val_type[0].split(',')[1]
-                    field = field_def_t(field_name, field_type, key_type, val_type)
-                    parent_struct.add_field(field)
-                    index = index + 1
+                else:
+                    field_type = ''
+                    field_name = ''
+                    key_type   = ''
+                    val_type   = ''
+                    if -1 != cur_word.find('array'):
+                        field_name = self.all_words[index + 1].split(';')[0]
+                        word_split = cur_word.split('<')
+                        field_type = word_split[0]
+                        key_type = word_split[1].split('>')[0]
+                        field = field_def_t(field_name, field_type, key_type, '')
+                        parent_struct.add_field(field)
+                        index = index + 1
+                    elif -1 != cur_word.find('dictionary'):
+                        field_name = self.all_words[index + 1].split(';')[0]
+                        word_split = cur_word.split('<')
+                        field_type = word_split[0]
+                        key_val_type = word_split[1].split('>')
+                        key_type = key_val_type[0].split(',')[0]
+                        val_type = key_val_type[0].split(',')[1]
+                        field = field_def_t(field_name, field_type, key_type, val_type)
+                        parent_struct.add_field(field)
+                        index = index + 1
             index = index + 1
             
     def exe(self):
