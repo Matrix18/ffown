@@ -15,6 +15,10 @@ typedef runtime_error        msg_exception_t;
 typedef rapidjson::Document  json_dom_t;
 typedef rapidjson::Value     json_value_t;
 
+typedef int int8 ;
+typedef int int16;
+typedef int int32;
+
 struct student_t
 {
     struct book_t

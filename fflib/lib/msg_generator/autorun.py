@@ -15,7 +15,7 @@ if __name__ =='__main__':
 
 t = struct_def_t('TT')
 
-f = field_def_t('ok', 'int8', '', '')
+f = field_def_t('ok', 'float', '', '')
 t.add_field(f)
-s = f.format_parse_code()
-print(s)
+s = t.format_declare_code()
+#print(s)

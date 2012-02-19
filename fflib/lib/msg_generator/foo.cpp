@@ -9,7 +9,7 @@ struct student_t
     int8                age;
     float               grade;
     string              name;
-    array<string>       friends;
+    array<book_t>       friends;
     book_t              mybook;
-    dictionary<string,string> note;
+    dictionary<string,int8> note;
 };
