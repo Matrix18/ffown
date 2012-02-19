@@ -11,6 +11,10 @@ using namespace std;
 #include "rapidjson/filestream.h"   // wrapper of C stream for prettywriter as output
 //! using namespace rapidjson;
 
+typedef runtime_error        msg_exception_t;
+typedef rapidjson::Document  json_dom_t;
+typedef rapidjson::Value     json_value_t;
+
 struct student_t
 {
     struct book_t
@@ -23,28 +27,9 @@ struct student_t
     string              name;
     vector<string>      friends;
     map<string, book_t> books;
-};
 
-template<typename T, typename R>
-class msg_dispather_t
-{
-    typedef runtime_error        msg_exception_t;
-    typedef rapidjson::Document  json_dom_t;
-    typedef rapidjson::Value     json_value_t;
-    typedef R                    socket_ptr_t;
-    typedef int (msg_dispather_t<T, R>::*reg_func_t)(const json_value_t&, socket_ptr_t);
-public:
-    msg_dispather_t(T& msg_handler_):
-        m_msg_handler(msg_handler_)
+    int parse(const json_value_t& jval_)
     {
-        m_reg_func["student_t"] = &msg_dispather_t<T, R>::student_t_dispacher;
-    }
-    int dispath(const string& json_, socket_ptr_t sock_);
-
-private:
-    int student_t_dispacher(const json_value_t& jval_, socket_ptr_t sock_)
-    {
-        student_t s_val;
         const json_value_t& age      = jval_["age"];
         const json_value_t& grade    = jval_["grade"];
         const json_value_t& name     = jval_["name"];
@@ -57,19 +42,19 @@ private:
             snprintf(buff, sizeof(buff), "student::age[int] field needed");
             throw msg_exception_t(buff);
         }
-        s_val.age = age.GetInt();
+        this->age = age.GetInt();
         if (false == grade.IsDouble())
         {
             snprintf(buff, sizeof(buff), "student::grade[float] field needed");
             throw msg_exception_t(buff);
         }
-        s_val.grade = grade.GetDouble();
+        this->grade = grade.GetDouble();
         if (false == name.IsString())
         {
             snprintf(buff, sizeof(buff), "student::name[string] field needed");
             throw msg_exception_t(buff);
         }
-        s_val.name = name.GetString();
+        this->name = name.GetString();
         if (false == friends.IsArray())
         {
             snprintf(buff, sizeof(buff), "student::friends[Array] field needed");
@@ -83,7 +68,7 @@ private:
                 snprintf(buff, sizeof(buff), "student::friends field at[%u] must string", i);
                 throw msg_exception_t(buff);
             }
-			s_val.friends.push_back(val.GetString());
+			this->friends.push_back(val.GetString());
         }
         if (false == books.IsObject())
         {
@@ -122,8 +107,30 @@ private:
                 throw msg_exception_t(buff);
             }
             book_val.contents = book_contens.GetString();
-            s_val.books[name.GetString()] = book_val;
+            this->books[name.GetString()] = book_val;
         }
+        return 0;
+    }
+};
+
+template<typename T, typename R>
+class msg_dispather_t
+{
+    typedef R                    socket_ptr_t;
+    typedef int (msg_dispather_t<T, R>::*reg_func_t)(const json_value_t&, socket_ptr_t);
+public:
+    msg_dispather_t(T& msg_handler_):
+        m_msg_handler(msg_handler_)
+    {
+        m_reg_func["student_t"] = &msg_dispather_t<T, R>::student_t_dispacher;
+    }
+    int dispath(const string& json_, socket_ptr_t sock_);
+
+private:
+    int student_t_dispacher(const json_value_t& jval_, socket_ptr_t sock_)
+    {
+        student_t s_val;
+        s_val.parse(jval_);
 
         m_msg_handler.handle(s_val, sock_);
         return 0;
