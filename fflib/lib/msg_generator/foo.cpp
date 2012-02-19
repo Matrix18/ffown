@@ -11,5 +11,5 @@ struct student_t
     string              name;
     array<string>       friends;
     book_t              mybook;
-    dictionary<string, string> note;
+    dictionary<string,string> note;
 };
