@@ -1,8 +1,8 @@
 
 import sys
-from inc import *
-from src_parser import src_parser_t
-from code_generator import code_generator_t
+from pylib.inc import *
+from pylib.src_parser import src_parser_t
+from pylib.code_generator import code_generator_t
 
 
 if __name__ =='__main__':
