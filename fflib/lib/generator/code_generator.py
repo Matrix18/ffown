@@ -1,5 +1,30 @@
 from inc import *
 
+
+def convert_to_check_op(t):
+    if t == 'int8' or t == 'int16' or t == 'int32':
+        return 'IsNumber'
+    elif t == 'float':
+        return 'IsDouble'
+    elif t == 'string':
+        return 'IsString'
+    elif t == 'array':
+        return 'IsArray'
+    elif t == 'dictionary':
+        return 'IsObject'
+    else:
+        return 'IsObject'
+
+def convert_to_fetch_op(t, var_name = 'tmp_val', j_var = 'val'):
+    if t == 'int8' or t == 'int16' or t == 'int32':
+        return '%s = %s.GetInt()' % (var_name, j_var)
+    elif t == 'float':
+        return '%s = %s.GetDouble();' % (var_name, j_var)
+    elif t == 'string':
+        return '%s = %s.GetString()' % (var_name, j_var)
+    else:
+        return '%s.parse(%s)' % (var_name, j_var)
+
 inc_str = '''
 #include <stdint.h>
 #include <string>
@@ -25,8 +50,9 @@ typedef int int32;
 '''
 
 class code_generator_t:
-    def __init__(self, struct_def_mgr):
+    def __init__(self, struct_def_mgr, dest_filename):
         self.struct_def_mgr = struct_def_mgr
+        self.dest_filename = dest_filename
 
     def gen_class_def_code(self, f):
         tmp_s = '''
@@ -114,9 +140,9 @@ private:
             ret = ret + '%s %s;' %(type_str, field_name)
         return ret
     def format_field_parse_code(self, field_def, prefix = ''):
-        type_str   = self.get_type()
-        field_name = self.get_name()
-        key_type = self.get_key_type()
+        type_str   = field_def.get_type()
+        field_name = field_def.get_name()
+        key_type = field_def.get_key_type()
         val_type = field_def.get_val_type()
 
         ret = ''
@@ -191,7 +217,7 @@ private:
         elif 'dictionary' == type_str:
             ret += \
         '''
-    %sif (false == %s.IsObject())
+    %sif (false == %s.IsObject() || %s.MemberBegin() == %s.MemberEnd())
     %s{
         %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
         %sthrow msg_exception_t(buff);
@@ -215,7 +241,7 @@ private:
     %s    %s tmp_val; %s;
     %s    this->%s[key_val] = tmp_val;
     %s}
-        ''' % (prefix, field_name, \
+        ''' % (prefix, field_name, field_name, field_name, \
                prefix, \
                prefix, field_def.get_parent().get_name(), field_name, type_str, \
                prefix, \
@@ -274,7 +300,9 @@ private:
         ret = ret + prefix + '    int parse(const json_value_t& jval_) {\n'
         ret = ret + prefix + '        char buff[128];\n'
         for field_name in all_fields:    
-            ret += all_fields[field_name].format_parse_code(prefix + '    ') + '\n'
+            #ret += all_fields[field_name].format_parse_code(prefix + '    ') + '\n'
+            ret += self.format_field_parse_code(all_fields[field_name], prefix + '    ') + '\n'
+            
         ret += prefix + '        return 0;\n' + prefix + '    }'
 
         ret = ret + '\n' + prefix + '};'
@@ -290,7 +318,7 @@ private:
             #print(ret_str)
             f.write(ret_str)
     def exe(self):
-        f = open("msg_def.h", "w")
+        f = open(self.dest_filename, "w")
         self.gen_declare_code(f)
         self.gen_class_def_code(f)
 

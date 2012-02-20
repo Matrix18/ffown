@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     try
     {
         string tmp = "{\"student_t\":{\"age\":123,\"grade\":1.2,\"name\":\"bible\",\"friends\":[\"a\",\"b\"],"
-                     "\"mybook\":{\"pages\":123,\"contents\":\"oh nice\"},\"note\":{}}}";
+                     "\"mybook\":{\"pages\":123,\"contents\":\"oh nice\"},\"note\":{\"a\":123}}}";
         msg_handler_t xxx;
         msg_dispather_t<msg_handler_t, msg_handler_t::socket_ptr_t> p(xxx);
         p.dispath(tmp, 0);
