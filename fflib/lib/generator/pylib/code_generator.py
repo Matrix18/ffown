@@ -1,4 +1,4 @@
-from inc import *
+from pylib.inc import *
 
 
 def convert_to_check_op(t):

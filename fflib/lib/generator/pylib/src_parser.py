@@ -1,4 +1,4 @@
-from inc import *
+from pylib.inc import *
 
 class src_parser_t:
     def __init__(self, file):
