@@ -63,7 +63,7 @@ json_outstream_t& json_outstream_t::encode(const char* filed_name_, json_value_t
 {
     json_value_t tmp_val(rapidjson::kObjectType);
     dest_.encode_json_val(tmp_val, m_allocator);
-    jval_[filed_name_] = tmp_val;
+    jval_.AddMember(filed_name_, tmp_val, m_allocator);
     return *this;
 }
 
