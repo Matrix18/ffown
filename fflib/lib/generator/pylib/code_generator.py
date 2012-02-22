@@ -6,9 +6,9 @@ def convert_to_check_op(t):
         return 'IsInt'
     elif t == 'uint8' or t == 'uint16' or t == 'uint32':
         return 'IsUint'
-    elfi t == 'int64':
+    elif t == 'int64':
         return 'IsInt64'
-    elfi t == 'UInt64':
+    elif t == 'UInt64':
         return 'IsUint64'
     elif t == 'float':
         return 'IsDouble'
@@ -65,7 +65,7 @@ typedef uint16_t uint16;
 typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
-typedef uint64_t int64;
+typedef uint64_t uint64;
 
 '''
 
