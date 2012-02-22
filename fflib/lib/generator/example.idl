@@ -12,4 +12,5 @@ struct student_t
     array<string>       friends;
     book_t              mybook;
     dictionary<string,int8> note;
+    array<book_t>       vt;
 };

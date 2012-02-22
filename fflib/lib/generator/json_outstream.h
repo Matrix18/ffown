@@ -51,7 +51,7 @@ public:
     void to_json_val(const char* filed_name_, json_value_t& jval_, const T& dest_)
     {
         jval_.SetObject();
-        encode(filed_name_, jval_, dest_);
+        dest_.encode_json_val(jval_, m_allocator);
     }
 
 private:

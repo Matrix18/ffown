@@ -53,7 +53,7 @@ json_instream_t& json_instream_t::decode(const char* filed_name_, const json_val
         throw msg_exception_t(m_err_buff);
     }
 
-    dest_.decode(jval_);
+    dest_.parse(jval_);
     return *this;
 }
 
@@ -72,7 +72,7 @@ json_instream_t& json_instream_t::decode(const char* filed_name_, const json_val
         this->decode(filed_name_, jval_[i], tmp_val);
         dest_.push_back(tmp_val);
     }
-    dest_.decode(jval_);
+
     return *this;
 }
 
