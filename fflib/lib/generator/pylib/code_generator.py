@@ -3,7 +3,13 @@ from pylib.inc import *
 
 def convert_to_check_op(t):
     if t == 'int8' or t == 'int16' or t == 'int32':
-        return 'IsNumber'
+        return 'IsInt'
+    elif t == 'uint8' or t == 'uint16' or t == 'uint32':
+        return 'IsUint'
+    elfi t == 'int64':
+        return 'IsInt64'
+    elfi t == 'UInt64':
+        return 'IsUint64'
     elif t == 'float':
         return 'IsDouble'
     elif t == 'string':
@@ -18,6 +24,12 @@ def convert_to_check_op(t):
 def convert_to_fetch_op(t, var_name = 'tmp_val', j_var = 'val'):
     if t == 'int8' or t == 'int16' or t == 'int32':
         return '%s = %s.GetInt()' % (var_name, j_var)
+    elif t == 'uint8' or t == 'uint16' or t == 'uint32':
+        return '%s = %s.GetUint()' % (var_name, j_var)
+    elif t == 'int64':
+        return '%s = %s.GetInt64()' % (var_name, j_var)
+    elif t == 'uint64':
+        return '%s = %s.GetUint64()' % (var_name, j_var)
     elif t == 'float':
         return '%s = %s.GetDouble();' % (var_name, j_var)
     elif t == 'string':
@@ -37,15 +49,23 @@ using namespace std;
 #include "rapidjson/document.h"     // rapidjson's DOM-style API
 #include "rapidjson/prettywriter.h" // for stringify JSON
 #include "rapidjson/filestream.h"   // wrapper of C stream for prettywriter as output
+#include "json_instream.h"
+#include "json_outstream.h"
+#include "rapidjson/stringbuffer.h" 
 //! using namespace rapidjson;
 
 typedef runtime_error        msg_exception_t;
 typedef rapidjson::Document  json_dom_t;
 typedef rapidjson::Value     json_value_t;
 
-typedef int int8 ;
-typedef int int16;
-typedef int int32;
+typedef int8_t int8;
+typedef uint8_t uint8;
+typedef int16_t int16;
+typedef uint16_t uint16;
+typedef int32_t int32;
+typedef uint32_t uint32;
+typedef int64_t int64;
+typedef uint64_t int64;
 
 '''
 
@@ -139,148 +159,6 @@ private:
         else:
             ret = ret + '%s %s;' %(type_str, field_name)
         return ret
-    def format_field_parse_code(self, field_def, prefix = ''):
-        type_str   = field_def.get_type()
-        field_name = field_def.get_name()
-        key_type = field_def.get_key_type()
-        val_type = field_def.get_val_type()
-
-        ret = ''
-        ret +='''%s    const json_value_t& %s = jval_["%s"];''' %(prefix, field_name, field_name)
-        if 'int8' == type_str or 'int16' == type_str or 'int32' == type_str:
-            ret += \
-        '''
-    %sif (false == %s.IsNumber())
-    %s{
-        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
-        %sthrow msg_exception_t(buff);
-    %s}
-    %sthis->%s = %s.GetInt();
-        ''' % (prefix, field_name, prefix, prefix, field_def.get_parent().get_name(), field_name, type_str, prefix, prefix, prefix, field_name, field_name)
-        elif 'string' == type_str:
-            ret += \
-        '''
-    %sif (false == %s.IsString())
-    %s{
-        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
-        %sthrow msg_exception_t(buff);
-    %s}
-    %sthis->%s = %s.GetString();
-        ''' % (prefix, field_name, prefix, prefix, field_def.get_parent().get_name(), field_name, type_str, prefix, prefix, prefix, field_name, field_name)
-        elif 'float' == type_str:
-            ret += \
-        '''
-    %sif (false == %s.IsDouble())
-    %s{
-        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
-        %sthrow msg_exception_t(buff);
-    %s}
-    %sthis->%s = %s.GetDouble();
-        ''' % (prefix, field_name, prefix, prefix, field_def.get_parent().get_name(), field_name, type_str, prefix, prefix, prefix, field_name, field_name)
-        elif 'array' == type_str:
-            ret += \
-        '''
-    %sif (false == %s.IsArray())
-    %s{
-        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
-        %sthrow msg_exception_t(buff);
-    %s}
-    %sfor (rapidjson::SizeType i = 0; i < %s.Size(); i++)
-    %s{
-        %sconst json_value_t& val = %s[i];
-        %sif (false == val.%s())
-        %s{
-            %ssnprintf(buff, sizeof(buff), "%s::%s field at[%%u] must %s", i);
-            %sthrow msg_exception_t(buff);
-        %s}
-        %s%s tmp_val;
-        %s%s;
-		%sthis->%s.push_back(tmp_val);
-    %s}
-        ''' % (prefix, field_name, \
-               prefix, \
-               prefix, field_def.get_parent().get_name(), field_name, type_str, \
-               prefix, \
-               prefix, \
-               prefix, field_name, \
-               prefix, \
-               prefix, field_name, \
-               prefix, convert_to_check_op(key_type), \
-               prefix, \
-               prefix, field_def.get_parent().get_name(), field_name, type_str, \
-               prefix, \
-               prefix, \
-               prefix, key_type, \
-               prefix, convert_to_fetch_op(key_type), \
-               prefix, field_name, \
-               prefix)
-        elif 'dictionary' == type_str:
-            ret += \
-        '''
-    %sif (false == %s.IsObject() || %s.MemberBegin() == %s.MemberEnd())
-    %s{
-        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
-        %sthrow msg_exception_t(buff);
-    %s}
-    %srapidjson::Document::ConstMemberIterator it = %s.MemberBegin();
-    %sfor (; it != %s.MemberEnd(); ++it)
-    %s{
-    %s    const  json_value_t& name = it->name;
-    %s    if (false == name.%s())
-    %s    {
-    %s        snprintf(buff, sizeof(buff), "%s::%s[Object] key must [string]");
-    %s        throw msg_exception_t(buff);
-    %s    }
-    %s    const  json_value_t& val = it->value;
-    %s    if (false == val.%s())
-    %s    {
-    %s        snprintf(buff, sizeof(buff), "%s::%s[Object] val must [%s]");
-    %s        throw msg_exception_t(buff);
-    %s    }
-    %s    %s key_val; %s;
-    %s    %s tmp_val; %s;
-    %s    this->%s[key_val] = tmp_val;
-    %s}
-        ''' % (prefix, field_name, field_name, field_name, \
-               prefix, \
-               prefix, field_def.get_parent().get_name(), field_name, type_str, \
-               prefix, \
-               prefix, \
-               prefix, field_name, \
-               prefix, field_name, \
-               prefix, \
-               prefix, \
-               prefix, convert_to_check_op(key_type), \
-               prefix, \
-               prefix, field_def.get_parent().get_name(), field_name, \
-               prefix, \
-               prefix, \
-               prefix, \
-               prefix, convert_to_check_op(val_type), \
-               prefix, \
-               prefix, field_def.get_parent().get_name(), field_name, val_type, \
-               prefix, \
-               prefix, \
-               prefix, key_type, convert_to_fetch_op(key_type, 'key_val', 'name'), \
-               prefix, val_type, convert_to_fetch_op(val_type), \
-               prefix, field_name, \
-               prefix)
-        else:
-            ret += \
-        '''
-    %sif (false == %s.IsObject())
-    %s{
-        %ssnprintf(buff, sizeof(buff), "%s::%s[%s] field needed");
-        %sthrow msg_exception_t(buff);
-    %s}
-    %s%s;
-        ''' % (prefix, field_name, \
-               prefix, \
-               prefix, field_def.get_parent().get_name(), field_name, type_str, \
-               prefix, \
-               prefix, \
-               prefix, convert_to_fetch_op(key_type, 'this->%s' %(field_name), field_name))
-        return ret
 
     def format_struct_declare_code(self, struct_def, prefix = ''):
         struct_name = struct_def.get_name()
@@ -289,23 +167,53 @@ private:
         ret = '' + prefix
         ret += 'struct %s {\n' %(struct_name)
         for sub_struct in all_sub_struct:
-            #ret = ret + sub_struct.format_declare_code(prefix + '    ') + '\n'
             ret = ret + self.format_struct_declare_code(sub_struct, prefix + '    ') + '\n'
 
         for field_name in all_fields:
-            #ret = ret + all_fields[field_name].format_declare_code(prefix + '    ') + '\n'
             ret = ret +  self.format_field_declare_code(all_fields[field_name], prefix + '    ') + '\n'
             
 
         ret = ret + prefix + '    int parse(const json_value_t& jval_) {\n'
-        ret = ret + prefix + '        char buff[128];\n'
-        for field_name in all_fields:    
-            #ret += all_fields[field_name].format_parse_code(prefix + '    ') + '\n'
-            ret += self.format_field_parse_code(all_fields[field_name], prefix + '    ') + '\n'
-            
-        ret += prefix + '        return 0;\n' + prefix + '    }'
+        ret += '''
+            json_instream_t in("%s");
+            in''' % (struct_name)
 
-        ret = ret + '\n' + prefix + '};'
+        for field_name in all_fields:
+            ret += '.decode("%s", jval_["%s"], %s)' % (field_name, field_name, field_name)
+
+        ret += ';\n'
+        ret += prefix + '        return 0;\n' + prefix + '    }\n'
+
+        ret += '''
+    string encode_json() const
+    {
+        rapidjson::Document::AllocatorType allocator;
+        rapidjson::StringBuffer            str_buff;
+        json_value_t                       ibj_json(rapidjson::kObjectType);
+        json_value_t                       ret_json(rapidjson::kObjectType);
+
+        this->encode_json_val(ibj_json, allocator);
+        ret_json.AddMember("%s", ibj_json, allocator);
+
+        rapidjson::Writer<rapidjson::StringBuffer> writer(str_buff, &allocator);
+        ret_json.Accept(writer);
+        string output(str_buff.GetString(), str_buff.Size());
+        return output;
+    }
+        \n''' % (struct_name)
+
+        ret += prefix + '    int encode_json_val(json_value_t& dest, rapidjson::Document::AllocatorType& allocator) const{\n'
+        ret += '''
+        json_outstream_t out(allocator);
+		out'''
+
+        for field_name in all_fields:    
+            ret += '.encode("%s", dest, %s)' % (field_name, field_name)
+        ret += ';\n'
+        ret += prefix + '        return 0;\n' + prefix + '    }\n'
+        
+
+        ret = ret + '\n' + prefix + '};\n'
         return ret
 
     def gen_declare_code(self, f):
