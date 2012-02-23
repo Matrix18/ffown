@@ -1,16 +1,12 @@
 
-struct student_t
+struct get_friends_req_t
 {
-    struct book_t
-    {
-        int16       pages;
-        string      contents;
-    };
-    int8                age;
-    float               grade;
-    string              name;
-    array<string>       friends;
-    book_t              mybook;
-    dictionary<string,int8> note;
-    array<book_t>       vt;
+    uint32 uid;
 };
+
+
+struct all_friends_ret_t
+{
+    array<uint32> friends;
+};
+
