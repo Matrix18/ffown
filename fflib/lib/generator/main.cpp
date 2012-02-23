@@ -13,18 +13,31 @@ using namespace std;
 
 #include "msg_def.h"
 
-class msg_handler_t
+class socket_t
 {
 public:
-    typedef int socket_ptr_t;
-public:
-    void handle(const student_t& s_,  socket_ptr_t sock_)
+    void async_write(msg_ptr_t msg_)
     {
-        cout  << "msg_handler_t::handle:\n";
-        cout  << "age:" << int(s_.age) << " grade:" << s_.grade << " friends:"<< s_.friends.size() << " name:"
-              << s_.name << " mybook:" << s_.mybook.pages << " " << s_.mybook.contents << " note:" << s_.note.size() <<"\n";
-              
-        cout  << s_.encode_json() <<"\n";
+        //! TODO do io write
+        cout <<"wile send:" << msg_->encode_json() <<"\n";
+    }
+};
+
+typedef socket_t* socket_ptr_t;
+
+class logic_service_t
+{
+public:
+    void handle(shared_ptr_t<get_friends_req_t> req_,  socket_ptr_t sock_)
+    {
+        cout << "req uid:" << req_->uid <<"\n";
+        //! DO some logic code
+        shared_ptr_t<all_friends_ret_t> msg(new all_friends_ret_t());
+
+        for (int i = 0; i < 10; ++i)
+            msg->friends.push_back(i);
+
+        sock_->async_write(msg);
     }
 };
 
@@ -33,11 +46,12 @@ int main(int argc, char* argv[])
 {
     try
     {
-        string tmp = "{\"student_t\":{\"vt\":[{\"pages\":123,\"contents\":\"oh nice\"}],\"age\":12,\"grade\":1.2,\"name\":\"bible\",\"friends\":[\"a\",\"b\"],"
-                     "\"mybook\":{\"pages\":123,\"contents\":\"oh nice\"},\"note\":{\"a\":123}}}";
-        msg_handler_t xxx;
-        msg_dispather_t<msg_handler_t, msg_handler_t::socket_ptr_t> p(xxx);
-        p.dispath(tmp, 0);
+        string tmp = "{\"get_friends_req_t\":{\"uid\":12345}}";
+        logic_service_t logic_service;
+        msg_dispather_t<logic_service_t, socket_ptr_t> msg_dispather(logic_service);
+        //! 这里实际上应该被网络层调用
+        socket_ptr_t sock = new socket_t();
+        msg_dispather.dispath(tmp, sock);
     }
     catch(exception& e)
     {
