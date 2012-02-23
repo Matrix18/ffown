@@ -51,7 +51,8 @@ using namespace std;
 #include "rapidjson/filestream.h"   // wrapper of C stream for prettywriter as output
 #include "json_instream.h"
 #include "json_outstream.h"
-#include "rapidjson/stringbuffer.h" 
+#include "rapidjson/stringbuffer.h"
+#include "smart_ptr/shared_ptr.h"
 //! using namespace rapidjson;
 
 typedef runtime_error        msg_exception_t;
@@ -66,6 +67,13 @@ typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
+
+struct msg_t
+{
+    virtual ~msg_t(){}
+    virtual string encode_json() const = 0;
+};
+typedef shared_ptr_t<msg_t> msg_ptr_t;
 
 '''
 
@@ -129,13 +137,13 @@ public:
             tmp_s += '''
     int %s_dispacher(const json_value_t& jval_, socket_ptr_t sock_)
     {
-        %s ret_val;
-        ret_val.parse(jval_);
+        shared_ptr_t<%s> ret_val(new %s());
+        ret_val->parse(jval_);
 
         m_msg_handler.handle(ret_val, sock_);
         return 0;
     }
-            ''' % (struct, struct)
+            ''' % (struct, struct, struct)
 
         tmp_s += '''
 private:
@@ -165,7 +173,7 @@ private:
         all_sub_struct = struct_def.get_all_struct()
         all_fields = struct_def.get_all_field()
         ret = '' + prefix
-        ret += 'struct %s {\n' %(struct_name)
+        ret += 'struct %s : public msg_t {\n' %(struct_name)
         for sub_struct in all_sub_struct:
             ret = ret + self.format_struct_declare_code(sub_struct, prefix + '    ') + '\n'
 
