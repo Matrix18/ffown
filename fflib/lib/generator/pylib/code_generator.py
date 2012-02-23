@@ -96,6 +96,8 @@ public:
     {
         '''
         for struct in self.struct_def_mgr.get_all_struct():
+            if -1 != struct.find('ret_t'):
+                continue
             tmp_s += '''
         m_reg_func["%s"] = &msg_dispather_t<T, R>::%s_dispacher;
             ''' % (struct, struct)
@@ -134,6 +136,8 @@ public:
         '''
 
         for struct in self.struct_def_mgr.get_all_struct():
+            if -1 != struct.find('ret_t'):
+                continue
             tmp_s += '''
     int %s_dispacher(const json_value_t& jval_, socket_ptr_t sock_)
     {
