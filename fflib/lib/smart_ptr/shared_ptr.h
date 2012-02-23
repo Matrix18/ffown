@@ -8,12 +8,23 @@ template<typename T>
 class shared_ptr_t
 {
 public:
-    typedef T               object_t;
-    typedef shared_ptr_t<T> self_type_t;
+    typedef T                         object_t;
+    typedef shared_ptr_t<T>           self_type_t;
 public:
     shared_ptr_t();
     shared_ptr_t(object_t* p);
     shared_ptr_t(self_type_t& p);
+    template<typename R>
+    shared_ptr_t(shared_ptr_t<R>& p):
+        m_dest_ptr(p.get()),
+        m_ref_count(p.ger_ref_count())
+    {
+        if (NULL != m_dest_ptr)
+        {
+            m_ref_count->inc();
+        }
+    }
+
     ~shared_ptr_t();
 
     ref_count_t* ger_ref_count()  const  { return m_ref_count; }
@@ -30,9 +41,10 @@ public:
     {
         return NULL != m_dest_ptr;
     }
+
 private:
-    object_t*       m_dest_ptr;
-    ref_count_t*    m_ref_count;
+    object_t*         m_dest_ptr;
+    ref_count_t*      m_ref_count;
 };
 
 template<typename T>
