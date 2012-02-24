@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         string tmp = "{\"get_friends_req_t\":{\"uid\":12345}}";
         logic_service_t logic_service;
         msg_dispather_t<logic_service_t, socket_ptr_t> msg_dispather(logic_service);
-        //! 这里实际上应该被网络层调用
+        //! 脮芒脌茂脢碌录脢脡脧脫娄赂脙卤禄脥酶脗莽虏茫碌梅脫脙
         socket_ptr_t sock = new socket_t();
         msg_dispather.dispath(tmp, sock);
     }
