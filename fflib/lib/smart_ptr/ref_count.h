@@ -1,7 +1,11 @@
 #ifndef _REF_COUNT_H_
 #define _REF_COUNT_H_
 
-#define ATOMIC_ADD(src_ptr, v) 						(void)__sync_add_and_fetch(src_ptr, v)
+//! windows.h
+//! InterlockedIncrement
+//! InterlockedDecrement
+
+#define ATOMIC_ADD(src_ptr, v)            (void)__sync_add_and_fetch(src_ptr, v)
 #define ATOMIC_SUB_AND_FETCH(src_ptr, v)  __sync_sub_and_fetch(src_ptr, v)
 
 class ref_count_t
