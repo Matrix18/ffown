@@ -241,5 +241,6 @@ private:
         f = open(self.dest_filename, "w")
         self.gen_declare_code(f)
         self.gen_class_def_code(f)
+        f.write('\n')
 
     
