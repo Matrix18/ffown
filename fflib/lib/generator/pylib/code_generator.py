@@ -209,7 +209,7 @@ private:
 
         rapidjson::Writer<rapidjson::StringBuffer> writer(str_buff, &allocator);
         ret_json.Accept(writer);
-        string output(str_buff.GetString(), str_buff.Size());
+        string output(str_buff.GetString(), str_buff.GetSize());
         return output;
     }
         \n''' % (struct_name)
