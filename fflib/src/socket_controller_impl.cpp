@@ -27,7 +27,7 @@ int socket_controller_impl_t::handle_error(socket_i* sp_)
 
 int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
 {
-    if ('H' == buff[0])
+    if ('G' == buff[0])
     {
         const char* data = "HTTP/1.0 200 OK\r\nConnection: Close\r\nContent-type: text/html\r\nContent-length: 10\r\n\r\nHelloWorld";
         sp_->async_send(data);
