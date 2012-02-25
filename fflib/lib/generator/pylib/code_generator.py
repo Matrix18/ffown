@@ -38,6 +38,9 @@ def convert_to_fetch_op(t, var_name = 'tmp_val', j_var = 'val'):
         return '%s.parse(%s)' % (var_name, j_var)
 
 inc_str = '''
+#ifndef _IDL_DEF_I_
+#define _IDL_DEF_I_
+
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -241,6 +244,6 @@ private:
         f = open(self.dest_filename, "w")
         self.gen_declare_code(f)
         self.gen_class_def_code(f)
-        f.write('\n')
+        f.write('\n#endif\n')
 
     
