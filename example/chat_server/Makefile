@@ -29,9 +29,9 @@ ARCH=
 BIN=chat_server
 
 #源文件目录
-SrcDir= . src 
+SrcDir= . ../../fflib/src src  ../../fflib/lib/generator
 #头文件目录
-IncDir= ./include  ./../fflib/include/
+IncDir= ./include  ../../fflib/include/ ../../fflib/lib/ ../../fflib/lib/generator
 #连接库目录
 LibDir= 
 SRCS=$(foreach dir,$(SrcDir),$(wildcard $(dir)/*.cpp))
