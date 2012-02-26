@@ -26,11 +26,12 @@ int main(int argc, char* argv[])
     thread_t thread;
     thread.create_thread(task_queue_pool_t::gen_task(&tg), 2);
 
+    chat_service_t chat_service;
+
     epoll_impl_t epoll(&tg);
-    acceptor_impl_t acceptor(&epoll);
+    acceptor_impl_t acceptor(&epoll, &chat_service);
     ret = acceptor.open(string(buff));
 
-    chat_service_t chat_service;
     msg_dispather_t<chat_service_t, socket_ptr_t> msg_dispather(chat_service);
     string tmp;
     socket_ptr_t sock = NULL;
