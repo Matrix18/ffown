@@ -1,4 +1,6 @@
 #include "chat_service.h"
+#include <iostream>
+using namespace std;
 
 int chat_service_t::handle_broken(socket_ptr_t sock_)
 {
@@ -7,6 +9,7 @@ int chat_service_t::handle_broken(socket_ptr_t sock_)
 
 int chat_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 {
+    cout <<"chat_service_t::handle_msg begin..." << msg_.get_body() <<"\n";
     return 0;
 }
 

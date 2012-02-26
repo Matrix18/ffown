@@ -9,7 +9,7 @@
 using namespace std;
 
 socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
-    m_msg_handler(false),
+    m_msg_handler(msg_handler_),
     m_head_end_flag(false),
     m_body_size(0)
 {
@@ -81,12 +81,27 @@ int socket_controller_impl_t::parse_msg_head()
 {
     vector<string> vt;
     strtool::split(m_head, vt, " ");
-    if (vt.size() != 3)
-    {
-        return -1;
-    }
 
-    m_body_size = atoi(vt[2].c_str());;
+    size_t vt_size = vt.size();
+    switch (vt_size)
+    {
+        case 1:
+        {
+            m_body_size = atoi(vt[0].c_str());;
+        }
+        break;
+        case 2:
+        case 3:
+        {
+            m_body_size = atoi(vt[0].c_str());;
+        }
+        break;
+        default:
+        {
+            return -1;
+        }
+        break;
+    }
     return 0;
 }
 
