@@ -9,7 +9,7 @@
 using namespace std;
 
 socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
-    m_msg_handler(false)
+    m_msg_handler(false),
     m_head_end_flag(false),
     m_body_size(0)
 {

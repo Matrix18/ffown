@@ -13,11 +13,10 @@ public:
     typedef socket_i* socket_ptr_t;
 
 public:
-    msg_handler_t();
-    ~msg_handler_t();
+    virtual ~msg_handler_i() {} ;
 
-    int handle_broken(socket_ptr_t sock_);
-    int handle_msg(const message_t& sock_);
+    virtual int handle_broken(socket_ptr_t sock_)  = 0;
+    virtual int handle_msg(const message_t& msg_, socket_ptr_t sock_) = 0;
 
 };
 
