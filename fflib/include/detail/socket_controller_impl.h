@@ -19,6 +19,7 @@ public:
     virtual int handle_read(socket_i*, char* buff, size_t len);
     virtual int handle_write_completed(socket_i*);
 
+    virtual int check_pre_send(socket_i*, string& buff_);
 private:
     int parse_msg_head();
     int append_msg_body(socket_i* sp_, char* buff_begin_, size_t& left_);

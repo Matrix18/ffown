@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
 using namespace std;
 
 socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
@@ -123,4 +124,12 @@ int socket_controller_impl_t::append_msg_body(socket_i* sp_, char* buff_begin_, 
         m_message.clear();
     }
     return tmp;
+}
+
+int socket_controller_impl_t::check_pre_send(socket_i*, string& buff_)
+{
+    ostringstream outstr;
+    outstr << buff_.size() <<" \r\n" << buff_;
+    buff_ = outstr.str();
+    return 0;
 }

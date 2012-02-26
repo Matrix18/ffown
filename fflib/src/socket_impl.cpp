@@ -120,9 +120,10 @@ int socket_impl_t::handle_epoll_write()
     return 0;
 }
 
-void socket_impl_t::async_send(const string& buff_)
+void socket_impl_t::async_send(const string& src_buff_)
 {
-    if (false == is_open() || m_sc->check_pre_send(this, buff_) || buff_.empty())
+    string buff_ = src_buff_;
+    if (false == is_open() || m_sc->check_pre_send(this, buff_))
     {
         return;
     }
