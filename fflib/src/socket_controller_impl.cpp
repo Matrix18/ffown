@@ -8,7 +8,8 @@
 #include <iostream>
 using namespace std;
 
-socket_controller_impl_t::socket_controller_impl_t():
+socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
+    m_msg_handler(false)
     m_head_end_flag(false),
     m_body_size(0)
 {
@@ -21,7 +22,8 @@ socket_controller_impl_t::~socket_controller_impl_t()
 int socket_controller_impl_t::handle_error(socket_i* sp_)
 {
     //! cout <<"socket_controller_impl_t::handle_error \n";
-    delete sp_;
+    //! TODO delete sp_;
+    m_msg_handler->handle_broken(sp_);
     return 0;
 }
 
@@ -91,14 +93,15 @@ int socket_controller_impl_t::parse_msg_head()
 int socket_controller_impl_t::append_msg_body(socket_i* sp_, char* buff_begin_, size_t& left_)
 {
     size_t tmp        = m_body_size > left_ ? left_: m_body_size;
-    left_               -= tmp;
+    left_             -= tmp;
     m_body_size  -= tmp;
     m_message.append_msg(buff_begin_, tmp);
 
     if (m_body_size == 0)
     {
         //! msg dispatcher
-        sp_->async_send(m_message.get_body());
+        //! TODO sp_->async_send(m_message.get_body());
+        m_msg_handler->handle_msg(m_message, sp_);
 
         m_head_end_flag = false;
         m_head.clear();
