@@ -5,11 +5,6 @@ struct login_req_t
     uint32 uid;
 };
 
-struct logout_req_t
-{
-    uint32 uid;
-};
-
 struct chat_to_some_req_t
 {
     array<uint32> dest_uids;

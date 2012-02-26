@@ -66,7 +66,6 @@ $(BIN):$(OBJS)
 #%.arm:%.cpp
 # @echo -e "[$(ARCH)] \t\tCompileing $@..."
 # @$(CC) $(CFLAGS) -fPIC -c $< -o $@
-
 .PHONY: clean
 clean:
 	@echo -e "[$(ARCH)] \tCleaning files..."
