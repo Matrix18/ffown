@@ -5,7 +5,7 @@ int chat_service_t::handle_broken(socket_ptr_t sock_)
     return 0;
 }
 
-int chat_service_t::handle_msg(const message_t& sock_)
+int chat_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 {
     return 0;
 }

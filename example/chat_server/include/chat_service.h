@@ -15,7 +15,7 @@ public:
     ~chat_service_t();
 
     int handle_broken(socket_ptr_t sock_);
-    int handle_msg(const message_t& sock_);
+    int handle_msg(const message_t& msg_, socket_ptr_t sock_);
 
     int handle(shared_ptr_t<login_req_t> req_, socket_ptr_t sock_);
     int handle(shared_ptr_t<logout_req_t> req_, socket_ptr_t sock_);
