@@ -65,7 +65,7 @@ class msg_handler_t:
     def handle_broken(self, client_):
         print "msg_handler_t:handle_broken"
 
-    def handle_msg(self, client_, cmd_, content):
+    def handle_msg(self, client_, cmd_, content_):
         try:
             result = eval(content_)
 
