@@ -74,7 +74,7 @@ int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
 int socket_controller_impl_t::handle_write_completed(socket_i* sp_)
 {
     //! cout <<"socket_controller_impl_t::handle_write_completed \n";
-    sp_->close();
+    //! sp_->close();
     return 0;
 }
 
