@@ -9,7 +9,7 @@ using namespace std;
 static int log_impl(const char* mod, const char* fmt, ...)
 {
     char buff[256];
-    int len = snprintf(buff, sizeof(buff), "%s", mod);
+    int len = snprintf(buff, sizeof(buff), "%s ", mod);
 
     va_list vl;
     va_start(vl, fmt);
@@ -80,6 +80,7 @@ int chat_service_t::handle(shared_ptr_t<login_req_t> req_, socket_ptr_t sock_)
     pair<map<uid_t, socket_ptr_t>::iterator, bool> ret =  m_clients.insert(make_pair(req_->uid, sock_));
     if (false == ret.second)
     {
+        logtrace((CHAT_SERVICE, "chat_service_t::handle login_req_t insert failed"));
         sock_->close();
         return -1;
     }
@@ -106,16 +107,24 @@ int chat_service_t::handle(shared_ptr_t<login_req_t> req_, socket_ptr_t sock_)
 
 int chat_service_t::handle(shared_ptr_t<chat_to_some_req_t> req_, socket_ptr_t sock_)
 {
+    logtrace((CHAT_SERVICE, "chat_service_t::handle chat_to_some"));
+    uid_t* user = sock_->get_data<uid_t>();
+    if (NULL == user) return -1;
+
     lock_guard_t lock(m_mutex);
 
     chat_content_ret_t content_ret;
-    content_ret.from_uid = *sock_->get_data<uid_t>();
+    content_ret.from_uid = *user;
     content_ret.content  = req_->content;
 
     string json_msg =  content_ret.encode_json();
     for (size_t i = 0; i < req_->dest_uids.size(); ++i)
     {
-        m_clients[req_->dest_uids[i]]->async_send(json_msg);
+        map<uid_t, socket_ptr_t>::const_iterator it = m_clients.find(req_->dest_uids[i]);
+        if (it != m_clients.end())
+        {
+            it->second->async_send(json_msg);
+        }
     }
     return 0;
 }
