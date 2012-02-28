@@ -75,14 +75,14 @@ class msg_handler_t:
             }
             for key in result:
                 if register_dict.get(key) != None:
-                    register_dict[key](client_, result)
+                    register_dict[key](client_, result[key])
 
         except:
             print "handle_msgXXX....cmd:", cmd_, "not supported!", "body:", content_
             return
         
     def handle_login(self, client_, result_):
-        client_.uid = result_["uid"]
+        client_.uid = result_["uid"], result_['uid']
         print "handle_login...uid:", client_.uid
         
         pass
