@@ -3,6 +3,8 @@ import struct
 import time
 import thread 
 import threading
+import sys
+import traceback
 
 class client_t:
     uid = 0
@@ -35,9 +37,10 @@ class client_t:
         try:
             #head = struct.pack('IHH', len(content_), cmd_, 0)
             dest = str(len(content_)) + '\r\n' + content_
-            self.socket.sendall(dest)
+            self.socket.sendall(dest.encode())
             #self.socket.sendall((head.decode() + content_).encode())
         except:
+            print("send msg error", sys.exc_info())
             self.handle_broken()
         self.mutex.release()
 
@@ -45,8 +48,10 @@ class client_t:
         try:
             buff = self.socket.recv(1024*8)
             dest = buff.split('\r\n')
-            self.handler.handle_msg(self, dest[0], dest[1])
+            if len(dest) == 2:
+                self.handler.handle_msg(self, dest[0], dest[1])
         except:
+            print("read_some error", sys.exc_info())
             self.handle_broken()
 
 
@@ -63,9 +68,10 @@ class client_t:
 
 class msg_handler_t:
     def handle_broken(self, client_):
-        print "msg_handler_t:handle_broken"
+        print "msg_handler_t:handle_broken xXX"
 
     def handle_msg(self, client_, cmd_, content_):
+        print(content_)
         try:
             result = eval(content_)
 
@@ -82,8 +88,7 @@ class msg_handler_t:
             return
         
     def handle_login(self, client_, result_):
-        client_.uid = result_["uid"], result_['uid']
-        print "handle_login...uid:", client_.uid
+        print "handle_login...uid:", result_['uid']
         
         pass
     def handle_echo(self, client_, result_):
@@ -110,8 +115,11 @@ def test():
 def get_cmd(c):
     cmd = 1
     while cmd:
-        cmd = input("input cmd:")
-        c.send_msg(cmd, '{"login_req_t":{"uid":123}}')
+        cmd = input("input cmd 1 chat to other:")
+        if 1 == cmd:
+            c.send_msg(cmd, '{"chat_to_some_req_t":{"dest_uids":[321],"content":"oh nice"}}')
+        else:
+            print(cmd, "not support")
 
 def exe(cmd):
     shell_cmd = cmd + ' > /tmp/tmp_result'
