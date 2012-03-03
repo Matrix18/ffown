@@ -16,4 +16,6 @@ public:
 };
 
 typedef plugin_i* plugin_ptr_t;
+typedef int (*handle_channel_func_t)(channel_ptr_t);
+
 #endif
