@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
     task_queue_pool_t tg;
     thread_t thread;
-    thread.create_thread(task_queue_pool_t::gen_task(&tg), 2);
+    thread.create_thread(task_queue_pool_t::gen_task(&tg), 1);
 
     msg_broker_service_t broker_service;
 

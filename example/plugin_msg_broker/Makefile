@@ -18,7 +18,7 @@ CP=/bin/cp
 RM=-/bin/rm -rf
 LN=/bin/ln -s 
 CFLAGS=-g  -Wall
-LDFLAGS= -lpthread
+LDFLAGS= -lpthread -ldl
 #链接库名
 LIB_NAME=
 #链接库版本
@@ -29,7 +29,7 @@ ARCH=
 BIN=msg_broker_server
 
 #源文件目录
-SrcDir= . ../../fflib/src src  ../../fflib/lib/generator
+SrcDir= . ../../fflib/src src src/plugin_impl  ../../fflib/lib/generator
 #头文件目录
 IncDir= ./include  ../../fflib/include/ ../../fflib/lib/ ../../fflib/lib/generator
 #连接库目录

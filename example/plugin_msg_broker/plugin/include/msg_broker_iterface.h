@@ -1,13 +1,18 @@
-#ifndef _CHANNEL_H_
-#define _CHANNEL_H_
+#ifndef _MSG_BROKER_INTERFACE_H_
+#define _MSG_BROKER_INTERFACE_H_
 
-#include "socket_i.h"
+#include <string>
+using namespace std;
+
+class message_t
+{
+public:
+    const string& get_body() const;
+};
 
 class channel_t
 {
 public:
-    channel_t(socket_ptr_t sock_);
-    ~channel_t();
     void  set_data(void* p);
     void* get_data() const;
 
@@ -16,10 +21,6 @@ public:
 
     void async_send(const string& buff_);
     void close();
-
-private:
-    socket_ptr_t    m_socket;
 };
-
 typedef channel_t* channel_ptr_t;
 #endif
