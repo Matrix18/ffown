@@ -32,11 +32,7 @@ int main(int argc, char* argv[])
     acceptor_impl_t acceptor(&epoll, &chat_service);
     ret = acceptor.open(string(buff));
 
-    msg_dispather_t<chat_service_t, socket_ptr_t> msg_dispather(chat_service);
-    string tmp;
-    socket_ptr_t sock = NULL;
-
-     if (ret)
+    if (ret)
     {
         cout <<"acceptor open failed:" << buff <<"\n";
         return 1;
@@ -48,7 +44,6 @@ int main(int argc, char* argv[])
 
     epoll.event_loop();
     thread.join();
-    msg_dispather.dispath(tmp, sock);
 
     return 0;
 }
