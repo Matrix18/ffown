@@ -25,4 +25,5 @@ private:
     void*   m_data;
 };
 
+typedef socket_i*  socket_ptr_t;
 #endif
