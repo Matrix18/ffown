@@ -4,25 +4,10 @@
 #include <iostream>
 using namespace std;
 
+#include "log_module.h"
 #include "msg_broker_service.h"
 #include "channel.h"
 #include "plugin_factory.h"
-
-static int log_impl(const char* mod, const char* fmt, ...)
-{
-    char buff[256];
-    int len = snprintf(buff, sizeof(buff), "%s ", mod);
-
-    va_list vl;
-    va_start(vl, fmt);
-    vsnprintf(buff + len, sizeof(buff) - len - 1, fmt, vl);
-    va_end(vl);
-    printf(buff);
-    return printf("\n");
-}
-
-#define logtrace(content) log_impl content
-#define BROKER_SERVICE "CHAT_SERVICE"
 
 msg_broker_service_t::msg_broker_service_t()
 {
