@@ -14,7 +14,7 @@ public:
 
     const string& get_cmd() const               { return m_cmd; }
     const string& get_key() const                { return m_key; }
-    const string& get_body() const              { return m_body; }
+    const string& get_body() const;
     size_t size() const                                    { return m_body.size(); }
     uint16_t get_flag() const                        { return m_flag; }
 
