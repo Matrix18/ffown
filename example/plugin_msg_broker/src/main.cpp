@@ -28,7 +28,10 @@ int main(int argc, char* argv[])
 
     msg_broker_service_t broker_service;
 
-    broker_service.start(argv[3]);
+    if (broker_service.start(argv[3]))
+    {
+        return -1;
+    }
 
     epoll_impl_t epoll(&tg);
     acceptor_impl_t acceptor(&epoll, &broker_service);

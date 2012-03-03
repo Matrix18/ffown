@@ -19,6 +19,7 @@ public:
 
 private:
     socket_ptr_t    m_socket;
+    void*               m_data;
 };
 
 typedef channel_t* channel_ptr_t;
