@@ -16,6 +16,9 @@ public:
 };
 
 typedef plugin_i* plugin_ptr_t;
-typedef int (*handle_channel_func_t)(channel_ptr_t);
+typedef int (*handle_channel_msg_func_t)(const message_t& msg_, channel_ptr_t);
+typedef int (*handle_channel_broken_func_t)(channel_ptr_t);
 
+#define HANDLE_CHANNEL_MSG       "handle_channel_msg"
+#define HANDLE_CHANNEL_BROKEN "handle_channel_broken"
 #endif
