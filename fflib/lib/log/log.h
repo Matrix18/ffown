@@ -1,3 +1,6 @@
+#ifndef _LOG_H_
+#define _LOG_H_
+
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -21,4 +24,5 @@ static int log_impl(const char* mod, const char* fmt, ...)
 #define logerror(content) log_impl content
 #define logfatal(content) log_impl content
 
+#endif
 
