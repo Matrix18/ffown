@@ -1,4 +1,6 @@
-
+#include<unistd.h>
+#include<stdlib.h>
+#include<signal.h>
 #include<stdio.h>
 #include<pthread.h>
 #include <iostream>
@@ -10,8 +12,14 @@ using namespace std;
 #include "smart_ptr/shared_ptr.h"
 #include "msg_broker_service.h"
 
+void handler(int sig) {
+    printf("signal:%d\n", sig);
+    exit(0);
+}
+
 int main(int argc, char* argv[])
 {
+    signal(SIGINT,handler);
     if (argc != 4)
     {
         cout <<argv[0] <<" useage listen:host port plugin_path\n";

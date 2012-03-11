@@ -7,7 +7,7 @@ plugin_python_t::plugin_python_t(const string& name_):
     m_py_mod(NULL)
 {
     m_py_name = "echo";
-    Py_Initialize();
+    Py_InitializeEx(0);
     initpyext(this);
     PyRun_SimpleString("import channel;import sys;sys.path.append('./plugin/plugin_echo_py/')");
 }
