@@ -1,17 +1,3 @@
-#=======================================================================================
-#   Filename: Makefile
-#   Description: Makefile Templete
-#   Usage:  make            (默认使用i386下的g++编译                   ) 
-#        
-#            make clean      (remove objects, executable, prerequisits  ) 
-#
-#   Version: 1.0
-#   Created: 
-#   Revision: --- 
-#   Author:  zhaoxinfeng
-#   Company: 
-#   Email:   gogozhaoxinfeng@gmail.com
-#=======================================================================================
 #交叉编译器路径
 CROSS=
 CP=/bin/cp
@@ -51,21 +37,9 @@ $(BIN):$(OBJS)
 	@echo -e " OK!\tComplie $@ "
 # @$(LN) $(shell pwd)/$(LIB_NAME).$(LIB_VER) /lib/$(LIB_NAME)
 
-
-
-#gcc 则要加 -lc选项(显示的链接C库)
-#Wl 把参数传给链接器
-#all:$(OBJS)
-# @echo -e "[$(ARCH)] OK!\tComplie $@ "
-# @$(LN) $(shell pwd)/$(LIB_NAME).$(LIB_VER) /lib/$(LIB_NAME)
-
-#-fPIC 产生于位置无关的代码关能加载到任何地址
 %.o:%.cpp
 	@echo -e "[$(ARCH)] \t\tCompileing $@..."
 	@$(CC) $(CFLAGS)  -c $< -o $@
-#%.arm:%.cpp
-# @echo -e "[$(ARCH)] \t\tCompileing $@..."
-# @$(CC) $(CFLAGS) -fPIC -c $< -o $@
 .PHONY: clean
 clean:
 	@echo -e "[$(ARCH)] \tCleaning files..."

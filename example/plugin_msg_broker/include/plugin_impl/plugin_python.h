@@ -1,11 +1,11 @@
 #ifndef _PLUGIN_PYTHON_H_
 #define _PLUGIN_PYTHON_H_
+#include <Python.h>
 
 #include <string>
 #include <map>
 using namespace std;
 
-#include <Python.h>
 
 #include "plugin_i.h"
 

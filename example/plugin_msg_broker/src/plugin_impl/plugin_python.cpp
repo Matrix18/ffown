@@ -3,6 +3,7 @@
 #include "plugin_impl/pyext.h"
 #include "log_module.h"
 
+
 plugin_python_t::plugin_python_t(const string& name_):
     m_py_mod(NULL)
 {
@@ -19,7 +20,7 @@ plugin_python_t::plugin_python_t(const string& name_):
     }
     pos = m_py_name.find_first_of('.');
     m_py_name = m_py_name.substr(0, pos);
-    printf("%s, %s\n", pythonpath.c_str(), m_py_name.c_str());
+
     Py_InitializeEx(0);
     Py_SetPythonHome((char*)pythonpath.c_str());
     initpyext(this);
