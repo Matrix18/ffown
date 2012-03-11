@@ -6,8 +6,22 @@
 plugin_python_t::plugin_python_t(const string& name_):
     m_py_mod(NULL)
 {
-    m_py_name = "echo";
+    string pythonpath = "./";
+    int pos = name_.find_last_of('/');
+    if (-1 == pos)
+    {
+        m_py_name = name_;
+    }
+    else
+    {
+        m_py_name = name_.substr(pos+1);
+        pythonpath = name_.substr(0, pos+1);
+    }
+    pos = m_py_name.find_first_of('.');
+    m_py_name = m_py_name.substr(0, pos);
+    printf("%s, %s\n", pythonpath.c_str(), m_py_name.c_str());
     Py_InitializeEx(0);
+    Py_SetPythonHome((char*)pythonpath.c_str());
     initpyext(this);
     PyRun_SimpleString("import channel;import sys;sys.path.append('./plugin/plugin_echo_py/')");
 }
