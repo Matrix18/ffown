@@ -37,7 +37,8 @@ plugin_lua_t::plugin_lua_t(const string& name_):
     lua_checkstack(m_ls, 20);
 
     lua_pushcfunction(m_ls, channel_send_msg);
-    lua_setglobal(m_ls, "channel_send_msg");
+    lua_setglobal(m_ls, "_tmp_func_");
+    luaL_dostring(m_ls, "channel = {} channel.send = _tmp_func_ _tmp_func_ = nil");
 
     string lua_str = "package.path = package.path .. \"" + luapath + "?.lua\"";
     luaL_openlibs(m_ls);
