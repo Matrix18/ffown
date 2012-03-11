@@ -1,5 +1,6 @@
 
 #include "plugin_impl/plugin_python.h"
+#include "plugin_impl/pyext.h"
 #include "log_module.h"
 
 plugin_python_t::plugin_python_t(const string& name_):
@@ -7,7 +8,8 @@ plugin_python_t::plugin_python_t(const string& name_):
 {
     m_py_name = "echo";
     Py_Initialize();
-    PyRun_SimpleString("import sys;sys.path.append('./plugin/plugin_echo_py/')");
+    initpyext(this);
+    PyRun_SimpleString("import channel;import sys;sys.path.append('./plugin/plugin_echo_py/')");
 }
 
 plugin_python_t::~plugin_python_t()
@@ -119,4 +121,14 @@ int plugin_python_t::call_py_handle_broken(long val)
         return -1;
     }
     return 0;
+}
+
+channel_ptr_t plugin_python_t::get_channel(long p)
+{
+    map<long, channel_ptr_t>::iterator it = m_channel_mgr.find(p);
+    if (it != m_channel_mgr.end())
+    {
+        return it->second;
+    }
+    return NULL;
 }

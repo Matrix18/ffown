@@ -20,6 +20,7 @@ public:
     int handle_broken(channel_ptr_t channel_);
     int handle_msg(const message_t& msg_, channel_ptr_t channel_);
 
+    channel_ptr_t get_channel(long p);
 private:
     int load_py_mod();
     int call_py_handle_msg(long val, const char* msg);
