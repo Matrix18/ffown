@@ -18,7 +18,7 @@ CP=/bin/cp
 RM=-/bin/rm -rf
 LN=/bin/ln -s 
 CFLAGS=-g  -Wall
-LDFLAGS= -export-dynamic -lpthread -ldl 
+LDFLAGS= -export-dynamic -lpthread -ldl  -lpython2.6
 #链接库名
 LIB_NAME=
 #链接库版本
@@ -31,7 +31,7 @@ BIN=msg_broker_server
 #源文件目录
 SrcDir= . ../../fflib/src src src/plugin_impl  ../../fflib/lib/generator
 #头文件目录
-IncDir= ./include  ../../fflib/include/ ../../fflib/lib/ ../../fflib/lib/generator
+IncDir= ./include  ../../fflib/include/ ../../fflib/lib/ ../../fflib/lib/generator /usr/include/python2.6/
 #连接库目录
 LibDir= 
 SRCS=$(foreach dir,$(SrcDir),$(wildcard $(dir)/*.cpp))
