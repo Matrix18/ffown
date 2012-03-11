@@ -4,6 +4,7 @@
 print("lua load end ok...")
 
 function handle_msg(channel_, msg_)
+    channel_send_msg(channel_, msg_)
     print(channel_, msg_)
 end
 

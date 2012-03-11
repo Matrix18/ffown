@@ -1,9 +1,24 @@
 #include "plugin_impl/plugin_lua.h"
 #include "log_module.h"
 
+static plugin_lua_t* g_plugin_lua_obj = NULL;
+static int channel_send_msg(lua_State* ls_)
+{
+    long ptr = (long)luaL_checknumber(ls_, 1);
+    size_t len = 0;
+    const char* msg = luaL_checklstring(ls_, 2, &len);
+    channel_ptr_t c = g_plugin_lua_obj->get_channel(ptr);
+    if (c)
+    {
+        c->async_send(msg);
+    }
+    return 0;
+}
+
 plugin_lua_t::plugin_lua_t(const string& name_):
     m_ls(NULL)
 {
+    g_plugin_lua_obj = this;
     string luapath = "./";
     int pos = name_.find_last_of('/');
     if (-1 == pos)
@@ -19,10 +34,14 @@ plugin_lua_t::plugin_lua_t(const string& name_):
     m_lua_name = m_lua_name.substr(0, pos);
     
     m_ls = lua_open();
+    lua_checkstack(m_ls, 20);
+
+    lua_pushcfunction(m_ls, channel_send_msg);
+    lua_setglobal(m_ls, "channel_send_msg");
+
     string lua_str = "package.path = package.path .. \"" + luapath + "?.lua\"";
     luaL_openlibs(m_ls);
-    
-     printf("lua path<%s>\n", lua_str.c_str());
+
     if (luaL_dostring(m_ls, lua_str.c_str()))
     {
         lua_pop(m_ls, 1);
@@ -97,5 +116,15 @@ int plugin_lua_t::call_lua_handle_broken(long val)
         return -1;
     }
     return 0;
+}
+
+channel_ptr_t plugin_lua_t::get_channel(long p)
+{
+    map<long, channel_ptr_t>::iterator it = m_channel_mgr.find(p);
+    if (it != m_channel_mgr.end())
+    {
+        return it->second;
+    }
+    return NULL;
 }
 
