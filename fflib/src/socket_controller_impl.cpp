@@ -10,6 +10,7 @@
 using namespace std;
 
 socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
+    m_protocol(UNKNOWN_PROTOCOL),
     m_msg_handler(msg_handler_),
     m_head_end_flag(false),
     m_body_size(0)
@@ -20,61 +21,35 @@ socket_controller_impl_t::~socket_controller_impl_t()
 {
 }
 
+//! when socket broken(whenever), this function will be called
+//! this func just callback logic layer to process this event
+//! each socket broken event only can happen once
+//! logic layer has responsibily to deconstruct the socket object
 int socket_controller_impl_t::handle_error(socket_i* sp_)
 {
-    //! cout <<"socket_controller_impl_t::handle_error \n";
-    //! TODO delete sp_;
     m_msg_handler->handle_broken(sp_);
     return 0;
 }
 
 int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
 {
-    if ('G' == buff[0])
+    if (TXT_PROTOCOL == analyze_protocol(buff, len))
     {
-        const char* data = "HTTP/1.0 200 OK\r\nConnection: Close\r\nContent-type: text/html\r\nContent-length: 10\r\n\r\nHelloWorld";
-        sp_->async_send(data);
-        return 0;
+        return parse_text_protocol(sp_, buff, len);
     }
 
-    char* buff_begin = buff;
-    size_t left = len;
-    do
-    {
-        if (false == m_head_end_flag)
-        {
-            
-            char* pos = ::strstr(buff_begin, "\r\n");
-            if (NULL == pos)
-            {
-                m_head.append(buff_begin, left);
-                return 0;
-            }
-
-            m_head.append(buff_begin, pos - buff);
-            if (parse_msg_head())
-            {
-                sp_->async_send("ERROR\r\n");
-                return -1;
-            }
-    
-            m_head_end_flag = true;
-            left -= (pos + 2 - buff_begin);
-            buff_begin = pos + 2;
-        }
-
-        int consume = append_msg_body(sp_, buff_begin, left);
-        buff_begin += consume;
-    }
-    while (left > 0);
-
-    return 0;
+    return parse_http_protocol(sp_, buff, len);
 }
 
+//! 当数据全部发送完毕后，此函数会被回调
+//! 对于http1.0 协议, 发送完毕数据需要close掉连接
 int socket_controller_impl_t::handle_write_completed(socket_i* sp_)
 {
-    //! cout <<"socket_controller_impl_t::handle_write_completed \n";
-    //! sp_->close();
+    //! only http1.0 supported
+    if (HTTP_PROTOCOL == m_protocol)
+    {
+        sp_->close();
+    }
     return 0;
 }
 
@@ -115,8 +90,6 @@ int socket_controller_impl_t::append_msg_body(socket_i* sp_, char* buff_begin_, 
 
     if (m_body_size == 0)
     {
-        //! msg dispatcher
-        //! TODO sp_->async_send(m_message.get_body());
         m_msg_handler->handle_msg(m_message, sp_);
 
         m_head_end_flag = false;
@@ -129,7 +102,113 @@ int socket_controller_impl_t::append_msg_body(socket_i* sp_, char* buff_begin_, 
 int socket_controller_impl_t::check_pre_send(socket_i*, string& buff_)
 {
     ostringstream outstr;
-    outstr << buff_.size() <<" \r\n" << buff_;
+    if (TXT_PROTOCOL == m_protocol)
+    {
+        outstr << buff_.size() <<" \r\n" << buff_;
+    }
+    else
+    {
+        outstr <<  "HTTP/1.0 200 OK\r\nConnection: Close\r\nContent-type: text/html\r\nContent-length: "
+               <<  buff_.size() << "\r\n\r\n" << buff_;
+    }
     buff_ = outstr.str();
+    return 0;
+}
+
+socket_controller_impl_t::protocol_e  socket_controller_impl_t::analyze_protocol(char* buff, size_t len)
+{
+    if (UNKNOWN_PROTOCOL != m_protocol)
+    {
+        return m_protocol;
+    }
+    
+    if (false == m_head.empty())
+    {
+        if ('G' == m_head[0])//! http get request
+        {
+            m_protocol = HTTP_PROTOCOL;
+        }
+        else
+        {
+            m_protocol = TXT_PROTOCOL;
+        }
+    }
+    else
+    {
+        if ('G' == buff[0])
+        {
+            m_protocol =  HTTP_PROTOCOL;
+        }
+        else
+        {
+            m_protocol = TXT_PROTOCOL;
+        }
+    }
+    (void)len;
+    return m_protocol;
+}
+
+int socket_controller_impl_t::parse_http_protocol(socket_i* sp_, char* buff, size_t len)
+{
+    char* buff_begin = buff;
+    size_t left = len;
+
+    if (false == m_head_end_flag)
+    {
+        char* pos = ::strstr(buff_begin, "\r\n");
+        if (NULL == pos)
+        {
+            m_head.append(buff_begin, left);
+            return 0;
+        }
+
+        m_head.append(buff_begin, pos - buff);
+        vector<string> vt;
+        strtool::split(m_head, vt, " ");
+            
+        if (vt.size() > 1)
+        {
+            m_message.append_msg((char*)vt[1].c_str(), vt[1].size());
+        }
+
+        m_head_end_flag = true;
+        m_msg_handler->handle_msg(m_message, sp_);
+    }
+    return 0;
+}
+
+int socket_controller_impl_t::parse_text_protocol(socket_i* sp_, char* buff, size_t len)
+{
+    char* buff_begin = buff;
+    size_t left = len;
+    do
+    {
+        if (false == m_head_end_flag)
+        {
+            
+            char* pos = ::strstr(buff_begin, "\r\n");
+            if (NULL == pos)
+            {
+                m_head.append(buff_begin, left);
+                return 0;
+            }
+            
+            m_head.append(buff_begin, pos - buff);
+            if (parse_msg_head())
+            {
+                sp_->async_send("ERROR\r\n");
+                return -1;
+            }
+            
+            m_head_end_flag = true;
+            left -= (pos + 2 - buff_begin);
+            buff_begin = pos + 2;
+        }
+        
+        int consume = append_msg_body(sp_, buff_begin, left);
+        buff_begin += consume;
+    }
+    while (left > 0);
+    
     return 0;
 }

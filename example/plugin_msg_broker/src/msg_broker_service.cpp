@@ -28,8 +28,8 @@ int msg_broker_service_t::handle_broken(socket_ptr_t sock_)
         channel_t* c = sock_->get_data<channel_t>();
         if (NULL == c)
         {
-            c->close();
-            delete c;
+            sock_->close();
+            delete sock_;
             return 0;
         }
         m_plugin->handle_broken(c);
