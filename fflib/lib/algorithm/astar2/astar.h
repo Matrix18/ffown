@@ -15,20 +15,8 @@ using namespace std;
 namespace ff {
 
 class astar_t {
-public:
-    
-};
-
-
-class astar_impl_t {
 
 public:
-    struct pos_t
-    {
-        pos_t(): x(0), y(0){}
-        uint32_t x;
-        uint32_t y;
-    };
     struct search_node_t
     {
         struct node_cmp_t
@@ -115,7 +103,8 @@ public:
             pos_index(pos_),
             parrent_pos_index(0),
             gval(0),
-            flag(NONE)
+            flag(NONE),
+            pass_flag(true)
         {}
         uint32_t get_pos_index() const { return pos_index;     }
         bool     is_open()       const { return OPEN == flag;  }
@@ -134,22 +123,37 @@ public:
         void     set_parrent(uint32_t pos_)     {parrent_pos_index = pos_; }
         uint32_t get_parrent() const { return parrent_pos_index; }
         
+        bool     is_can_pass() const { return pass_flag; }
+        void     set_pass_flag(bool f_) { pass_flag = f_; }
+        
+        void     clear()
+        {
+            parrent_pos_index = 0;
+            gval = 0;
+            hval = 0;
+            flag = NONE;
+        }
         uint32_t      pos_index;
         uint32_t      parrent_pos_index;
         uint32_t      gval;
         uint32_t      hval;
         node_state_e  flag;
+        bool          pass_flag;
     };
     struct map_mgr_t
     {
-        map_mgr_t():
-            m_map_nodes(NULL)
+        map_mgr_t(uint32_t width_, uint32_t height_):
+            m_map_nodes(NULL),
+            m_width(width_),
+            m_height(height_)
         {
-            m_width = 10;
-            m_map_nodes = (map_node_t*)malloc(100 * sizeof(map_node_t));
-            for (uint32_t i = 0; i < 100; ++i)
+            m_map_nodes = (map_node_t*)malloc(m_width * m_height * sizeof(map_node_t));
+            for (uint32_t i = 0; i < m_height; ++i)
             {
-                new(m_map_nodes + i) map_node_t(i);
+                for (uint32_t j = 0; j < m_width; ++j)
+                {
+                    new(m_map_nodes + i * m_width + j) map_node_t(i * m_width + j);
+                }
             }
         }
         ~map_mgr_t()
@@ -160,14 +164,26 @@ public:
         map_node_t* get_node(uint32_t pos_) { return m_map_nodes + pos_; }
         void get_neighbors(uint32_t pos_, vector<map_node_t*>& ret_)
         {
-            ret_.push_back(m_map_nodes + pos_ - 1);
-            ret_.push_back(m_map_nodes + pos_ + 1);
-            ret_.push_back(m_map_nodes + pos_ - m_width);
-            //ret_.push_back(m_map_nodes + pos_ - m_width - 1);
-            //ret_.push_back(m_map_nodes + pos_ - m_width + 1);
-            ret_.push_back(m_map_nodes + pos_ + m_width);
-            //ret_.push_back(m_map_nodes + pos_ + m_width - 1);
-            //ret_.push_back(m_map_nodes + pos_ + m_width + 1);
+            map_node_t* tmp = m_map_nodes + pos_ - 1;
+            if (tmp >= m_map_nodes && tmp < m_map_nodes + m_height * m_width && tmp->is_can_pass())
+            {
+                ret_.push_back(tmp);
+            }
+            tmp = m_map_nodes + pos_ + 1;
+            if (tmp >= m_map_nodes && tmp < m_map_nodes + m_height * m_width && tmp->is_can_pass())
+            {
+                ret_.push_back(tmp);
+            }
+            tmp = m_map_nodes + pos_ - m_width;
+            if (tmp >= m_map_nodes && tmp < m_map_nodes + m_height * m_width && tmp->is_can_pass())
+            {
+                ret_.push_back(tmp);
+            }
+            tmp = m_map_nodes + pos_ + m_width;
+            if (tmp >= m_map_nodes && tmp < m_map_nodes + m_height * m_width && tmp->is_can_pass())
+            {
+                ret_.push_back(tmp);
+            }
         }
         uint32_t distance(uint32_t from_, uint32_t to_)
         {
@@ -182,16 +198,21 @@ public:
         {
             return this->distance(from_, to_);
         }
+        void set_pos_pass_state(uint32_t pos_, bool flag_)
+        {
+            m_map_nodes[pos_].set_pass_flag(flag_);
+        }
         
         map_node_t* m_map_nodes;
         uint32_t    m_width;
         uint32_t    m_height;
     };
-public:
-    astar_impl_t();
 
+public:
+    astar_t(uint32_t width_, uint32_t height_);
     int search_path(uint32_t from_index, uint32_t to_index, vector<uint32_t>& path_);
 
+    void set_pos_pass_state(uint32_t pos_, bool flag_);
 private:
     map_mgr_t m_map;
 };
