@@ -48,6 +48,7 @@ public:
     void timer_callback(long ms_, task_t func);
 
     void run();
+    void stop();
 
 private:
     void interunpt();
@@ -82,6 +83,8 @@ timer_service_t::timer_service_t():
 
 timer_service_t::~timer_service_t()
 {
+    m_runing = false;
+    interunpt();
     m_thread.join();
 }
 
@@ -148,5 +151,6 @@ long timer_service_t::process_timer_callback(long cost_ms_)
     lock_guard_t lock(m_mutex);
     return -1;
 }
+
 #endif
 
