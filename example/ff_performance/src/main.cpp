@@ -21,7 +21,7 @@ void foo2(void*)
 
 int main(int argc, char* argv[])
 {
-    timer_service_t ts(500);
+    timer_service_t ts(1);
     gettimeofday(&begin, NULL);
     ts.timer_callback(6000, task_t(&foo, NULL));
     sleep(1);
