@@ -51,7 +51,7 @@ public:
         m_tasklist->push_back(task_);
     }
 
-    int   comsume(task_t& task_)
+    int   consume(task_t& task_)
     {
         lock_guard_t lock(m_mutex);
         //! 当没有作业时，就等待直到条件满足被唤醒
@@ -70,7 +70,7 @@ public:
         return 0;
     }
 
-    task_list_t* comsume_all()
+    task_list_t* consume_all()
     {
         lock_guard_t lock(m_mutex);
 
@@ -88,6 +88,15 @@ public:
         m_tasklist = &m_tasklist_cache[(++m_index) % 2];
 
         return tmp;
+    }
+    int run()
+    {
+        task_t t;
+        while (0 == consume(t))
+        {
+            t.run();
+        }
+        return 0;
     }
 private:
     volatile bool                     m_flag;
@@ -118,8 +127,8 @@ public:
         pthread_mutex_init(&m_mutex, NULL);
     }
 
-    int   comsume(task_t& task_){ return -1; }
-    task_list_t*   comsume_all(){ return NULL; }
+    int   consume(task_t& task_){ return -1; }
+    task_list_t*   consume_all(){ return NULL; }
 
     void run()
     {
@@ -129,7 +138,7 @@ public:
         m_tqs.push_back(p);
         pthread_mutex_unlock(&m_mutex);
 
-        task_list_t* tasklist = p->comsume_all();
+        task_list_t* tasklist = p->consume_all();
         while (tasklist)
         {
             for(task_list_t::iterator it = tasklist->begin(); it != tasklist->end(); ++it)
@@ -137,7 +146,7 @@ public:
                 (*it).run();
             }
             tasklist->clear();
-            tasklist = p->comsume_all();
+            tasklist = p->consume_all();
         }
     }
 
