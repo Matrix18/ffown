@@ -30,7 +30,7 @@ public:
     virtual void close() = 0;
     virtual void produce(const task_t& task_) =0;
     virtual void multi_produce(const task_list_t& task_) =0;
-    virtual int   comsume(task_t& task_) = 0;
-    virtual task_list_t* comsume_all() = 0;
+    virtual int   consume(task_t& task_) = 0;
+    virtual task_list_t* consume_all() = 0;
 };
 #endif
