@@ -126,6 +126,7 @@ int performance_daemon_t::stop()
 
     m_started = false; //! timer will stop
 
+    m_task_queue.close();
     m_thread.join();
     m_fstream.close();
     return 0;
