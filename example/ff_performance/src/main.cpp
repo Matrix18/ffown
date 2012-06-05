@@ -22,6 +22,7 @@ void foo2(void*)
 
 int main(int argc, char* argv[])
 {
+    
     singleton_t<performance_daemon_t>::instance().start("perf.txt", 1); 
     singleton_t<performance_daemon_t>::instance().post("test", 100);
     singleton_t<performance_daemon_t>::instance().post("test", 200);
