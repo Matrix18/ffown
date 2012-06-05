@@ -1,5 +1,6 @@
 #ifndef _TIMER_SERVICE_H_
 #define _TIMER_SERVICE_H_
+
 #include <sys/epoll.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -32,12 +33,11 @@ class timer_service_t
     struct registered_info_t
     {
         registered_info_t(long ms_, const task_t& t_):
-            ticks(ms_),
+            dest_tm(ms_),
             callback(t_)
         {}
-        void dec(long t_)       { ticks -= t_; }
-        bool is_timeout()       { return ticks <= 0; }
-        long    ticks;
+        bool is_timeout(long cur_ms_)       { return dest_tm <= cur_ms_; }
+        long    dest_tm;
         task_t  callback;
     };
     typedef list<registered_info_t> registered_info_list_t;
@@ -59,7 +59,7 @@ private:
     int                      m_cache_list;
     int                      m_checking_list;
     registered_info_list_t   m_registered_data[2];
-    interupt_info_t          m_interupt_info;
+    //! interupt_info_t          m_interupt_info;
     thread_t                 m_thread;
     mutex_t                  m_mutex;
 };
@@ -86,7 +86,7 @@ timer_service_t::timer_service_t(long tick):
 timer_service_t::~timer_service_t()
 {
     m_runing = false;
-    interupt();
+    //! interupt();
     ::close(m_efd);
     m_thread.join();
 }
@@ -94,42 +94,45 @@ timer_service_t::~timer_service_t()
 void timer_service_t::run()
 {
     struct epoll_event ev_set[64];
-    interupt();
+    //! interupt();
 
-    struct timeval begin;
-    struct timeval end;
-    gettimeofday(&begin, NULL);
+    struct timeval tv;
 
     do
     {
         ::epoll_wait(m_efd, ev_set, 64, m_min_timeout);
-        gettimeofday(&end, NULL);
-
-        long cost_ms = (end.tv_sec - begin.tv_sec)*1000 + (end.tv_usec - begin.tv_usec)/1000;
-        gettimeofday(&begin, NULL);
 
         if (false == m_runing)//! cancel
         {
             break;
         }
 
-        process_timer_callback(cost_ms);
+        gettimeofday(&tv, NULL);
+        long cur_ms = tv.tv_sec*1000 + tv.tv_usec / 1000;
+
+        process_timer_callback(cur_ms);
         
     }while (true) ;
 }
 
 void timer_service_t::timer_callback(long ms_, task_t func)
 {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    long   dest_ms = tv.tv_sec*1000 + tv.tv_usec / 1000 + ms_;
+
     lock_guard_t lock(m_mutex);
-    m_registered_data[m_cache_list].push_back(registered_info_t(ms_, func));
+    m_registered_data[m_cache_list].push_back(registered_info_t(dest_ms, func));
 }
 
 void timer_service_t::interupt()
 {
+    /*
     epoll_event ev = { 0, { 0 } };
     ev.events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP | EPOLLET;
     ev.data.fd= m_interupt_info.read_fd();
     ::epoll_ctl(m_efd, EPOLL_CTL_ADD, ev.data.fd, &ev);
+     */
 }
 
 void timer_service_t::process_timer_callback(long cost_ms_)
@@ -142,8 +145,7 @@ void timer_service_t::process_timer_callback(long cost_ms_)
     registered_info_list_t::iterator it = m_registered_data[m_checking_list].begin();
     while (it != m_registered_data[m_checking_list].end()) 
     {
-        (*it).dec(cost_ms_);
-        if (it->is_timeout())
+        if (it->is_timeout(cost_ms_))
         {
             it->callback.run();
             registered_info_list_t::iterator tmp = it++;
