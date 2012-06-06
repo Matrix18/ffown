@@ -13,14 +13,35 @@ using namespace std;
 #include "thread.h"
 #include "singleton.h"
 
+#define AUTO_PERF() performance_daemon_t::perf_tool_t __tmp__(__FUNCTION__)
+#define PERF(m)     performance_daemon_t::perf_tool_t __tmp__(m)
+
 //! ÐÔÄÜ¼à¿Ø
 class performance_daemon_t
 {
+public:
+    struct perf_tool_t
+    {
+        perf_tool_t(const char* mod_):
+            mod(mod_)
+        {
+            gettimeofday(&tm, NULL);
+        }
+        ~perf_tool_t()
+        {
+            struct timeval now;
+            gettimeofday(&now, NULL);
+            long cost = (now.tv_sec - tm.tv_sec)*1000000 + (now.tv_usec - tm.tv_usec);
+            singleton_t<performance_daemon_t>::instance().post(mod, cost);
+        }
+        const char*    mod;
+        struct timeval tm;
+    };
     struct perf_info_t
     {
         perf_info_t():
             max(0),
-            min(0),
+            min(0x7FFFFFFFFFFFFFFF),
             total(0),
             times(0)
         {}
@@ -176,13 +197,19 @@ void performance_daemon_t::flush()
                         tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
                         tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
     char buff[1024] = {0};
+
+    snprintf(buff, sizeof(buff), "time,mod,max_cost[us],min_cost[us],per_cost[us],request_per_second,exe_times\n");
+    m_fstream << buff;
+
     for (; it != m_perf_info.end(); ++it)
     {
         perf_info_t& pinfo = it->second;
+        long per = pinfo.total / pinfo.times;
+        long rps = (per == 0? -1: 1000000 / per);
 
-        //! -------------------------- time, mod, max, min, per
-        snprintf(buff, sizeof(buff), "%s,%s,%ld,%ld,%ld",
-                 tmp_buff, it->first.c_str(), pinfo.max, pinfo.min, pinfo.total / pinfo.times);
+        //! -------------------------- time, mod, max, min, per, rps, times
+        snprintf(buff, sizeof(buff), "%s,%s,%ld,%ld,%ld,%ld,%ld\n",
+                 tmp_buff, it->first.c_str(), pinfo.max, pinfo.min, per, rps, pinfo.times);
         m_fstream << buff;
     }
 
