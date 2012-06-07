@@ -157,14 +157,16 @@ void timer_service_t::process_timer_callback(long cost_ms_)
         }
     }
     
-    if (false == m_registered_data[m_checking_list].empty())
+    lock_guard_t lock(m_mutex);
+    if (false == m_registered_data[m_cache_list].empty())
     {
-        lock_guard_t lock(m_mutex);
-        m_registered_data[m_cache_list].insert(m_registered_data[m_cache_list].end(),
-                                               m_registered_data[m_checking_list].begin(),
-                                               m_registered_data[m_checking_list].end());
-        m_registered_data[m_checking_list].clear();
+        m_registered_data[m_checking_list].insert(m_registered_data[m_checking_list].end(),
+                                                  m_registered_data[m_cache_list].begin(),
+                                                  m_registered_data[m_cache_list].end());
+
+        m_registered_data[m_cache_list].clear();
     }
+    std::swap(m_checking_list, m_cache_list);
 }
 
 #endif

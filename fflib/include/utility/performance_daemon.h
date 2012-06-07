@@ -41,7 +41,7 @@ public:
     {
         perf_info_t():
             max(0),
-            min(0x7FFFFFFFFFFFFFFF),
+            min(2147483647),
             total(0),
             times(0)
         {}
