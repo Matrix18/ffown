@@ -102,14 +102,19 @@ int socket_controller_impl_t::append_msg_body(socket_i* sp_, char* buff_begin_, 
 int socket_controller_impl_t::check_pre_send(socket_i*, string& buff_)
 {
     ostringstream outstr;
-    if (TXT_PROTOCOL == m_protocol)
+    
+    if (HTTP_PROTOCOL == m_protocol)
+    {
+        outstr <<  "HTTP/1.0 200 OK\r\nConnection: Close\r\nContent-type: text/html\r\nContent-length: "
+               <<  buff_.size() << "\r\n\r\n" << buff_;
+    }
+    else if (TXT_PROTOCOL == m_protocol)
     {
         outstr << buff_.size() <<" \r\n" << buff_;
     }
     else
     {
-        outstr <<  "HTTP/1.0 200 OK\r\nConnection: Close\r\nContent-type: text/html\r\nContent-length: "
-               <<  buff_.size() << "\r\n\r\n" << buff_;
+        outstr << buff_.size() <<" \r\n" << buff_;
     }
     buff_ = outstr.str();
     return 0;

@@ -179,6 +179,7 @@ public:
         static unsigned int i = 0;
         m_tqs[i++ % m_tqs.size()]->multi_produce(task_);
     }
+    size_t size() const { return m_tqs.size(); }
 private:
     pthread_mutex_t       m_mutex;
     task_queue_vt_t         m_tqs;
