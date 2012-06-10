@@ -38,5 +38,6 @@ int main(int argc, char* argv[])
     skt->async_send("Ohnice");
     //sleep(1);
     skt->close();
+    sleep(1);
     return 0;
 }

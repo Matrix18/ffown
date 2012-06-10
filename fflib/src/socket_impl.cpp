@@ -123,12 +123,12 @@ int socket_impl_t::handle_epoll_write()
 void socket_impl_t::async_send(const string& src_buff_)
 {
     string buff_ = src_buff_;
-    if (false == is_open() || m_sc->check_pre_send(this, buff_))
+
+    lock_guard_t lock(m_mutex);
+    if (/*false == is_open() || */m_sc->check_pre_send(this, buff_))
     {
         return;
     }
-
-    lock_guard_t lock(m_mutex);
     //! socket buff is full, cache the data
     if (false == m_send_buffer.empty())
     {
@@ -157,7 +157,7 @@ void socket_impl_t::async_send(const string& src_buff_)
 int socket_impl_t::do_send(const string& buff_, string& left_buff_)
 {
     size_t nleft             = buff_.size();
-    const char* buffer = buff_.data();
+    const char* buffer       = buff_.data();
     ssize_t nwritten;
 
     while(nleft > 0)
@@ -170,7 +170,6 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
             }
             else if (EWOULDBLOCK == errno)
             {
-                assert(0);
                 left_buff_.assign(buff_.c_str() + (buff_.size() - nleft), nleft);
                 return 1;
             }
@@ -181,7 +180,7 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
         }
 
         nleft    -= nwritten;
-        buffer += nwritten;
+        buffer   += nwritten;
     }
 
     return 0;
