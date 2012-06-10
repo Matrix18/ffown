@@ -40,7 +40,7 @@ public:
                 started_flag = true;
                 thread.create_thread(task_t(&run_epoll, this), 1);
                 thread.create_thread(task_queue_pool_t::gen_task(&tg), thread_num_);
-                while (tg.size() == 0){}
+                while (tg.size() != (size_t)thread_num_){}
             }
         }
         void stop()
@@ -73,6 +73,7 @@ acceptor_i* net_factory_t::listen(const string& host_, msg_handler_i* msg_handle
 
 socket_ptr_t net_factory_t::connect(const string& host_, msg_handler_i* msg_handler_)
 {
+    singleton_t<global_data_t>::instance().start();
     return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_);
 }
 #endif
