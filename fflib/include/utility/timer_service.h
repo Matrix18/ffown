@@ -5,6 +5,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <assert.h>
 
 #include <list>
 using namespace std;
@@ -16,19 +19,19 @@ class timer_service_t
 {
     struct interupt_info_t
     {
-        int pipe_fds[2];
+        int pair_fds[2];
         interupt_info_t()
         {
-            ::pipe(pipe_fds);
-            ::fcntl(pipe_fds[0], F_SETFL, O_NONBLOCK);
-            ::fcntl(pipe_fds[1], F_SETFL, O_NONBLOCK);
+            assert(0 == ::socketpair(AF_LOCAL, SOCK_STREAM, 0, pair_fds));
+            ::write(pair_fds[1], "0", 1);
         }
         ~interupt_info_t()
         {
-            ::close(pipe_fds[0]);
-            ::close(pipe_fds[1]);
+            ::close(pair_fds[0]);
+            ::close(pair_fds[1]);
         }
-        int read_fd() { return pipe_fds[0]; }
+        int read_fd() { return pair_fds[0]; }
+        int write_fd() { return pair_fds[1]; }
     };
     struct registered_info_t
     {
@@ -59,7 +62,7 @@ private:
     int                      m_cache_list;
     int                      m_checking_list;
     registered_info_list_t   m_registered_data[2];
-    //! interupt_info_t          m_interupt_info;
+    interupt_info_t          m_interupt_info;
     thread_t                 m_thread;
     mutex_t                  m_mutex;
 };
@@ -86,20 +89,7 @@ timer_service_t::timer_service_t(long tick):
 timer_service_t::~timer_service_t()
 {
     m_runing = false;
-    //! interupt();
-    int pipe_fds[2];
-    ::pipe(pipe_fds);
-    
-    struct epoll_event ee = { 0, { 0 } };
-    
-    ee.data.ptr  = NULL;
-    ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP | EPOLLET;;
-    ::write(pipe_fds[1], "1", 1);
-    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[0], &ee);
-    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[1], &ee);
-    
-    ::close(pipe_fds[0]);
-    ::close(pipe_fds[1]);
+    interupt();
 
     ::close(m_efd);
     m_thread.join();
@@ -141,12 +131,10 @@ void timer_service_t::timer_callback(long ms_, task_t func)
 
 void timer_service_t::interupt()
 {
-    /*
     epoll_event ev = { 0, { 0 } };
-    ev.events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP | EPOLLET;
-    ev.data.fd= m_interupt_info.read_fd();
-    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, ev.data.fd, &ev);
-     */
+    ev.events = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP;
+
+    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, m_interupt_info.read_fd(), &ev);
 }
 
 void timer_service_t::process_timer_callback(long cost_ms_)

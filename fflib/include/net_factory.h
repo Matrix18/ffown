@@ -8,6 +8,8 @@
 #include "utility/singleton.h"
 #include "utility/performance_daemon.h"
 #include "thread.h"
+#include "codec.h"
+#include "msg_sender.h"
 
 class net_factory_t
 {

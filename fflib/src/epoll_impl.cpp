@@ -3,20 +3,31 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <assert.h>
 
+#include "utility/socket_op.h"
 #include "epoll_fd_i.h"
 #include "detail/epoll_impl.h"
 
 epoll_impl_t::epoll_impl_t(task_queue_i* tqg_):
-    m_running(false),
+    m_running(true),
     m_efd(-1),
     m_task_queue(tqg_)
 {
     m_efd = ::epoll_create(CREATE_EPOLL_SIZE);
+    m_interunpt_sockets[0] = -1;
+    m_interunpt_sockets[1] = -1;
 }
 
 epoll_impl_t::~epoll_impl_t()
 {
+    ::close(m_interunpt_sockets[0]);
+    ::close(m_interunpt_sockets[1]);
+    ::close(m_efd);
+    m_efd = -1;
 }
 
 static void post_read_event(void* p)
@@ -81,21 +92,15 @@ int epoll_impl_t::event_loop()
 int epoll_impl_t::close()
 {
     m_running = false;
-    int pipe_fds[2];
-    ::pipe(pipe_fds);
+
+    assert( 0 == ::socketpair(AF_LOCAL, SOCK_STREAM, 0, m_interunpt_sockets));
+    ::write(m_interunpt_sockets[1], "0", 1);
 
     struct epoll_event ee = { 0, { 0 } };
-    
-    ee.data.ptr  = NULL;
+    ee.data.ptr  = this;
     ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP | EPOLLET;;
-    ::write(pipe_fds[1], "1", 1);
-    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[0], &ee);
-    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[1], &ee);
-
-    ::close(pipe_fds[0]);
-    ::close(pipe_fds[1]);
-    ::close(m_efd);
-    m_efd = -1;
+    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, m_interunpt_sockets[0], &ee);
+    
     return 0;
 }
 

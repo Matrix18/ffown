@@ -28,6 +28,7 @@ private:
     volatile bool            m_running;
     int                      m_efd;
     task_queue_i*            m_task_queue;
+    int                      m_interunpt_sockets[2];
 };
 
 #endif
