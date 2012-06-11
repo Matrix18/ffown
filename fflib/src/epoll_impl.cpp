@@ -1,11 +1,14 @@
 
 #include <sys/epoll.h>
 #include <errno.h>
+#include <unistd.h>
+#include <stdio.h>
 
 #include "epoll_fd_i.h"
 #include "detail/epoll_impl.h"
 
 epoll_impl_t::epoll_impl_t(task_queue_i* tqg_):
+    m_running(false),
     m_efd(-1),
     m_task_queue(tqg_)
 {
@@ -41,9 +44,13 @@ int epoll_impl_t::event_loop()
 
     do
     {
-        nfds  = epoll_wait(m_efd, ev_set, EPOLL_EVENTS_SIZE, EPOLL_WAIT_TIME);
+        nfds  = ::epoll_wait(m_efd, ev_set, EPOLL_EVENTS_SIZE, EPOLL_WAIT_TIME);
+
+        if (false == m_running) return 0;
+
         if (nfds < 0 && EINTR == errno)
         {
+            nfds = 0;
             continue;
         }
 
@@ -73,6 +80,22 @@ int epoll_impl_t::event_loop()
 
 int epoll_impl_t::close()
 {
+    m_running = false;
+    int pipe_fds[2];
+    ::pipe(pipe_fds);
+
+    struct epoll_event ee = { 0, { 0 } };
+    
+    ee.data.ptr  = NULL;
+    ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP | EPOLLET;;
+    ::write(pipe_fds[1], "1", 1);
+    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[0], &ee);
+    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[1], &ee);
+
+    ::close(pipe_fds[0]);
+    ::close(pipe_fds[1]);
+    ::close(m_efd);
+    m_efd = -1;
     return 0;
 }
 

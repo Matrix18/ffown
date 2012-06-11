@@ -87,6 +87,20 @@ timer_service_t::~timer_service_t()
 {
     m_runing = false;
     //! interupt();
+    int pipe_fds[2];
+    ::pipe(pipe_fds);
+    
+    struct epoll_event ee = { 0, { 0 } };
+    
+    ee.data.ptr  = NULL;
+    ee.events    = EPOLLIN | EPOLLPRI | EPOLLOUT | EPOLLHUP | EPOLLET;;
+    ::write(pipe_fds[1], "1", 1);
+    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[0], &ee);
+    ::epoll_ctl(m_efd, EPOLL_CTL_ADD, pipe_fds[1], &ee);
+    
+    ::close(pipe_fds[0]);
+    ::close(pipe_fds[1]);
+
     ::close(m_efd);
     m_thread.join();
 }

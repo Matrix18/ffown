@@ -25,7 +25,8 @@ public:
     virtual int mod_fd(epoll_fd_i*);
 
 private:
-    int                             m_efd;
+    volatile bool            m_running;
+    int                      m_efd;
     task_queue_i*            m_task_queue;
 };
 
