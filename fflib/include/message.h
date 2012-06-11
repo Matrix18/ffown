@@ -13,6 +13,11 @@ struct message_head_t
         cmd(0),
         flag(0)
     {}
+    explicit message_head_t(uint16_t cmd_):
+        size(0),
+        cmd(cmd_),
+        flag(0)
+    {}
     uint32_t size;
     uint16_t cmd;
     uint16_t flag;
