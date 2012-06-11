@@ -13,9 +13,16 @@ using namespace std;
 class bin_encoder_t;
 class bin_decoder_t;
 
-struct codec_helper_t
+struct codec_i
 {
-    virtual ~codec_helper_t(){}
+    virtual ~codec_i(){}
+    virtual string encode(uint16_t cmd_) const   = 0;
+    virtual void decode(const string& src_buff_) = 0;
+};
+
+struct codec_helper_i
+{
+    virtual ~codec_helper_i(){}
     virtual void encode(bin_encoder_t&) const = 0;
     virtual void decode(bin_decoder_t&)       = 0;
 };
@@ -56,7 +63,7 @@ public:
     }
     
     template<typename T>
-    bin_decoder_t& operator >>(codec_helper_t& dest_)
+    bin_decoder_t& operator >>(codec_helper_i& dest_)
     {
         dest_.decode(*this);
         return *this;
@@ -129,7 +136,7 @@ public:
         return *this;
     }
     
-    bin_encoder_t& operator <<(const codec_helper_t& dest_)
+    bin_encoder_t& operator <<(const codec_helper_i& dest_)
     {
         dest_.encode(*this);
         return *this;
