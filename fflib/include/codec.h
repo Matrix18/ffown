@@ -30,10 +30,17 @@ struct codec_helper_i
 class bin_decoder_t
 {
 public:
+    bin_decoder_t(){}
     explicit bin_decoder_t(const string& src_buff_):
-    m_index_ptr(src_buff_.data()),
-    m_remaindered(src_buff_.size())
+        m_index_ptr(src_buff_.data()),
+        m_remaindered(src_buff_.size())
     {
+    }
+    bin_decoder_t& init(const string& str_buff_)
+    {
+        m_index_ptr = str_buff_.data();
+        m_remaindered = str_buff_.size();
+        return *this;
     }
 
     template<typename T>
@@ -104,10 +111,17 @@ private:
 class bin_encoder_t
 {
 public:
+    bin_encoder_t(){}
     explicit bin_encoder_t(uint16_t cmd_)
     {
         message_head_t h(cmd_);
         m_dest_buff.append((const char*)(&h), sizeof(h));
+    }
+    bin_encoder_t& init(uint32_t cmd_)
+    {
+        message_head_t h(cmd_);
+        m_dest_buff.append((const char*)(&h), sizeof(h));
+        return *this;
     }
 
     const string& get_buff() const { return m_dest_buff; }
@@ -158,6 +172,43 @@ private:
 
 private:
     string         m_dest_buff;
+};
+
+
+struct msg_i : public codec_i
+{
+    msg_i(const char* msg_name_):
+    service_group_id(0),
+    service_id(0),
+    uuid(0),
+    msg_name(msg_name_)
+    {}
+    
+    void set(uint16_t group_id, uint16_t id_, uint32_t uuid_)
+    {
+        service_group_id = group_id;
+        service_id       = id_;
+        uuid             = uuid_;
+    }
+
+    uint16_t get_group_id()   const{ return service_group_id; }
+    uint16_t get_service_id() const{ return service_id;       }
+    uint32_t get_uuid()       const{ return uuid;             }
+    uint16_t service_group_id;
+    uint16_t service_id;
+    uint32_t uuid;
+    string   msg_name;
+
+    bin_encoder_t& init_encoder(uint16_t cmd_)
+    {
+        return encoder.init(cmd_) << service_group_id << service_id << uuid << msg_name;
+    }
+    bin_decoder_t& init_decoder(const string& buff_)
+    {
+        return decoder.init(buff_) >> service_group_id >> service_id >> uuid >> msg_name;
+    }
+    bin_decoder_t decoder;
+    bin_encoder_t encoder;
 };
 
 #endif
