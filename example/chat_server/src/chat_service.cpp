@@ -36,7 +36,7 @@ int chat_service_t::handle_broken(socket_ptr_t sock_)
     uid_t* user = sock_->get_data<uid_t>();
     if (NULL == user)
     {
-        delete sock_;
+        sock_->safe_delete();
         return 0;
     }
 
@@ -46,7 +46,7 @@ int chat_service_t::handle_broken(socket_ptr_t sock_)
     user_logout_ret_t ret_msg;
     ret_msg.uid = *user;
     string json_msg = ret_msg.encode_json();
-    delete sock_;
+    sock_->safe_delete();
 
     map<uid_t, socket_ptr_t>::iterator it = m_clients.begin();
     for (; it != m_clients.end(); ++it)
