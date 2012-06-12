@@ -22,7 +22,7 @@ public:
         epoll_impl_t      epoll;
         global_data_t():
             started_flag(false),
-            epoll(&tg)
+            epoll()
         {
         }
         ~ global_data_t()
@@ -63,7 +63,9 @@ public:
 acceptor_i* net_factory_t::listen(const string& host_, msg_handler_i* msg_handler_)
 {
     singleton_t<global_data_t>::instance().start();
-    acceptor_impl_t* ret = new acceptor_impl_t(&(singleton_t<global_data_t>::instance().epoll), msg_handler_);
+    acceptor_impl_t* ret = new acceptor_impl_t(&(singleton_t<global_data_t>::instance().epoll),
+                                               msg_handler_, 
+                                               &(singleton_t<global_data_t>::instance().tg));
 
     if (ret->open(host_))
     {
@@ -76,6 +78,7 @@ acceptor_i* net_factory_t::listen(const string& host_, msg_handler_i* msg_handle
 socket_ptr_t net_factory_t::connect(const string& host_, msg_handler_i* msg_handler_)
 {
     singleton_t<global_data_t>::instance().start();
-    return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_);
+    return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_,
+                                &(singleton_t<global_data_t>::instance().tg));
 }
 #endif

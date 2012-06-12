@@ -6,11 +6,10 @@
 using namespace std;
 
 #include "socket_i.h"
-#include "lock.h"
 
 class epoll_i;
 class socket_controller_i;
-class mutex_t;
+class task_queue_i;
 
 #define  RECV_BUFFER_SIZE 8096
 
@@ -20,7 +19,7 @@ public:
     typedef list<string>    send_buffer_t;
 
 public:
-    socket_impl_t(epoll_i*, socket_controller_i*, int fd = -1);
+    socket_impl_t(epoll_i*, socket_controller_i*, int fd, task_queue_i* tq_);
     ~socket_impl_t();
 
     virtual int socket() { return m_fd; }
@@ -31,19 +30,24 @@ public:
     virtual int handle_epoll_write();
     virtual int handle_epoll_error();
 
-   virtual void async_send(const string& buff_);
-   virtual void async_recv();
-
+    virtual void async_send(const string& buff_);
+    virtual void async_recv();
+    virtual void safe_delete();
+    
+    int handle_epoll_read_impl();
+    int handle_epoll_write_impl();
+    int handle_epoll_error_impl();
+    void send_impl(const string& buff_);
+    void close_impl();
 private:
     bool is_open() { return m_fd > 0; }
 
     int do_send(const string& msg, string& left_);
 private:
     epoll_i*                            m_epoll;
-    socket_controller_i*         m_sc;
-    int                                   m_fd;
-
-    send_buffer_t                  m_send_buffer;
-    mutex_t                          m_mutex;
+    socket_controller_i*                m_sc;
+    int                                 m_fd;
+    task_queue_i*                       m_tq;
+    send_buffer_t                       m_send_buffer;
 };
 #endif

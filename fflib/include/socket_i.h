@@ -16,7 +16,7 @@ public:
     virtual void open() = 0;
     virtual void async_send(const string& buff_) = 0;
     virtual void async_recv() = 0;
-
+    virtual void safe_delete() { delete this; }
     virtual void set_data(void* p) { m_data = p; }
     template<typename T>
     T* get_data() const { return (T*)m_data; }

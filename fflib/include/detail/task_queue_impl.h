@@ -180,6 +180,8 @@ public:
         m_tqs[i++ % m_tqs.size()]->multi_produce(task_);
     }
     size_t size() const { return m_tqs.size(); }
+    
+    task_queue_i* alloc(long id_ = 0) { return m_tqs[id_ % m_tqs.size()]; }
 private:
     pthread_mutex_t       m_mutex;
     task_queue_vt_t         m_tqs;

@@ -7,11 +7,13 @@
 #include "utility/socket_op.h"
 #include "utility/singleton.h"
 #include "lock.h"
+#include "task_queue_i.h"
 
-socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_):
+socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_, task_queue_i* tq_):
     m_epoll(e_),
     m_sc(seh_),
-    m_fd(fd_)
+    m_fd(fd_),
+    m_tq(tq_)
 {
 }
 
@@ -29,6 +31,18 @@ void socket_impl_t::open()
 
 void socket_impl_t::close()
 {
+    struct lambda_t
+    {
+        static void exe(void* p_)
+        {
+            ((socket_impl_t*)p_)->close_impl();
+        }
+    };
+    m_tq->produce(task_t(&lambda_t::exe, this));
+}
+
+void socket_impl_t::close_impl()
+{
     if (m_fd > 0)
     {
         m_epoll->unregister_fd(this);
@@ -38,6 +52,18 @@ void socket_impl_t::close()
 }
 
 int socket_impl_t::handle_epoll_read()
+{
+    struct lambda_t
+    {
+        static void exe(void* p_)
+        {
+            ((socket_impl_t*)p_)->handle_epoll_read_impl();
+        }
+    };
+    m_tq->produce(task_t(&lambda_t::exe, this));
+    return 0;
+}
+int socket_impl_t::handle_epoll_read_impl()
 {
     if (is_open())
     {
@@ -84,6 +110,19 @@ int socket_impl_t::handle_epoll_error()
 
 int socket_impl_t::handle_epoll_write()
 {
+    struct lambda_t
+    {
+        static void exe(void* p_)
+        {
+            ((socket_impl_t*)p_)->handle_epoll_write_impl();
+        }
+    };
+    m_tq->produce(task_t(&lambda_t::exe, this));
+    return 0;
+}
+
+int socket_impl_t::handle_epoll_write_impl()
+{
     int ret = 0;
     string left_buff;
 
@@ -93,7 +132,6 @@ int socket_impl_t::handle_epoll_write()
     }
 
     {
-        lock_guard_t lock(m_mutex);
         do
         {
             const string& msg = m_send_buffer.front();
@@ -120,11 +158,30 @@ int socket_impl_t::handle_epoll_write()
     return 0;
 }
 
-void socket_impl_t::async_send(const string& src_buff_)
+void socket_impl_t::async_send(const string& msg_)
+{
+    struct lambda_t
+    {
+        static void exe(void* p_)
+        {
+            lambda_t* tmp = (lambda_t*)p_;
+            tmp->sp->send_impl(tmp->msg);
+            delete tmp;
+        }
+        lambda_t (socket_impl_t* s_, const string& m_):
+            sp(s_),
+            msg(m_)
+        {}
+        socket_impl_t* sp;
+        string         msg;
+    };
+    m_tq->produce(task_t(&lambda_t::exe, new lambda_t(this, msg_)));
+}
+
+void socket_impl_t::send_impl(const string& src_buff_)
 {
     string buff_ = src_buff_;
 
-    lock_guard_t lock(m_mutex);
     if (/*false == is_open() || */m_sc->check_pre_send(this, buff_))
     {
         return;
@@ -189,4 +246,16 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
 void socket_impl_t::async_recv()
 {
     m_epoll->register_fd(this);
+}
+
+void socket_impl_t::safe_delete()
+{
+    struct lambda_t
+    {
+        static void exe(void* p_)
+        {
+            delete ((socket_impl_t*)p_);
+        }
+    };
+    m_tq->produce(task_t(&lambda_t::exe, this));
 }

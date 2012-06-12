@@ -20,10 +20,10 @@
 class connector_t
 {
 public:
-    static socket_ptr_t connect(const string& host_, epoll_i* e_, msg_handler_i* msg_handler_);
+    static socket_ptr_t connect(const string& host_, epoll_i* e_, msg_handler_i* msg_handler_, task_queue_i* tq_);
 };
 
-socket_ptr_t connector_t::connect(const string& host_, epoll_i* e_, msg_handler_i* msg_handler_)
+socket_ptr_t connector_t::connect(const string& host_, epoll_i* e_, msg_handler_i* msg_handler_, task_queue_i* tq_)
 {
     socket_ptr_t ret = NULL;
     //! example tcp://192.168.1.1:1024
@@ -55,7 +55,7 @@ socket_ptr_t connector_t::connect(const string& host_, epoll_i* e_, msg_handler_
         return ret;
     }
     
-    ret = new socket_impl_t(e_, new socket_controller_impl_t(msg_handler_), s);
+    ret = new socket_impl_t(e_, new socket_controller_impl_t(msg_handler_), s, tq_);
     ret->open();
     return ret;
 }

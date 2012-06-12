@@ -15,7 +15,7 @@ using namespace std;
 class epoll_impl_t: public epoll_i
 {
 public:
-    epoll_impl_t(task_queue_i* tqg_);
+    epoll_impl_t();
     ~epoll_impl_t();
 
     virtual int event_loop();

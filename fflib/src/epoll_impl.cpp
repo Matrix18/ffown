@@ -12,10 +12,9 @@
 #include "epoll_fd_i.h"
 #include "detail/epoll_impl.h"
 
-epoll_impl_t::epoll_impl_t(task_queue_i* tqg_):
+epoll_impl_t::epoll_impl_t():
     m_running(true),
-    m_efd(-1),
-    m_task_queue(tqg_)
+    m_efd(-1)
 {
     m_efd = ::epoll_create(CREATE_EPOLL_SIZE);
     m_interunpt_sockets[0] = -1;
@@ -29,7 +28,7 @@ epoll_impl_t::~epoll_impl_t()
     ::close(m_efd);
     m_efd = -1;
 }
-
+/*
 static void post_read_event(void* p)
 {
     epoll_fd_i* fd_ptr = (epoll_fd_i*)p;
@@ -47,6 +46,7 @@ static void post_error_event(void* p)
     epoll_fd_i* fd_ptr = (epoll_fd_i*)p;
     fd_ptr->handle_epoll_error();
 }
+*/
 
 int epoll_impl_t::event_loop()
 {
@@ -72,11 +72,13 @@ int epoll_impl_t::event_loop()
     
             if (cur_ev.events & (EPOLLIN | EPOLLPRI))
             {
-                m_task_queue->produce(task_t(post_read_event, fd_ptr));
+                //! m_task_queue->produce(task_t(post_read_event, fd_ptr));
+                fd_ptr->handle_epoll_read();
             }
             else if(cur_ev.events & EPOLLOUT)
             {
-                m_task_queue->produce(task_t(post_write_event, fd_ptr));
+                //! m_task_queue->produce(task_t(post_write_event, fd_ptr));
+                fd_ptr->handle_epoll_write();
             }
             else
             {
@@ -121,7 +123,8 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
     ee.data.ptr  = (void*)0;
     int ret = ::epoll_ctl(m_efd, EPOLL_CTL_DEL, fd_ptr_->socket(), &ee);
 
-    if (0 == ret) m_task_queue->produce(task_t(post_error_event, fd_ptr_));
+    if (0 == ret) fd_ptr_->handle_epoll_error();
+    //! m_task_queue->produce(task_t(post_error_event, fd_ptr_));
     return ret;
 }
 
