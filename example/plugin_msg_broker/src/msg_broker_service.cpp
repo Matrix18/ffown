@@ -29,7 +29,7 @@ int msg_broker_service_t::handle_broken(socket_ptr_t sock_)
         if (NULL == c)
         {
             sock_->close();
-            delete sock_;
+            sock_->safe_delete();
             return 0;
         }
         m_plugin->handle_broken(c);

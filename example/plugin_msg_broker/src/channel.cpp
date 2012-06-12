@@ -10,7 +10,7 @@ channel_t::~channel_t()
 {
     if (m_socket)
     {
-        delete m_socket;
+        m_socket->safe_delete();
     }
 }
 

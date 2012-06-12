@@ -11,6 +11,7 @@ using namespace std;
 #include "thread.h"
 #include "smart_ptr/shared_ptr.h"
 #include "msg_broker_service.h"
+#include "net_factory.h"
 
 void handler(int sig) {
     printf("signal:%d\n", sig);
@@ -28,8 +29,6 @@ int main(int argc, char* argv[])
     char buff[128];
     snprintf(buff, sizeof(buff), "tcp://%s:%s", argv[1], argv[2]);
 
-    int ret = 0;
-
     task_queue_pool_t tg;
     thread_t thread;
     thread.create_thread(task_queue_pool_t::gen_task(&tg), 1);
@@ -41,11 +40,12 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    epoll_impl_t epoll(&tg);
+    epoll_impl_t epoll;
+    /*
     acceptor_impl_t acceptor(&epoll, &broker_service);
     ret = acceptor.open(string(buff));
-
-     if (ret)
+     */
+    if (NULL == net_factory_t::listen(buff, &broker_service))
     {
         cout <<"acceptor open failed:" << buff <<"\n";
         return 1;
