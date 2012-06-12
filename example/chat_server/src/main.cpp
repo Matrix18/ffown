@@ -9,6 +9,7 @@ using namespace std;
 #include "thread.h"
 #include "smart_ptr/shared_ptr.h"
 #include "chat_service.h"
+#include "net_factory.h"
 
 int main(int argc, char* argv[])
 {
@@ -20,19 +21,17 @@ int main(int argc, char* argv[])
     char buff[128];
     snprintf(buff, sizeof(buff), "tcp://%s:%s", argv[1], argv[2]);
 
-    int ret = 0;
-
     task_queue_pool_t tg;
     thread_t thread;
     thread.create_thread(task_queue_pool_t::gen_task(&tg), 2);
 
     chat_service_t chat_service;
 
-    epoll_impl_t epoll(&tg);
-    acceptor_impl_t acceptor(&epoll, &chat_service);
-    ret = acceptor.open(string(buff));
+    epoll_impl_t epoll;
+//    acceptor_impl_t acceptor(&epoll, &chat_service);
+//    ret = acceptor.open(string(buff));
 
-    if (ret)
+    if (NULL == net_factory_t::listen(buff, &chat_service))
     {
         cout <<"acceptor open failed:" << buff <<"\n";
         return 1;
