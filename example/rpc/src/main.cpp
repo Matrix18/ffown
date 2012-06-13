@@ -32,6 +32,15 @@ public:
     }
 };
 test_service_t test_service(1), test_service2(2);
+
+void foo(){}
+int foo1() {return 0;}
+
+struct foo_t
+{
+public:
+    void dumy(){}
+};
 int main(int argc, char* argv[])
 {
     
@@ -52,5 +61,11 @@ int main(int argc, char* argv[])
     skt->close();
     sleep(1);
     cout <<"oh end\n";
+
+    task_binder_t::gen(&foo);
+    task_binder_t::gen(&foo1);
+    
+    foo_t f;
+    task_binder_t::gen(&foo_t::dumy, &f);
     return 0;
 }
