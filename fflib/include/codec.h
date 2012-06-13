@@ -16,7 +16,7 @@ class bin_decoder_t;
 struct codec_i
 {
     virtual ~codec_i(){}
-    virtual string encode(uint16_t cmd_) const   = 0;
+    virtual string encode(uint16_t cmd_)         = 0;
     virtual void decode(const string& src_buff_) = 0;
 };
 

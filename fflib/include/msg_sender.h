@@ -22,7 +22,7 @@ public:
             socket_ptr_->async_send(dest);
         }
     }
-    static void send(socket_ptr_t socket_ptr_, uint16_t cmd_, const codec_i& src_msg_)
+    static void send(socket_ptr_t socket_ptr_, uint16_t cmd_, codec_i& src_msg_)
     {
         if (socket_ptr_)
         {
