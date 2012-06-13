@@ -15,9 +15,9 @@ ARCH=
 BIN=app_event_store
 
 #源文件目录
-SrcDir= . src  ../../fflib/lib/generator
+SrcDir= . src  ../../fflib/lib/generator ../../fflib/lib/algorithm/astar2
 #头文件目录
-IncDir= ./include ../../fflib/include/  ../../fflib/lib 
+IncDir= ./include ../../fflib/include/  ../../fflib/lib  ../../fflib/lib/algorithm
 #连接库目录
 LibDir= /usr/local/lib
 SRCS=$(foreach dir,$(SrcDir),$(wildcard $(dir)/*.cpp))
