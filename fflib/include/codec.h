@@ -194,6 +194,7 @@ struct msg_i : public codec_i
     uint16_t get_group_id()   const{ return service_group_id; }
     uint16_t get_service_id() const{ return service_id;       }
     uint32_t get_uuid()       const{ return uuid;             }
+    const string& get_name()  const{ return msg_name;         }
     uint16_t service_group_id;
     uint16_t service_id;
     uint32_t uuid;
@@ -211,4 +212,18 @@ struct msg_i : public codec_i
     bin_encoder_t encoder;
 };
 
+struct msg_tool_t: public msg_i
+{
+    msg_tool_t():
+        msg_i("")
+    {}
+    virtual string encode(uint16_t cmd_)
+    {
+        return (init_encoder(cmd_)).get_buff();
+    }
+    virtual void decode(const string& src_buff_)
+    {
+        init_decoder(src_buff_);
+    }
+};
 #endif

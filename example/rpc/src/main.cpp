@@ -33,6 +33,7 @@ public:
 };
 test_service_t test_service(1), test_service2(2);
 
+void foo(test_msg_t& in_msg_, rpc_callcack_t& cb_) {}
 int foo1(const int& a){return 0;}
 int foo2(const int& a, const char* p_){return 0;}
 int foo3(const int& a, const char* p_, string b){return 0;}
@@ -59,6 +60,7 @@ public:
     int foo8(const int& a, const char* p_, string b, long c, const test_service_t*, char aa, float cc, double dd){return 0;}
     int foo9(const int& a, const char* p_, string b, long c, const test_service_t*, char aa, float cc, double, long long){return 0;}
 };
+
 int main(int argc, char* argv[])
 {
     
@@ -105,5 +107,8 @@ int main(int argc, char* argv[])
     task_binder_t::gen(&foo_t::foo7, &f, 1, "", "aa", 100, (const test_service_t*)NULL, 'a', 0.1);
     task_binder_t::gen(&foo8, 1, "", "aa", 100, (const test_service_t*)NULL, 'a', 0.1, 0.2);
     task_binder_t::gen(&foo9, 1, "", string("aa"), (long)100, (const test_service_t*)NULL, 'a', (float)0.1, 0.3, (long long)11111);
+    
+    rpc_service_t rpc_service;
+    rpc_service.reg(&foo);
     return 0;
 }
