@@ -80,7 +80,7 @@ struct msg_process_class_func_impl_t: public msg_process_func_i
     {
         IN_MSG in_msg;
         in_msg.decode(msg_);
-        (*m_interface)(in_msg, cb_);
+        (m_obj->*(m_interface))(in_msg, cb_);
     }
     RET (T::*m_interface)(IN_MSG&, rpc_callcack_t&);
     T* m_obj;

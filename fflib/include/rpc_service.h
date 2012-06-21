@@ -27,10 +27,13 @@ public:
     template<typename RET, typename MSGT>
     void async_call(msg_i& msg_, RET (*callback_)(MSGT&));
 
+    rpc_service_t& bind_service(void* p_) { m_bind_service_ptr = p_;  return *this; }
     template <typename IN_MSG, typename RET>
-    void reg(RET (*interface_)(IN_MSG&, rpc_callcack_t&));
+    rpc_service_t& reg(RET (*interface_)(IN_MSG&, rpc_callcack_t&));
     template <typename IN_MSG, typename RET, typename T>
-    void reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t&), T* obj_);
+    rpc_service_t& reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t&), T* obj_);
+    template <typename IN_MSG, typename RET, typename T>
+    rpc_service_t& reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t&)) { return reg(interface_, (T*)m_bind_service_ptr); }
 
     int interface_callback(uint32_t uuid_, const string& buff_);
     int call_interface(const string& interface_name_, const string& msg_buff_, socket_ptr_t sock_);
@@ -42,13 +45,15 @@ private:
     socket_ptr_t    m_socket;
     callback_map_t  m_callback_map;
     interface_map_t m_interface_map;
+    void*           m_bind_service_ptr;
 };
 
 rpc_service_t::rpc_service_t():
     m_service_group_id(0),
     m_service_id(0),
     m_uuid(0),
-    m_socket(NULL)
+    m_socket(NULL),
+    m_bind_service_ptr(NULL)
 {
 }
 
@@ -82,21 +87,23 @@ int rpc_service_t::interface_callback(uint32_t uuid_, const string& buff_)
 }
 
 template <typename IN_MSG, typename RET>
-void rpc_service_t::reg(RET (*interface_)(IN_MSG&, rpc_callcack_t&))
+rpc_service_t& rpc_service_t::reg(RET (*interface_)(IN_MSG&, rpc_callcack_t&))
 {
     IN_MSG msg;
     const string& msg_name = msg.get_name();
     msg_process_func_i* msg_process_func = new msg_process_func_impl_t<IN_MSG, RET>(interface_);
     assert(m_interface_map.insert(make_pair(msg_name, msg_process_func)).second == true  && "interface has existed");
+    return *this;
 }
 
 template <typename IN_MSG, typename RET, typename T>
-void rpc_service_t::reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t&), T* obj_)
+rpc_service_t& rpc_service_t::reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t&), T* obj_)
 {
     IN_MSG msg;
     const string& msg_name = msg.get_name();
     msg_process_func_i* msg_process_func = new msg_process_class_func_impl_t<IN_MSG, RET, T>(interface_, obj_);
     assert(obj_ && m_interface_map.insert(make_pair(msg_name, msg_process_func)).second == true  && "interface has existed");
+    return *this;
 }
 
 int rpc_service_t::call_interface(const string& interface_name_, const string& msg_buff_, socket_ptr_t socket_)

@@ -14,7 +14,7 @@ public:
     int handle_broken(socket_ptr_t sock_)
     {
         cout <<m_a <<" handle broken\n";
-	sock_->safe_delete();
+        sock_->safe_delete();
         return 0;
     }
     int handle_msg(const message_t& msg_, socket_ptr_t sock_)
@@ -49,6 +49,7 @@ struct foo_t
 {
 public:
     void dumy(){}
+    void foo(test_msg_t& in_msg_, rpc_callcack_t& cb_) {}
     int foo1(const int& a){return 0;}
     int foo2(const int& a, const char* p_){return 0;}
     int foo3(const int& a, const char* p_, string b){return 0;}
@@ -110,5 +111,11 @@ int main(int argc, char* argv[])
     
     rpc_service_t rpc_service;
     rpc_service.reg(&foo);
+    rpc_service.reg(&foo_t::foo, &f);
+    rpc_service .bind_service(&f)
+                .reg(&foo_t::foo)
+                .reg(&foo_t::foo)
+                .reg(&foo_t::foo)
+                .reg(&foo_t::foo);
     return 0;
 }
