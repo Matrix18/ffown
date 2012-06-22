@@ -1,9 +1,8 @@
 #include <iostream>
 using namespace std;
 
-#include "net_factory.h"
-#include "rpc_service.h"
 #include "msg_def.h"
+#include "msg_bus.h"
 
 class test_service_t: public msg_handler_i
 {
@@ -21,13 +20,15 @@ public:
     {
         test_msg_t test_msg;
         test_msg.decode(msg_.get_body());
-        cout <<m_a << " handle msg:" << test_msg.val <<"\n";
+        cout <<m_a << " test_service_t::handle msg:" << test_msg.val <<"\n";
+        /*
         test_msg.val = m_a;
         if (m_a == 1) {
             msg_sender_t::send(sock_, 100, test_msg);
         }
         else
             msg_sender_t::send(sock_, 100, test_msg);
+         */
         return 0;
     }
 };
@@ -49,7 +50,12 @@ struct foo_t
 {
 public:
     void dumy(){}
-    void foo(test_msg_t& in_msg_, rpc_callcack_t& cb_) {}
+    void foo(test_msg_t& in_msg_, rpc_callcack_t& cb_)
+    {
+        cout << "foo_t::foo done:" << in_msg_.val << "\n";
+        usleep(1000*200);
+        cb_(in_msg_);
+    }
     int foo1(const int& a){return 0;}
     int foo2(const int& a, const char* p_){return 0;}
     int foo3(const int& a, const char* p_, string b){return 0;}
@@ -62,26 +68,16 @@ public:
     int foo9(const int& a, const char* p_, string b, long c, const test_service_t*, char aa, float cc, double, long long){return 0;}
 };
 
+rpc_service_t* g_rpc_service = NULL;
 int main(int argc, char* argv[])
 {
     
     char buff[128];
     snprintf(buff, sizeof(buff), "tcp://%s:%s", "127.0.0.1", "10241");
 
-    acceptor_i* acceptor = net_factory_t::listen(buff, &test_service);
-    cout <<"acceptor:" << acceptor <<"\n";
+    //acceptor_i* acceptor = net_factory_t::listen(buff, &test_service);
+    //cout <<"acceptor:" << acceptor <<"\n";
     //test_service2.handle_broken(NULL);
-
-    socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&test_service2);
-    cout << "skt:" << skt <<"\n";
-
-    test_msg_t test_msg;
-    test_msg.val  = 10241;
-    msg_sender_t::send(skt, 100, test_msg);
-    sleep(1);
-    skt->close();
-    sleep(1);
-    cout <<"oh end\n";
 
     //task_binder_t::gen(&foo);
     //task_binder_t::gen(&foo1);
@@ -109,13 +105,55 @@ int main(int argc, char* argv[])
     task_binder_t::gen(&foo8, 1, "", "aa", 100, (const test_service_t*)NULL, 'a', 0.1, 0.2);
     task_binder_t::gen(&foo9, 1, "", string("aa"), (long)100, (const test_service_t*)NULL, 'a', (float)0.1, 0.3, (long long)11111);
     
-    rpc_service_t rpc_service;
-    rpc_service.reg(&foo);
-    rpc_service.reg(&foo_t::foo, &f);
-    rpc_service .bind_service(&f)
-                .reg(&foo_t::foo)
-                .reg(&foo_t::foo)
-                .reg(&foo_t::foo)
-                .reg(&foo_t::foo);
+//    rpc_service_t rpc_service(1, 1);
+//    rpc_service.reg(&foo);
+//    rpc_service.reg(&foo_t::foo, &f);
+    
+    msg_bus_t msg_bus;
+    msg_bus.create_service("test", 1)
+           .bind_service(&f)
+           .reg(&foo_t::foo);
+    msg_bus.open(buff);
+    
+    socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&msg_bus);
+    cout << "skt:" << skt <<"\n";
+    g_rpc_service = &msg_bus.create_service("test", 1);//(1, 1, skt);
+    g_rpc_service->set_socket(skt);
+    
+    test_msg_t test_msg;
+    test_msg.val = 1;
+    struct lambda_t
+    {
+        static void callback(test_msg_t& in_msg_)
+        {
+            cout <<"oh nice\n";
+            call(in_msg_);
+        }
+        static void call(test_msg_t& test_msg)
+        {
+            if (test_msg.val < 10)
+            {
+            test_msg.val ++;
+            g_rpc_service->async_call(test_msg, &lambda_t::callback);
+            }
+            else
+            {
+                g_rpc_service = NULL;
+            }
+        }
+    };
+    g_rpc_service->async_call(test_msg, &lambda_t::callback);
+    /*
+    test_msg_t test_msg;
+    test_msg.val  = 10241;
+    msg_sender_t::send(skt, 100, test_msg);
+    */ 
+    sleep(1);
+    //skt->close();
+    while (g_rpc_service) {
+        usleep(1000);
+    }
+    cout <<"oh end\n";
+    
     return 0;
 }

@@ -1,0 +1,23 @@
+//! 消息定义
+#ifndef _MSG_DEF_H_
+#define _MSG_DEF_H_
+
+#include "codec.h"
+
+struct test_msg_t: public msg_i
+{
+    test_msg_t():
+        msg_i("test")
+    {}
+    virtual string encode(uint16_t cmd_)
+    {
+        return (init_encoder(cmd_) << val).get_buff();
+    }
+    virtual void decode(const string& src_buff_)
+    {
+        init_decoder(src_buff_) >> val;
+    }
+    
+    int val;
+};
+#endif
