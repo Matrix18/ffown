@@ -14,8 +14,11 @@ struct rpc_msg_cmd_e
 {
     enum
     {
-        CALL_INTERFACE     = 1,
-        INTREFACE_CALLBACK = 2
+        CREATE_SERVICE_GROUP = 1,
+        CREATE_SERVICE       = 2,
+        REG_INTERFACE        = 3,
+        CALL_INTERFACE       = 4,
+        INTREFACE_CALLBACK   = 5,
     };
 };
 

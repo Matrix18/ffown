@@ -11,52 +11,37 @@ using namespace std;
 class rpc_callcack_t
 {
 public:
-    rpc_callcack_t();
-    void exe(const string& msg_);
-    void exe(msg_i& msg_);
-    void set_socket(socket_ptr_t socket_);
-    void set_cmd(uint16_t cmd_);
+    rpc_callcack_t():
+        m_socket(NULL),
+        m_cmd(0)
+    {}
+
+    void operator()(const string& msg_)
+    {
+        exe(msg_);
+    }
+    void operator()(msg_i& msg_)
+    {
+        exe(msg_);
+    }
     
-    void operator()(const string& msg_);
-    void operator()(msg_i& msg_);
+    void exe(const string& msg_)
+    {
+        msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
+    }
+    
+    void exe(msg_i& msg_)
+    {
+        msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
+    }
+
+    void set_socket(socket_ptr_t socket_){  m_socket = socket_; }
+    void set_cmd(uint16_t cmd_)          {  m_cmd = cmd_;   }
+
 private:
     socket_ptr_t m_socket;
     uint16_t     m_cmd;
 };
-
-rpc_callcack_t::rpc_callcack_t():
-    m_socket(NULL),
-    m_cmd(0)
-{
-}
-
-void rpc_callcack_t::operator()(const string& msg_)
-{
-    exe(msg_);
-}
-void rpc_callcack_t::operator()(msg_i& msg_)
-{
-    exe(msg_);
-}
-
-void rpc_callcack_t::exe(const string& msg_)
-{
-    msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
-}
-
-void rpc_callcack_t::exe(msg_i& msg_)
-{
-    msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
-}
-
-void rpc_callcack_t::set_socket(socket_ptr_t socket_)
-{
-    m_socket = socket_;
-}
-void rpc_callcack_t::set_cmd(uint16_t cmd_)
-{
-    m_cmd = cmd_;
-}
 
 struct msg_process_func_i
 {

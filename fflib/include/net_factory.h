@@ -56,29 +56,27 @@ public:
         }
     };
 
-    static acceptor_i* listen(const string& host_, msg_handler_i* msg_handler_);
-    static socket_ptr_t connect(const string& host_, msg_handler_i* msg_handler_);
+    static acceptor_i* listen(const string& host_, msg_handler_i* msg_handler_)
+    {
+        singleton_t<global_data_t>::instance().start();
+        acceptor_impl_t* ret = new acceptor_impl_t(&(singleton_t<global_data_t>::instance().epoll),
+                                                   msg_handler_, 
+                                                   &(singleton_t<global_data_t>::instance().tg));
+        
+        if (ret->open(host_))
+        {
+            delete ret;
+            return NULL;
+        }
+        return ret;
+    }
+
+    static socket_ptr_t connect(const string& host_, msg_handler_i* msg_handler_)
+    {
+        singleton_t<global_data_t>::instance().start();
+        return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_,
+                                    &(singleton_t<global_data_t>::instance().tg));
+    }
 };
 
-acceptor_i* net_factory_t::listen(const string& host_, msg_handler_i* msg_handler_)
-{
-    singleton_t<global_data_t>::instance().start();
-    acceptor_impl_t* ret = new acceptor_impl_t(&(singleton_t<global_data_t>::instance().epoll),
-                                               msg_handler_, 
-                                               &(singleton_t<global_data_t>::instance().tg));
-
-    if (ret->open(host_))
-    {
-        delete ret;
-        return NULL;
-    }
-    return ret;
-}
-
-socket_ptr_t net_factory_t::connect(const string& host_, msg_handler_i* msg_handler_)
-{
-    singleton_t<global_data_t>::instance().start();
-    return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_,
-                                &(singleton_t<global_data_t>::instance().tg));
-}
 #endif
