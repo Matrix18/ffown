@@ -16,6 +16,9 @@ public:
     void exe(msg_i& msg_);
     void set_socket(socket_ptr_t socket_);
     void set_cmd(uint16_t cmd_);
+    
+    void operator()(const string& msg_);
+    void operator()(msg_i& msg_);
 private:
     socket_ptr_t m_socket;
     uint16_t     m_cmd;
@@ -27,14 +30,23 @@ rpc_callcack_t::rpc_callcack_t():
 {
 }
 
+void rpc_callcack_t::operator()(const string& msg_)
+{
+    exe(msg_);
+}
+void rpc_callcack_t::operator()(msg_i& msg_)
+{
+    exe(msg_);
+}
+
 void rpc_callcack_t::exe(const string& msg_)
 {
-    msg_sender_t::send(m_socket, 100, msg_);
+    msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
 }
 
 void rpc_callcack_t::exe(msg_i& msg_)
 {
-    msg_sender_t::send(m_socket, 100, msg_);
+    msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
 }
 
 void rpc_callcack_t::set_socket(socket_ptr_t socket_)
@@ -93,7 +105,7 @@ struct callback_wrapper_i
 };
 
 template <typename RET, typename MSGT>
-struct callback_wrapper_cfunc_impl_t
+struct callback_wrapper_cfunc_impl_t: public callback_wrapper_i
 {
     callback_wrapper_cfunc_impl_t(RET (*callback_)(MSGT&)):
         m_callback(callback_)

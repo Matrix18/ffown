@@ -9,6 +9,15 @@
 using namespace std;
 
 #include "message.h"
+ 
+struct rpc_msg_cmd_e
+{
+    enum
+    {
+        CALL_INTERFACE     = 1,
+        INTREFACE_CALLBACK = 2
+    };
+};
 
 class bin_encoder_t;
 class bin_decoder_t;
