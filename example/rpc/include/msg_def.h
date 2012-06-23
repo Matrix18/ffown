@@ -9,9 +9,9 @@ struct test_msg_t: public msg_i
     test_msg_t():
         msg_i("test")
     {}
-    virtual string encode(uint16_t cmd_)
+    virtual string encode()
     {
-        return (init_encoder(cmd_) << val).get_buff();
+        return (init_encoder() << val).get_buff();
     }
     virtual void decode(const string& src_buff_)
     {

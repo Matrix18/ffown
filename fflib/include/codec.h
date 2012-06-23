@@ -9,18 +9,6 @@
 using namespace std;
 
 #include "message.h"
- 
-struct rpc_msg_cmd_e
-{
-    enum
-    {
-        CREATE_SERVICE_GROUP = 1,
-        CREATE_SERVICE       = 2,
-        REG_INTERFACE        = 3,
-        CALL_INTERFACE       = 4,
-        INTREFACE_CALLBACK   = 5,
-    };
-};
 
 class bin_encoder_t;
 class bin_decoder_t;
@@ -190,10 +178,11 @@ private:
 struct msg_i : public codec_i
 {
     msg_i(const char* msg_name_):
-    service_group_id(0),
-    service_id(0),
-    uuid(0),
-    msg_name(msg_name_)
+        cmd(0),
+        service_group_id(0),
+        service_id(0),
+        uuid(0),
+        msg_name(msg_name_)
     {}
     
     void set(uint16_t group_id, uint16_t id_, uint32_t uuid_)
@@ -203,6 +192,7 @@ struct msg_i : public codec_i
         uuid             = uuid_;
     }
 
+    uint16_t cmd;
     uint16_t get_group_id()   const{ return service_group_id; }
     uint16_t get_service_id() const{ return service_id;       }
     uint32_t get_uuid()       const{ return uuid;             }
@@ -212,6 +202,16 @@ struct msg_i : public codec_i
     uint32_t uuid;
     string   msg_name;
 
+    virtual string encode(uint16_t cmd_)
+    {
+        this->cmd = cmd_;
+        return encode();
+    }
+    virtual string encode() = 0;
+    bin_encoder_t& init_encoder()
+    {
+        return encoder.init(cmd) << service_group_id << service_id << uuid << msg_name;
+    }
     bin_encoder_t& init_encoder(uint16_t cmd_)
     {
         return encoder.init(cmd_) << service_group_id << service_id << uuid << msg_name;
@@ -224,18 +224,138 @@ struct msg_i : public codec_i
     bin_encoder_t encoder;
 };
 
-struct msg_tool_t: public msg_i
+struct base_msg_t: public msg_i
 {
-    msg_tool_t():
-        msg_i("")
+    base_msg_t(const char* name_):
+        msg_i(name_)
     {}
-    virtual string encode(uint16_t cmd_)
+    virtual string encode()
     {
-        return (init_encoder(cmd_)).get_buff();
+        return init_encoder().get_buff();
     }
     virtual void decode(const string& src_buff_)
     {
         init_decoder(src_buff_);
     }
+};
+
+struct msg_tool_t: public base_msg_t
+{
+    msg_tool_t():
+        base_msg_t("")
+    {}
+};
+
+struct rpc_msg_cmd_e
+{
+    enum
+    {
+        CREATE_SERVICE_GROUP = 1,
+        CREATE_SERVICE       = 2,
+        REG_INTERFACE        = 3,
+        CALL_INTERFACE       = 4,
+        INTREFACE_CALLBACK   = 5,
+    };
+};
+
+struct bool_ret_msg_t: public msg_i
+{
+    bool_ret_msg_t(const char* name_ = ""):
+        msg_i(name_),
+        value(false)
+    {}
+    virtual string encode()
+    {
+        return (init_encoder()<< value).get_buff();
+    }
+    virtual void decode(const string& src_buff_)
+    {
+        init_decoder(src_buff_) >> value;
+    }
+    bool value;
+};
+
+struct create_service_group_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("create_service_group_t::in")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()<< service_name).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> service_name;
+        }
+        string service_name;
+    };
+    struct out_t: public msg_i
+    {
+        out_t():
+            msg_i("create_service_group_t::out")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()<< service_id).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> service_id;
+        }
+        uint16_t service_id;
+    };
+};
+
+struct create_service_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("create_service_t::in")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()<< new_service_group_id << new_service_id).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> new_service_group_id >> new_service_id;
+        }
+        uint16_t new_service_group_id;
+        uint16_t new_service_id;
+    };
+    struct out_t: public bool_ret_msg_t
+    {
+        out_t(): bool_ret_msg_t("create_service_group_t::out"){}
+    };
+};
+
+struct reg_interface_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("reg_interface_t::in")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()<< new_service_group_id << new_service_id << in_msg_name << out_msg_name).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> new_service_group_id >> new_service_id >> in_msg_name >> in_msg_name;
+        }
+        uint16_t new_service_group_id;
+        uint16_t new_service_id;
+        string in_msg_name;
+        string out_msg_name;
+    };
+    struct out_t: public bool_ret_msg_t
+    {
+        out_t(): bool_ret_msg_t("reg_interface::out"){}
+    };
 };
 #endif

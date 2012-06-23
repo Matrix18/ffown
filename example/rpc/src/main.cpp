@@ -34,7 +34,7 @@ public:
 };
 test_service_t test_service(1), test_service2(2);
 
-void foo(test_msg_t& in_msg_, rpc_callcack_t& cb_) {}
+void foo(test_msg_t& in_msg_, rpc_callcack_t<test_msg_t>& cb_) {}
 int foo1(const int& a){return 0;}
 int foo2(const int& a, const char* p_){return 0;}
 int foo3(const int& a, const char* p_, string b){return 0;}
@@ -50,7 +50,7 @@ struct foo_t
 {
 public:
     void dumy(){}
-    void foo(test_msg_t& in_msg_, rpc_callcack_t& cb_)
+    void foo(test_msg_t& in_msg_, rpc_callcack_t<test_msg_t>& cb_)
     {
         cout << "foo_t::foo done:" << in_msg_.val << "\n";
         usleep(1000*200);

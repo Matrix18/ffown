@@ -69,18 +69,19 @@ int rpc_service_t::interface_callback(uint32_t uuid_, const string& buff_)
 
 int rpc_service_t::call_interface(const string& interface_name_, const string& msg_buff_, socket_ptr_t socket_)
 {
-    rpc_callcack_t rcb;
+    rpc_callcack_base_t rcb;
     rcb.set_cmd(rpc_msg_cmd_e::INTREFACE_CALLBACK);
     rcb.set_socket(socket_);
-    
+
     try
     {
         interface_map_t::const_iterator it = m_interface_map.find(interface_name_);
         if (it != m_interface_map.end())
         {
-            it->second->exe(msg_buff_, rcb);
+            it->second->exe(msg_buff_, rpc_msg_cmd_e::INTREFACE_CALLBACK, socket_);
             return 0;
         }
+
         rcb.exe("interface not existed");
     }
     catch (exception& e_)

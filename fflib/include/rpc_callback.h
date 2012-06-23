@@ -8,13 +8,14 @@ using namespace std;
 #include "socket_i.h"
 #include "msg_sender.h"
 
-class rpc_callcack_t
+class rpc_callcack_base_t
 {
 public:
-    rpc_callcack_t():
+    rpc_callcack_base_t():
         m_socket(NULL),
         m_cmd(0)
     {}
+    ~rpc_callcack_base_t(){}
 
     void operator()(const string& msg_)
     {
@@ -37,49 +38,67 @@ public:
 
     void set_socket(socket_ptr_t socket_){  m_socket = socket_; }
     void set_cmd(uint16_t cmd_)          {  m_cmd = cmd_;   }
-
+    socket_ptr_t get_socket() const      {  return m_socket;}
 private:
     socket_ptr_t m_socket;
     uint16_t     m_cmd;
 };
 
+template <typename MSGT>
+struct rpc_callcack_t: public rpc_callcack_base_t
+{
+    void operator()(MSGT& msg_)
+    {
+        rpc_callcack_base_t::exe(msg_);
+    }
+};
+
 struct msg_process_func_i
 {
     virtual ~msg_process_func_i(){}
-    virtual void exe(const string& msg_, rpc_callcack_t& cb_) = 0;
+    //virtual void exe(const string& msg_, rpc_callcack_t& cb_) = 0;
+    virtual void exe(const string& msg_, uint16_t cmd_, socket_ptr_t socket_) = 0;
 };
 
-template <typename IN_MSG, typename RET>
+template <typename IN_MSG, typename RET, typename OUT_MSG>
 struct msg_process_func_impl_t: public msg_process_func_i
 {
-    msg_process_func_impl_t(RET (*interface_)(IN_MSG&, rpc_callcack_t&)):
+    msg_process_func_impl_t(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&)):
         m_interface(interface_)
     {
     }
-    virtual void exe(const string& msg_, rpc_callcack_t& cb_)
+    virtual void exe(const string& msg_, uint16_t cmd_, socket_ptr_t socket_)
     {
         IN_MSG in_msg;
         in_msg.decode(msg_);
-        (*m_interface)(in_msg, cb_);
+
+        rpc_callcack_t<OUT_MSG> cb;
+        cb.set_cmd(cmd_);
+        cb.set_socket(socket_);
+    
+        (*m_interface)(in_msg, cb);
     }
-    RET (*m_interface)(IN_MSG&, rpc_callcack_t&);
+    RET (*m_interface)(IN_MSG&, rpc_callcack_t<OUT_MSG>&);
 };
 
-template <typename IN_MSG, typename RET, typename T>
+template <typename IN_MSG, typename RET, typename T, typename OUT_MSG>
 struct msg_process_class_func_impl_t: public msg_process_func_i
 {
-    msg_process_class_func_impl_t(RET (T::*interface_)(IN_MSG&, rpc_callcack_t&), T* obj_):
+    msg_process_class_func_impl_t(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&), T* obj_):
         m_interface(interface_),
         m_obj(obj_)
     {
     }
-    virtual void exe(const string& msg_, rpc_callcack_t& cb_)
+    virtual void exe(const string& msg_, uint16_t cmd_, socket_ptr_t socket_)
     {
         IN_MSG in_msg;
         in_msg.decode(msg_);
-        (m_obj->*(m_interface))(in_msg, cb_);
+        rpc_callcack_t<OUT_MSG> cb;
+        cb.set_cmd(cmd_);
+        cb.set_socket(socket_);
+        (m_obj->*(m_interface))(in_msg, cb);
     }
-    RET (T::*m_interface)(IN_MSG&, rpc_callcack_t&);
+    RET (T::*m_interface)(IN_MSG&, rpc_callcack_t<OUT_MSG>&);
     T* m_obj;
 };
 
