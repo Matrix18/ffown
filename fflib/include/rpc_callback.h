@@ -127,4 +127,41 @@ struct callback_wrapper_cfunc_impl_t: public callback_wrapper_i
     }
     RET (*m_callback)(MSGT&);
 };
+
+template <typename RET, typename MSGT, typename T>
+struct callback_wrapper_class_impl_t: public callback_wrapper_i
+{
+    callback_wrapper_class_impl_t(RET (T::*func_)(MSGT&), T* obj_):
+        m_callback(func_),
+        m_obj(obj_)
+    {}
+    /*
+    callback_wrapper_class_impl_t(RET (T::*callback_)(MSGT&), T* obj_):
+        m_callback(callback_),
+        m_obj(obj_)
+    {}
+     */
+    virtual void callback(const string& msg_buff_)
+    {
+        MSGT msg;
+        try
+        {
+            msg.decode(msg_buff_);
+        }
+        catch (exception& e_){}
+
+        (m_obj->*(m_callback))(msg);
+    }
+    RET (T::*m_callback)(MSGT&);
+    T*  m_obj;
+};
+
+namespace binder_t
+{
+    template <typename RET, typename MSGT, typename T>
+    static callback_wrapper_i* callback(RET (T::*callback_)(MSGT&), T* obj_)
+    {
+        return new callback_wrapper_class_impl_t<RET, MSGT, T>(callback_, obj_);
+    }
+}
 #endif

@@ -12,6 +12,7 @@ using namespace std;
 #include "net_factory.h"
 #include "rpc_service.h"
 #include "rpc_service_group.h"
+#include "rpc_future.h"
 
 class msg_bus_t: public msg_handler_i
 {
@@ -29,10 +30,16 @@ public:
     int handle_msg(const message_t& msg_, socket_ptr_t sock_);
 
     int open(const string& host_);
+    socket_ptr_t get_socket(const rpc_service_t* rs_);
+
+    int register_service(const string& name_, uint16_t id_);
+    
 private:
-    uint32_t        m_uuid;
-    service_map_t   m_service_map;
-    acceptor_i*     m_acceptor;
+    uint32_t            m_uuid;
+    service_map_t       m_service_map;
+    acceptor_i*         m_acceptor;
+    rpc_service_t*      m_broker_service;
+    socket_ptr_t        m_socket;
 };
 
  #endif

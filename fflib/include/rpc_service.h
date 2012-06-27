@@ -11,13 +11,15 @@ using namespace std;
 #include "net_factory.h"
 #include "rpc_callback.h"
 
+class msg_bus_t;
+
 class rpc_service_t
 {
     typedef map<uint32_t, callback_wrapper_i*>    callback_map_t;
     typedef map<string, msg_process_func_i*>      interface_map_t;
 public:
-    rpc_service_t(uint16_t service_group_id_, uint16_t servie_id_, socket_ptr_t socket_ = NULL);
-    ~rpc_service_t();
+    rpc_service_t(msg_bus_t* mb_, uint16_t service_group_id_, uint16_t servie_id_);
+    virtual ~rpc_service_t();
     uint16_t get_group_id() const;
     uint16_t get_id() const;
 
@@ -37,16 +39,15 @@ public:
     int interface_callback(uint32_t uuid_, const string& buff_);
     int call_interface(const string& interface_name_, const string& msg_buff_, socket_ptr_t sock_);
 
-    void set_socket(socket_ptr_t socket_);
     socket_ptr_t get_socket() const;
 private:
     uint16_t        m_service_group_id;
     uint16_t        m_service_id;
     uint32_t        m_uuid;
-    socket_ptr_t    m_socket;
     callback_map_t  m_callback_map;
     interface_map_t m_interface_map;
     void*           m_bind_service_ptr;
+    msg_bus_t*      m_msg_bus;
 };
 
 template<typename RET, typename MSGT>

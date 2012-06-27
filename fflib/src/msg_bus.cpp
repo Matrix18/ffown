@@ -2,8 +2,9 @@
 
 
 msg_bus_t::msg_bus_t():
-m_uuid(0),
-m_acceptor(NULL)
+    m_uuid(0),
+    m_acceptor(NULL),
+    m_broker_service(NULL)
 {
 }
 
@@ -32,7 +33,7 @@ rpc_service_group_t& msg_bus_t::create_service_group(const string& name_)
         }
     }
     
-    rpc_service_group_t* rsg = new rpc_service_group_t(name_, ++m_uuid);
+    rpc_service_group_t* rsg = new rpc_service_group_t(this, name_, ++m_uuid);
     m_service_map[rsg->get_id()] = rsg;
     return *rsg;
 }
@@ -103,12 +104,31 @@ int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
     return 0;
 }
 
-
 int msg_bus_t::open(const string& host_)
 {
     m_acceptor = net_factory_t::listen(host_, this);
     assert(m_acceptor && "can not listen this address");
     
+    return 0;
+}
+
+socket_ptr_t msg_bus_t::get_socket(const rpc_service_t* rs_)
+{
+    return m_socket;
+}
+
+struct ohh_t
+{
+    void callback(create_service_t::out_t& out_)
+    {
+        
+    }
+};
+int msg_bus_t::register_service(const string& name_, uint16_t id_)
+{
+    rpc_future_t<create_service_t::out_t> rpc_future;
+    create_service_t::in_t in;
+    rpc_future.call(m_broker_service, in);
     return 0;
 }
 

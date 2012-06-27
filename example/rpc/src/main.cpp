@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&msg_bus);
     cout << "skt:" << skt <<"\n";
     g_rpc_service = &msg_bus.create_service("test", 1);//(1, 1, skt);
-    g_rpc_service->set_socket(skt);
+    //g_rpc_service->set_socket(skt);
     
     test_msg_t test_msg;
     test_msg.val = 1;
