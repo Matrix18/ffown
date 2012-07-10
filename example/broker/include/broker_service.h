@@ -1,10 +1,30 @@
 #ifndef _BROKER_SERVICE_H_
 #define _BROKER_SERVICE_H_
 
+#include <map>
+#include <string>
+using namespace std;
+
 #include "msg_bus.h"
 
 class broker_service_t: public msg_handler_i
 {
+    struct service_obj_t
+    {
+        string       name;
+        uint16_t     group_id;
+        uint16_t     id;
+        socket_ptr_t socket_ptr;
+    };
+    
+    struct service_obj_mgr_t
+    {
+        uint16_t id;
+        string   name;
+        socket_ptr_t socket_ptr;
+        map<uint16_t, service_obj_t> service_objs;
+    };
+    typedef map<uint16_t, service_obj_mgr_t> service_obj_map_t;
 public:
     broker_service_t();
     ~broker_service_t();
@@ -16,6 +36,8 @@ public:
     void create_service(create_service_t::in_t& in_msg_, rpc_callcack_t<create_service_t::out_t>& cb_);
     void reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcack_t<reg_interface_t::out_t>& cb_);
 private:
-    msg_bus_t   m_msg_bus;
+    msg_bus_t           m_msg_bus;
+    service_obj_map_t   m_service_obj_mgr;
+    int                 m_uuid;
 };
 #endif

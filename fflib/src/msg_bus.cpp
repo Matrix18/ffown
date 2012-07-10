@@ -117,18 +117,11 @@ socket_ptr_t msg_bus_t::get_socket(const rpc_service_t* rs_)
     return m_socket;
 }
 
-struct ohh_t
-{
-    void callback(create_service_t::out_t& out_)
-    {
-        
-    }
-};
 int msg_bus_t::register_service(const string& name_, uint16_t id_)
 {
     rpc_future_t<create_service_t::out_t> rpc_future;
     create_service_t::in_t in;
-    rpc_future.call(m_broker_service, in);
-    return 0;
+    create_service_t::out_t out = rpc_future.call(m_broker_service, in);
+    return out.value == true? 0: -1;
 }
 
