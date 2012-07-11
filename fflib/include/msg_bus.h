@@ -32,12 +32,11 @@ public:
     int open(const string& host_);
     socket_ptr_t get_socket(const rpc_service_t* rs_);
 
-    int register_service(const string& name_, uint16_t id_);
+    int register_service(const string& name_, uint16_t gid_, uint16_t id_);
     
 private:
     uint32_t            m_uuid;
     service_map_t       m_service_map;
-    acceptor_i*         m_acceptor;
     rpc_service_t*      m_broker_service;
     socket_ptr_t        m_socket;
 };

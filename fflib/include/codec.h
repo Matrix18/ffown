@@ -197,6 +197,8 @@ struct msg_i : public codec_i
     uint16_t get_service_id() const{ return service_id;       }
     uint32_t get_uuid()       const{ return uuid;             }
     const string& get_name()  const{ return msg_name;         }
+    
+    void     set_uuid(uint32_t id_){ uuid = id_; }
     uint16_t service_group_id;
     uint16_t service_id;
     uint32_t uuid;

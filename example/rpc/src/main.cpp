@@ -110,11 +110,14 @@ int main(int argc, char* argv[])
 //    rpc_service.reg(&foo_t::foo, &f);
     
     msg_bus_t msg_bus;
-    msg_bus.create_service("test", 1)
+    msg_bus.open("tcp://127.0.0.1:10241");
+    
+    msg_bus.create_service_group("teeeest");
+    msg_bus.create_service("teeeest", 1)
            .bind_service(&f)
            .reg(&foo_t::foo);
-    msg_bus.open(buff);
     
+    /*
     socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&msg_bus);
     cout << "skt:" << skt <<"\n";
     g_rpc_service = &msg_bus.create_service("test", 1);//(1, 1, skt);
@@ -143,16 +146,17 @@ int main(int argc, char* argv[])
         }
     };
     g_rpc_service->async_call(test_msg, &lambda_t::callback);
-    /*
+
     test_msg_t test_msg;
     test_msg.val  = 10241;
     msg_sender_t::send(skt, 100, test_msg);
-    */ 
+
     sleep(1);
     //skt->close();
     while (g_rpc_service) {
         usleep(1000);
     }
+         */ 
     cout <<"oh end\n";
     
     return 0;

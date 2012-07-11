@@ -54,6 +54,10 @@ int rpc_service_t::interface_callback(uint32_t uuid_, const string& buff_)
         m_callback_map.erase(it);
         return 0;
     }
+    else
+    {
+        cout <<"rpc_service_t::interface_callback:"<< uuid_ << "--" << m_callback_map.begin()->first << "\n";
+    }
     return -1;
 }
 

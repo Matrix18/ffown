@@ -3,19 +3,12 @@
 
 msg_bus_t::msg_bus_t():
     m_uuid(0),
-    m_acceptor(NULL),
     m_broker_service(NULL)
 {
 }
 
 msg_bus_t::~msg_bus_t()
-{    
-    if (m_acceptor)
-    {
-        delete m_acceptor;
-        m_acceptor = NULL;
-    }
-    
+{
     for (service_map_t::iterator it = m_service_map.begin(); it != m_service_map.end(); ++it)
     {
         delete it->second;
@@ -33,7 +26,13 @@ rpc_service_group_t& msg_bus_t::create_service_group(const string& name_)
         }
     }
     
-    rpc_service_group_t* rsg = new rpc_service_group_t(this, name_, ++m_uuid);
+    rpc_future_t<create_service_group_t::out_t> rpc_future;
+    create_service_group_t::in_t in;
+    in.service_name = name_;
+    const create_service_group_t::out_t& out = rpc_future.call(m_broker_service, in);
+    cout << "msg_bus_t::create_service_group out:" << out.service_id <<"\n";
+
+    rpc_service_group_t* rsg = new rpc_service_group_t(this, name_, out.service_id);
     m_service_map[rsg->get_id()] = rsg;
     return *rsg;
 }
@@ -63,6 +62,7 @@ int msg_bus_t::handle_broken(socket_ptr_t sock_)
 int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 {
     msg_tool_t msg_tool;
+    cout <<"msg_bus_t::handle_msg:" << msg_.get_cmd() << ":" << msg_tool.get_name()<<"\n";
     try
     {
         msg_tool.decode(msg_.get_body());
@@ -70,8 +70,9 @@ int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
         rpc_service_group_t* rsg = get_service_group(msg_tool.get_group_id());
         if (NULL == rsg)
         {
-            cout <<msg_tool.get_group_id()<< " 111...\n";
-            sock_->close();
+            cout <<msg_tool.get_group_id()<< "msg_bus_t::handle_msg 111...\n";
+            m_broker_service->interface_callback(msg_tool.get_uuid(), msg_.get_body());
+            //sock_->close();
             return -1;
         }
         rpc_service_t* rs = rsg->get_service(msg_tool.get_service_id());
@@ -106,9 +107,13 @@ int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 
 int msg_bus_t::open(const string& host_)
 {
-    m_acceptor = net_factory_t::listen(host_, this);
-    assert(m_acceptor && "can not listen this address");
-    
+    m_socket = net_factory_t::connect(host_, this);
+    if (NULL == m_socket)
+    {
+        return -1;
+    }
+ 
+    m_broker_service = new rpc_service_t(this, 0, 0);
     return 0;
 }
 
@@ -117,11 +122,14 @@ socket_ptr_t msg_bus_t::get_socket(const rpc_service_t* rs_)
     return m_socket;
 }
 
-int msg_bus_t::register_service(const string& name_, uint16_t id_)
+int msg_bus_t::register_service(const string& name_, uint16_t gid_, uint16_t id_)
 {
     rpc_future_t<create_service_t::out_t> rpc_future;
     create_service_t::in_t in;
-    create_service_t::out_t out = rpc_future.call(m_broker_service, in);
+    in.new_service_group_id = gid_;
+    in.new_service_id = id_;
+    const create_service_t::out_t& out = rpc_future.call(m_broker_service, in);
+    cout << "msg_bus_t::register_service:" << out.value <<"\n";
     return out.value == true? 0: -1;
 }
 
