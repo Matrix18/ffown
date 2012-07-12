@@ -62,15 +62,15 @@ int msg_bus_t::handle_broken(socket_ptr_t sock_)
 int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 {
     msg_tool_t msg_tool;
-    cout <<"msg_bus_t::handle_msg:" << msg_.get_cmd() << ":" << msg_tool.get_name()<<"\n";
+
     try
     {
         msg_tool.decode(msg_.get_body());
-        
+        cout <<"msg_bus_t::handle_msg:" << msg_.get_cmd() << ":" << msg_tool.get_name()<<"gid:"<< msg_tool.get_group_id()  << " id:"<< msg_tool.get_service_id() <<"\n";
         rpc_service_group_t* rsg = get_service_group(msg_tool.get_group_id());
         if (NULL == rsg)
         {
-            cout <<msg_tool.get_group_id()<< "msg_bus_t::handle_msg 111...\n";
+            cout <<msg_tool.get_group_id()<< " ==>msg_bus_t::handle_msg 111...\n";
             m_broker_service->interface_callback(msg_tool.get_uuid(), msg_.get_body());
             //sock_->close();
             return -1;

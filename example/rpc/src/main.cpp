@@ -111,12 +111,33 @@ int main(int argc, char* argv[])
     
     msg_bus_t msg_bus;
     msg_bus.open("tcp://127.0.0.1:10241");
-    
+    /*
     msg_bus.create_service_group("teeeest");
     msg_bus.create_service("teeeest", 1)
            .bind_service(&f)
            .reg(&foo_t::foo);
+    */
+    msg_bus.create_service_group("fooooo");
+    msg_bus.create_service("fooooo", 1)
+    .bind_service(&f)
+    .reg(&foo_t::foo);
     
+    struct lambda_t
+    {
+        static void callback(test_msg_t& in_msg_)
+        {
+            cout <<"oh nice\n";
+            //call(in_msg_);
+        }
+
+    };
+    test_msg_t test_msg;
+    test_msg.val = 1;
+    cout <<"\n\n";
+    sleep(1);
+    //g_rpc_service->async_call(test_msg, &lambda_t::callback);
+    msg_bus.get_service_group(1)->get_service(1)->async_call(test_msg, &lambda_t::callback);
+    sleep(100);
     /*
     socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&msg_bus);
     cout << "skt:" << skt <<"\n";

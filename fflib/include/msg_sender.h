@@ -29,6 +29,13 @@ public:
             socket_ptr_->async_send(src_msg_.encode(cmd_));
         }
     }
+    static void send(socket_ptr_t socket_ptr_, const string& str_)
+    {
+        if (socket_ptr_)
+        {
+            socket_ptr_->async_send(str_);
+        }
+    }
 };
 
 #endif

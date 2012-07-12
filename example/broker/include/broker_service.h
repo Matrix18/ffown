@@ -9,12 +9,27 @@ using namespace std;
 
 class broker_service_t: public msg_handler_i
 {
+    struct proc_stack_t
+    {
+        long start_time;
+        uint32_t uuid;
+    };
+    typedef map<uint32_t, proc_stack_t>    callback_map_t;
+    typedef map<string, msg_process_func_i*>      interface_map_t;
+    
     struct service_obj_t
     {
+        service_obj_t():m_uuid(0){}
+    
         string       name;
         uint16_t     group_id;
         uint16_t     id;
         socket_ptr_t socket_ptr;
+        uint32_t     m_uuid;
+        void async_call(msg_i& msg_, const string& body_);
+        int interface_callback(msg_i& msg_, const string& body_);
+        callback_map_t  m_callback_map;
+        interface_map_t m_interface_map;
     };
     
     struct service_obj_mgr_t

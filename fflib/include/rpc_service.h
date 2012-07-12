@@ -39,7 +39,7 @@ public:
     int interface_callback(uint32_t uuid_, const string& buff_);
     int call_interface(const string& interface_name_, const string& msg_buff_, socket_ptr_t sock_);
 
-    socket_ptr_t get_socket() const;
+    virtual socket_ptr_t get_socket() const;
 private:
     uint16_t        m_service_group_id;
     uint16_t        m_service_id;
