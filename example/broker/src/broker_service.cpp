@@ -1,4 +1,5 @@
 #include "broker_service.h"
+#include "log/log.h"
 
 broker_service_t::broker_service_t():
     m_uuid(0)
@@ -12,7 +13,38 @@ broker_service_t::~broker_service_t()
 
 int broker_service_t::handle_broken(socket_ptr_t sock_)
 {
+    logwarn((BROKER, "broker_service_t::handle_broken bagin soket_ptr<%p>", sock_));
+    
+    vector<uint32_t> del_sgid;
+    vector<uint32_t> del_sid;
+
+    service_obj_map_t::iterator it = m_service_obj_mgr.begin();
+    for (; it != m_service_obj_mgr.end(); ++it)
+    {
+        map<uint16_t, service_obj_t>::iterator it2 = it->second.service_objs.begin();
+        for (; it2 != it->second.service_objs.end(); ++it2)
+        {
+            if (it2->second.socket_ptr == sock_)
+            {
+                del_sgid.push_back(it->first);
+                del_sid.push_back(it2->first);
+            }
+        }
+    }
+    
+    for (size_t i = 0; i < del_sgid.size(); ++i)
+    {
+        logwarn((BROKER, "broker_service_t::handle_broken del sgid[%u], sid[%u]", del_sgid[i], del_sid[i]));
+        m_service_obj_mgr[del_sgid[i]].service_objs.erase(del_sid[i]);
+        if (m_service_obj_mgr[del_sgid[i]].service_objs.empty())
+        {
+            m_service_obj_mgr.erase(del_sgid[i]);
+            logwarn((BROKER, "broker_service_t::handle_broken del sgid[%u]", del_sgid[i]));
+        }
+    }
+    
     sock_->safe_delete();
+    logwarn((BROKER, "broker_service_t::handle_broken en ok"));
     return 0;
 }
 
@@ -21,13 +53,16 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
     
     msg_tool_t msg_tool;
     try{
-    msg_tool.decode(msg_.get_body());
-    }catch(...)
+        msg_tool.decode(msg_.get_body());
+    }catch(exception& e_)
     {
-        cout <<"oh no!--- len:" << msg_.get_body().size() <<"\n";
+        logerror((BROKER, "broker_service_t::handle_msg except<%s>", e_.what()));
         return -1;
     }
-    cout <<"handle:" << msg_.get_cmd() << ":" << msg_tool.get_name()<< " gid:"<< msg_tool.get_group_id()  << " id:"<< msg_tool.get_service_id() <<"\n";
+
+    logtrace((BROKER, "broker_service_t::handle_msg begin... cmd[%u], name[%s], sgid[%u], sid[%u]",
+                      msg_.get_cmd(), msg_tool.get_name().c_str(), msg_tool.get_group_id(), msg_tool.get_service_id()));
+    
     if (msg_tool.get_group_id() == 0 && msg_tool.get_service_id() == 0)
     {
         if (msg_tool.get_name() == "create_service_group_t::in")
@@ -78,8 +113,9 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 
 void broker_service_t::create_service_group(create_service_group_t::in_t& in_msg_, rpc_callcack_t<create_service_group_t::out_t>& cb_)
 {
+    logtrace((BROKER, "broker_service_t::create_service_group begin... service_name<%s>", in_msg_.service_name.c_str()));
+ 
     create_service_group_t::out_t ret;
-    cout <<"broker_service_t::create_service_group name:" << in_msg_.service_name <<"\n";
     service_obj_map_t::iterator it = m_service_obj_mgr.begin();
     
     for (; it != m_service_obj_mgr.end(); ++it)
@@ -93,13 +129,14 @@ void broker_service_t::create_service_group(create_service_group_t::in_t& in_msg
     if (it != m_service_obj_mgr.end())
     {
         ret.service_id = it->second.id;
+        loginfo((BROKER, "broker_service_t::create_service_group begin... service_name<%s> has exist", in_msg_.service_name.c_str()));
     }
     else
     {
         service_obj_mgr_t obj_mgr;
         obj_mgr.id = ++m_uuid;
         obj_mgr.name = in_msg_.service_name;
-        obj_mgr.socket_ptr = cb_.get_socket();
+        //obj_mgr.socket_ptr = cb_.get_socket();
         ret.service_id = obj_mgr.id;
         m_service_obj_mgr.insert(make_pair(obj_mgr.id, obj_mgr));
     }
@@ -110,14 +147,17 @@ void broker_service_t::create_service_group(create_service_group_t::in_t& in_msg
 
 void broker_service_t::create_service(create_service_t::in_t& in_msg_, rpc_callcack_t<create_service_t::out_t>& cb_)
 {
+    logtrace((BROKER, "broker_service_t::create_service begin... sgid<%u>, sid[%u]", in_msg_.new_service_group_id, in_msg_.new_service_id));
+
     create_service_t::out_t ret;
     service_obj_mgr_t& som = m_service_obj_mgr[in_msg_.new_service_group_id];
     map<uint16_t, service_obj_t>::iterator it = som.service_objs.find(in_msg_.new_service_id);
-    
-    cout <<"broker_service_t::create_service gid:" << in_msg_.new_service_group_id << ":" << in_msg_.new_service_id <<"\n";
+
     if (it != som.service_objs.end())
     {
         ret.value = false;
+
+        logerror((BROKER, "broker_service_t::create_service failed... sgid<%u>, sid[%u] exist", in_msg_.new_service_group_id, in_msg_.new_service_id));
     }
     else
     {
@@ -167,6 +207,7 @@ void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body
 
     m_callback_map[uuid] = stack;
     msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::CALL_INTERFACE , dest);
+    logtrace((BROKER, "broker_service_t::service_obj_t::async_call socket<%p>", socket_ptr));
     
 }
 

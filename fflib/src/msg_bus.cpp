@@ -53,6 +53,19 @@ rpc_service_group_t* msg_bus_t::get_service_group(uint16_t id_)
     return NULL;
 }
 
+rpc_service_group_t* msg_bus_t::get_service_group(const string& name_)
+{
+    service_map_t::iterator it = m_service_map.begin();
+    for (; it != m_service_map.end(); ++it)
+    {
+        if (it->second->get_name() == name_)
+        {
+            return it->second;
+        }
+    }
+    return NULL;
+}
+
 int msg_bus_t::handle_broken(socket_ptr_t sock_)
 {
     sock_->safe_delete();

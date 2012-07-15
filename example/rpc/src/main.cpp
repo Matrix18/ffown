@@ -136,8 +136,8 @@ int main(int argc, char* argv[])
     cout <<"\n\n";
     sleep(1);
     //g_rpc_service->async_call(test_msg, &lambda_t::callback);
-    msg_bus.get_service_group(1)->get_service(1)->async_call(test_msg, &lambda_t::callback);
-    sleep(100);
+    msg_bus.get_service_group("fooooo")->get_service(1)->async_call(test_msg, &lambda_t::callback);
+    sleep(10);
     /*
     socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&msg_bus);
     cout << "skt:" << skt <<"\n";

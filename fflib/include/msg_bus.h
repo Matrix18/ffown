@@ -25,6 +25,7 @@ public:
     rpc_service_t&       create_service(const string& name_, uint16_t id_);
 
     rpc_service_group_t* get_service_group(uint16_t id_);
+    rpc_service_group_t* get_service_group(const string& name_);
 
     int handle_broken(socket_ptr_t sock_);
     int handle_msg(const message_t& msg_, socket_ptr_t sock_);

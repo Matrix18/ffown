@@ -14,15 +14,19 @@ static int log_impl(const char* mod, const char* fmt, ...)
     vsnprintf(buff + len, sizeof(buff) - len - 1, fmt, vl);
     va_end(vl);
     printf(buff);
-    return printf("\n");
+    return 0;
 }
 
-#define logdebug(content) log_impl content
-#define logtrace(content) log_impl content
-#define loginfo(content) log_impl content
-#define logwarn(content) log_impl content
-#define logerror(content) log_impl content
-#define logfatal(content) log_impl content
+#define BROKER "BROKER"
+#define RPC    "RPC"
+#define FF     "FF"
+
+#define logdebug(content) printf("\033[1;33mDEBUG "); log_impl content ; printf("\033[0m\n")
+#define logtrace(content) printf("TRACE "); log_impl content ; printf("\n");
+#define loginfo(content) printf("\033[1;32mINFO  "); log_impl content ; printf("\033[0m\n")
+#define logwarn(content) printf("\033[1;34mWARN  "); log_impl content ; printf("\033[0m\n")
+#define logerror(content) printf("\033[0;31mERROR "); log_impl content ; printf("\033[0m\n")
+#define logfatal(content) printf("\033[0;35mFATAL "); log_impl content ; printf("\033[0m")
 
 #endif
 

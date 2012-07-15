@@ -36,7 +36,7 @@ class broker_service_t: public msg_handler_i
     {
         uint16_t id;
         string   name;
-        socket_ptr_t socket_ptr;
+        //socket_ptr_t socket_ptr;
         map<uint16_t, service_obj_t> service_objs;
     };
     typedef map<uint16_t, service_obj_mgr_t> service_obj_map_t;
@@ -53,6 +53,6 @@ public:
 private:
     msg_bus_t           m_msg_bus;
     service_obj_map_t   m_service_obj_mgr;
-    int                 m_uuid;
+    uint32_t            m_uuid;
 };
 #endif
