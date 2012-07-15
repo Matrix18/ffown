@@ -179,9 +179,9 @@ struct msg_i : public codec_i
 {
     msg_i(const char* msg_name_):
         cmd(0),
+        uuid(0),
         service_group_id(0),
         service_id(0),
-        uuid(0),
         msg_name(msg_name_)
     {}
     
@@ -199,9 +199,9 @@ struct msg_i : public codec_i
     const string& get_name()  const{ return msg_name;         }
     
     void     set_uuid(uint32_t id_){ uuid = id_; }
+    uint32_t uuid;
     uint16_t service_group_id;
     uint16_t service_id;
-    uint32_t uuid;
     string   msg_name;
 
     virtual string encode(uint16_t cmd_)
@@ -212,15 +212,15 @@ struct msg_i : public codec_i
     virtual string encode() = 0;
     bin_encoder_t& init_encoder()
     {
-        return encoder.init(cmd) << service_group_id << service_id << uuid << msg_name;
+        return encoder.init(cmd)  << uuid << service_group_id << service_id<< msg_name;
     }
     bin_encoder_t& init_encoder(uint16_t cmd_)
     {
-        return encoder.init(cmd_) << service_group_id << service_id << uuid << msg_name;
+        return encoder.init(cmd_) << uuid << service_group_id << service_id << msg_name;
     }
     bin_decoder_t& init_decoder(const string& buff_)
     {
-        return decoder.init(buff_) >> service_group_id >> service_id >> uuid >> msg_name;
+        return decoder.init(buff_) >> uuid >> service_group_id >> service_id >> msg_name;
     }
     bin_decoder_t decoder;
     bin_encoder_t encoder;

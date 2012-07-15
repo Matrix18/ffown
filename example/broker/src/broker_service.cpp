@@ -159,10 +159,14 @@ void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body
     proc_stack_t stack;
     stack.uuid = msg_.get_uuid();
 
-    uint32_t uuid = msg_.get_uuid();//++m_uuid;
-    //msg_.set(group_id, id, uuid);
+    uint32_t uuid = ++m_uuid;
+
+    //! 直接修改消息包内的uuid
+    string dest = body_;
+    *((uint32_t*)dest.data()) = uuid;
+    cout <<"XXXXXX:" << uuid <<"\n";
     m_callback_map[uuid] = stack;
-    msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::CALL_INTERFACE , body_);
+    msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::CALL_INTERFACE , dest);
     
 }
 
@@ -171,8 +175,12 @@ int broker_service_t::service_obj_t::interface_callback(msg_i& msg_, const strin
     callback_map_t::iterator it = m_callback_map.find(msg_.get_uuid());
     if (it != m_callback_map.end())
     {
-        msg_.set(group_id, id, it->second.uuid);
-        msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::INTREFACE_CALLBACK, body_);
+        string dest = body_;
+
+        //! 直接修改消息包内的uuid
+        cout <<"XXXXXX 22222:" << it->second.uuid <<"\n";
+
+        msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::INTREFACE_CALLBACK, dest);
         
         m_callback_map.erase(it);
         return 0;
