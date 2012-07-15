@@ -164,7 +164,7 @@ void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body
     //! 直接修改消息包内的uuid
     string dest = body_;
     *((uint32_t*)dest.data()) = uuid;
-    cout <<"XXXXXX:" << uuid <<"\n";
+
     m_callback_map[uuid] = stack;
     msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::CALL_INTERFACE , dest);
     
@@ -176,9 +176,7 @@ int broker_service_t::service_obj_t::interface_callback(msg_i& msg_, const strin
     if (it != m_callback_map.end())
     {
         string dest = body_;
-
-        //! 直接修改消息包内的uuid
-        cout <<"XXXXXX 22222:" << it->second.uuid <<"\n";
+        *((uint32_t*)dest.data()) = it->second.uuid;
 
         msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::INTREFACE_CALLBACK, dest);
         
