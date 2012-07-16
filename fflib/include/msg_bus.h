@@ -2,9 +2,6 @@
 #ifndef _MSG_BUS_H_
 #define _MSG_BUS_H_
 
-class rpc_service_t;
-class rpc_service_group_t;
-
 #include <string>
 #include <map>
 using namespace std;
@@ -13,6 +10,8 @@ using namespace std;
 #include "rpc_service.h"
 #include "rpc_service_group.h"
 #include "rpc_future.h"
+
+namespace ff {
 
 class msg_bus_t: public msg_handler_i
 {
@@ -42,4 +41,5 @@ private:
     socket_ptr_t        m_socket;
 };
 
- #endif
+}
+#endif

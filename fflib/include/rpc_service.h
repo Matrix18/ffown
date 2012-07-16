@@ -11,6 +11,8 @@ using namespace std;
 #include "net_factory.h"
 #include "rpc_callback.h"
 
+namespace ff {
+
 class msg_bus_t;
 
 class rpc_service_t
@@ -74,6 +76,8 @@ rpc_service_t& rpc_service_t::reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<O
     msg_process_func_i* msg_process_func = new msg_process_class_func_impl_t<IN_MSG, RET, T, OUT_MSG>(interface_, obj_);
     assert(obj_ && m_interface_map.insert(make_pair(msg_name, msg_process_func)).second == true  && "interface has existed");
     return *this;
+}
+
 }
 
 #endif

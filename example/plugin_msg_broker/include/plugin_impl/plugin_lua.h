@@ -7,6 +7,8 @@ using namespace std;
 #include <lua.hpp>
 #include "plugin_i.h"
 
+using namespace ff;
+
 class plugin_lua_t : public plugin_i
 {
 public:

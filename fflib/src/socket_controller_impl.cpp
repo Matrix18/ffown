@@ -9,6 +9,8 @@
 #include <sstream>
 using namespace std;
 
+using namespace ff;
+
 socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
     m_msg_handler(msg_handler_),
     m_have_recv_size(0)

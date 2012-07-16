@@ -3,6 +3,8 @@
 
 #include "acceptor_i.h"
 
+namespace ff {
+
 #define LISTEN_BACKLOG 5
 
 class epoll_i;
@@ -31,5 +33,8 @@ private:
     msg_handler_i*      m_msg_handler;
     task_queue_pool_t*  m_tq;
 };
+
+}
+
 #endif
 

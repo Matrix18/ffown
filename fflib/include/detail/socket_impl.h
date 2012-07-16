@@ -7,6 +7,8 @@ using namespace std;
 
 #include "socket_i.h"
 
+namespace ff {
+
 class epoll_i;
 class socket_controller_i;
 class task_queue_i;
@@ -50,4 +52,7 @@ private:
     task_queue_i*                       m_tq;
     send_buffer_t                       m_send_buffer;
 };
+
+}
+
 #endif

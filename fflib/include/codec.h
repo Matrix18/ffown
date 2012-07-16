@@ -10,6 +10,8 @@ using namespace std;
 
 #include "message.h"
 
+namespace ff {
+
 class bin_encoder_t;
 class bin_decoder_t;
 
@@ -360,4 +362,6 @@ struct reg_interface_t
         out_t(): bool_ret_msg_t("reg_interface::out"){}
     };
 };
+
+}
 #endif

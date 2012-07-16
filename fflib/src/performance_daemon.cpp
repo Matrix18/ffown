@@ -1,5 +1,6 @@
 #include "utility/performance_daemon.h"
 
+using namespace ff;
 
 performance_daemon_t::performance_daemon_t():
 m_started(false),

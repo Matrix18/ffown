@@ -6,6 +6,8 @@ using namespace std;
 
 #include "epoll_fd_i.h"
 
+namespace ff {
+
 class acceptor_i: public epoll_fd_i
 {
 public:
@@ -15,4 +17,5 @@ public:
     int handle_epoll_write(){ return -1; }
 };
 
+}
 #endif

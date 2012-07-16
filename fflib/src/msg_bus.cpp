@@ -1,5 +1,6 @@
 #include "msg_bus.h"
 
+using namespace ff;
 
 msg_bus_t::msg_bus_t():
     m_uuid(0),

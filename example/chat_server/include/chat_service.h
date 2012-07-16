@@ -9,6 +9,8 @@ using namespace std;
 #include "msg_handler_i.h"
 #include "lock.h"
 
+using namespace ff;
+
 typedef  uint32_t    uid_t;
 typedef socket_i*    socket_ptr_t;
 

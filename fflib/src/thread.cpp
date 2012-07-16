@@ -1,5 +1,7 @@
 #include "thread.h"
 
+using namespace ff;
+
 void* thread_t::thread_func(void* p_)
 {
     task_t* t = (task_t*)p_;

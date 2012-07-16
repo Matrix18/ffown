@@ -6,8 +6,9 @@
 #include <map>
 using namespace std;
 
-
 #include "plugin_i.h"
+
+using namespace ff;
 
 class plugin_python_t : public plugin_i
 {

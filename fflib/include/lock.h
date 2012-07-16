@@ -3,6 +3,8 @@
 
 #include<pthread.h>
 
+namespace ff {
+
 class mutex_t
 {
 public:
@@ -136,5 +138,6 @@ private:
     rw_mutex_t&      m_mutex;
 };
 
+}
 #endif
 

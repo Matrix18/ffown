@@ -4,6 +4,8 @@
 #include "channel.h"
 #include "message.h"
 
+using namespace ff;
+
 class plugin_i
 {
 public:

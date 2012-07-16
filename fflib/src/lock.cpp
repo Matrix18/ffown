@@ -1,5 +1,7 @@
 #include "lock.h"
 
+using namespace ff;
+
 mutex_t::mutex_t()
 {
     pthread_mutex_init(&m_mutex, NULL);

@@ -13,6 +13,8 @@ using namespace std;
 #include "thread.h"
 #include "singleton.h"
 
+namespace ff {
+
 #define AUTO_PERF() performance_daemon_t::perf_tool_t __tmp__(__FUNCTION__)
 #define PERF(m)     performance_daemon_t::perf_tool_t __tmp__(m)
 
@@ -97,5 +99,7 @@ private:
     ofstream                    m_fstream;
     timer_service_t*            m_timer_service;
 };
+
+}
 
 #endif //PERFORMANCE_DEAMON_H_

@@ -1,6 +1,8 @@
 #include "rpc_service.h"
 #include "msg_bus.h"
 
+using namespace ff;
+
 rpc_service_t::rpc_service_t(msg_bus_t* mb_, uint16_t service_group_id_, uint16_t servie_id_):
     m_service_group_id(service_group_id_),
     m_service_id(servie_id_),

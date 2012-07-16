@@ -1,6 +1,8 @@
 #ifndef _EPOLL_I_
 #define _EPOLL_I_
 
+namespace ff {
+
 class epoll_fd_i;
 
 class epoll_i
@@ -15,4 +17,5 @@ public:
     virtual int mod_fd(epoll_fd_i*)           = 0;
 };
 
+}
 #endif

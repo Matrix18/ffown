@@ -3,6 +3,8 @@
 #ifndef _MSG_SENDER_H_
 #define _MSG_SENDER_H_
 
+namespace ff {
+
 #include "socket_i.h"
 #include "message.h"
 #include "codec.h"
@@ -38,4 +40,5 @@ public:
     }
 };
 
+}
 #endif

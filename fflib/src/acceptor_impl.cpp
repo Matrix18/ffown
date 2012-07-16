@@ -18,6 +18,8 @@ using namespace std;
 #include "msg_handler_i.h"
 #include "detail/task_queue_impl.h"
 
+using namespace ff;
+
 acceptor_impl_t::acceptor_impl_t(epoll_i* e_, msg_handler_i* msg_handler_, task_queue_pool_t* tq_):
     m_listen_fd(-1),
     m_epoll(e_),

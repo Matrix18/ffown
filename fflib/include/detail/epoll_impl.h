@@ -7,6 +7,8 @@ using namespace std;
 #include "epoll_i.h"
 #include "task_queue_i.h"
 
+namespace ff {
+
 #define CREATE_EPOLL_SIZE  4096
 #define EPOLL_EVENTS_SIZE  128
 //! 1s
@@ -31,4 +33,5 @@ private:
     int                      m_interunpt_sockets[2];
 };
 
+}
 #endif

@@ -57,6 +57,7 @@ using namespace std;
 #include "rapidjson/stringbuffer.h"
 #include "smart_ptr/shared_ptr.h"
 //! using namespace rapidjson;
+using namespace ff;
 
 typedef runtime_error        msg_exception_t;
 typedef rapidjson::Document  json_dom_t;

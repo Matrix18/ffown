@@ -4,6 +4,8 @@ using namespace std;
 #include "utility/timer_service.h"
 #include "utility/performance_daemon.h"
 
+using namespace ff;
+
 struct timeval begin;
 struct timeval end;
 

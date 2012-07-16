@@ -9,6 +9,8 @@
 #include "lock.h"
 #include "task_queue_i.h"
 
+using namespace ff;
+
 socket_impl_t::socket_impl_t(epoll_i* e_, socket_controller_i* seh_, int fd_, task_queue_i* tq_):
     m_epoll(e_),
     m_sc(seh_),

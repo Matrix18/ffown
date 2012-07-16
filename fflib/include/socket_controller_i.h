@@ -4,6 +4,8 @@
 #include <string>
 using namespace std;
 
+namespace ff {
+
 class socket_i;
 
 class socket_controller_i
@@ -19,4 +21,7 @@ public:
     virtual int handle_write_completed(socket_i*)  {return 0;}
 
 };
+
+}
+
 #endif

@@ -8,6 +8,8 @@ using namespace std;
 #include "task_queue_i.h"
 #include "detail/task_queue_impl.h"
 
+namespace ff {
+
 class thread_t
 {
     static void* thread_func(void* p_);
@@ -19,4 +21,7 @@ public:
 private:
     list<pthread_t> m_tid_list;
 };
+
+}
+
 #endif

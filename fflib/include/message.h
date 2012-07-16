@@ -6,6 +6,8 @@
 #include <string.h>
 using namespace std;
 
+namespace ff {
+
 struct message_head_t
 {
     message_head_t():
@@ -61,4 +63,6 @@ private:
     message_head_t m_head;
     string         m_body;
 };
+    
+}
 #endif

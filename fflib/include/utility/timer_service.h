@@ -15,6 +15,8 @@ using namespace std;
 #include "thread.h"
 #include "lock.h"
 
+namespace ff {
+
 class timer_service_t 
 {
     struct interupt_info_t
@@ -159,6 +161,8 @@ private:
     thread_t                 m_thread;
     mutex_t                  m_mutex;
 };
+
+}
 
 #endif
 

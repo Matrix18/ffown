@@ -5,6 +5,8 @@
 #include <vector>
 using namespace std;
 
+namespace ff {
+
 typedef void (*task_func_t)(void*);
 struct task_t
 {
@@ -645,4 +647,7 @@ struct task_binder_t
         return task_t(lambda_t::task_func, new lambda_t(func_, obj_, arg1_, arg2_, arg3_, arg4_, arg5_, arg6_, arg7_, arg9_));
     }
 };
+
+}
+
 #endif

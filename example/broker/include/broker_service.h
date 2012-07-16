@@ -7,11 +7,14 @@ using namespace std;
 
 #include "msg_bus.h"
 
+using namespace ff;
+
 class broker_service_t: public msg_handler_i
 {
     struct proc_stack_t
     {
-        long start_time;
+        uint64_t start_time;
+        string   req_msg;
         uint32_t uuid;
     };
     typedef map<uint32_t, proc_stack_t>    callback_map_t;

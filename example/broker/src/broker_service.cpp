@@ -1,5 +1,7 @@
 #include "broker_service.h"
 #include "log/log.h"
+#include "utility/timer_service.h"
+#include "utility/performance_daemon.h"
 
 broker_service_t::broker_service_t():
     m_uuid(0)
@@ -197,7 +199,13 @@ void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcac
 void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body_)
 {
     proc_stack_t stack;
-    stack.uuid = msg_.get_uuid();
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    
+    stack.start_time = now.tv_sec*1000000 + now.tv_usec;
+
+    stack.uuid    = msg_.get_uuid();
+    stack.req_msg = msg_.get_name(); 
 
     uint32_t uuid = ++m_uuid;
 
@@ -221,12 +229,18 @@ int broker_service_t::service_obj_t::interface_callback(msg_i& msg_, const strin
 
         msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::INTREFACE_CALLBACK, dest);
         
+        struct timeval now;
+        gettimeofday(&now, NULL);
+
+        long cost = now.tv_sec*1000000 + now.tv_usec - it->second.start_time;
+
+        singleton_t<performance_daemon_t>::instance().post(it->second.req_msg, cost);
         m_callback_map.erase(it);
         return 0;
     }
     else
     {
-        cout <<"broker_service_t::interface_callback\n";
+        logerror((BROKER, "broker_service_t::service_obj_t::interface_callback none uuid"));
     }
 
     return -1;

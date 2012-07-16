@@ -9,6 +9,8 @@
 #include <sstream>
 using namespace std;
 
+using namespace ff;
+
 text_socket_controller_impl_t::text_socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
     m_protocol(UNKNOWN_PROTOCOL),
     m_msg_handler(msg_handler_),

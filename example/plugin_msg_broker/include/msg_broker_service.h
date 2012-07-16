@@ -8,6 +8,8 @@ using namespace std;
 #include "msg_handler_i.h"
 #include "plugin_i.h"
 
+using namespace ff;
+
 class msg_broker_service_t: public msg_handler_i
 {
 public:

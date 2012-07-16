@@ -9,6 +9,8 @@ using namespace std;
 
 #include "rpc_service.h"
 
+namespace ff {
+
 class msg_bus_t;
 
 class rpc_service_group_t
@@ -33,4 +35,5 @@ private:
     msg_bus_t*          m_msg_bus;
 };
 
+}
 #endif

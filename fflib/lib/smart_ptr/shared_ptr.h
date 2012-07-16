@@ -4,6 +4,8 @@
 #include "ref_count.h"
 #include <assert.h>
 
+namespace ff {
+
 template<typename T>
 class shared_ptr_t
 {
@@ -134,4 +136,7 @@ typename shared_ptr_t<T>::self_type_t& shared_ptr_t<T>::operator=(const self_typ
         m_ref_count->inc();
     }
 }
+    
+}
+
 #endif

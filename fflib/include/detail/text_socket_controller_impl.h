@@ -8,6 +8,8 @@ using namespace std;
 #include "message.h"
 #include "msg_handler_i.h"
 
+namespace ff {
+
 class socket_i;
 
 class text_socket_controller_impl_t: public socket_controller_i
@@ -44,4 +46,6 @@ private:
     string              m_head;
     message_t           m_message;
 };
+    
+}
 #endif

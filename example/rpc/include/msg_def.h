@@ -4,6 +4,8 @@
 
 #include "codec.h"
 
+using namespace ff;
+
 struct test_msg_t: public msg_i
 {
     test_msg_t():

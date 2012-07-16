@@ -17,6 +17,8 @@
 #include "msg_handler_i.h"
 #include "detail/socket_controller_impl.h"
 
+namespace ff {
+
 class connector_t
 {
 public:
@@ -58,4 +60,6 @@ public:
     }
 
 };
+    
+}
 #endif

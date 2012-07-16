@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+namespace ff {
+
 struct socket_op_t
 {
     static int set_nonblock(int fd_)
@@ -18,4 +20,7 @@ struct socket_op_t
         return 0;
     }
 };
+
+}
+
 #endif

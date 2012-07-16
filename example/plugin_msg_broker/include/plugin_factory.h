@@ -6,6 +6,8 @@ using namespace std;
 
 #include "plugin_i.h"
 
+using namespace ff;
+
 class plugin_factory_t
 {
 public:

@@ -3,6 +3,8 @@
 
 #include "socket_i.h"
 
+using namespace ff;
+
 class channel_t
 {
 public:

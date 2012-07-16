@@ -11,6 +11,8 @@
 #include "codec.h"
 #include "msg_sender.h"
 
+namespace ff {
+
 class net_factory_t
 {
 public:
@@ -78,5 +80,7 @@ public:
                                     &(singleton_t<global_data_t>::instance().tg));
     }
 };
+
+}
 
 #endif

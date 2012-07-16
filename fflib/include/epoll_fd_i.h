@@ -1,6 +1,8 @@
 #ifndef _EPOLL_FD_I_
 #define _EPOLL_FD_I_
 
+namespace ff {
+
 class epoll_fd_i
 {
 public:
@@ -13,5 +15,7 @@ public:
 
     virtual void close() = 0;
 };
+
+}
 
 #endif

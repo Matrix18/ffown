@@ -1,6 +1,7 @@
 #ifndef _REF_COUNT_H_
 #define _REF_COUNT_H_
 
+namespace ff {
 //! windows.h
 //! InterlockedIncrement
 //! InterlockedDecrement
@@ -34,4 +35,7 @@ public:
 private:
     atomic_t m_ref_num;
 };
+    
+}
+
 #endif

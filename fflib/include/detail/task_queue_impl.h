@@ -8,6 +8,8 @@ using namespace std;
 #include "task_queue_i.h"
 #include "lock.h"
 
+namespace ff {
+
 class task_queue_t: public task_queue_i
 {
 public:
@@ -187,5 +189,6 @@ private:
     task_queue_vt_t         m_tqs;
 };
 
+}
 
 #endif

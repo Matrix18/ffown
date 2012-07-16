@@ -6,6 +6,8 @@ using namespace std;
 
 #include "epoll_fd_i.h"
 
+namespace ff {
+    
 class socket_i: public epoll_fd_i
 {
 public:
@@ -26,4 +28,7 @@ private:
 };
 
 typedef socket_i*  socket_ptr_t;
+
+}
+
 #endif

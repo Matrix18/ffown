@@ -8,6 +8,8 @@ using namespace std;
 #include "socket_i.h"
 #include "msg_sender.h"
 
+namespace ff {
+
 class rpc_callcack_base_t
 {
 public:
@@ -163,5 +165,7 @@ namespace binder_t
     {
         return new callback_wrapper_class_impl_t<RET, MSGT, T>(callback_, obj_);
     }
+}
+
 }
 #endif

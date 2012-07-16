@@ -4,6 +4,8 @@ using namespace std;
 #include "msg_def.h"
 #include "msg_bus.h"
 
+using namespace ff;
+
 class test_service_t: public msg_handler_i
 {
 public:
@@ -52,8 +54,8 @@ public:
     void dumy(){}
     void foo(test_msg_t& in_msg_, rpc_callcack_t<test_msg_t>& cb_)
     {
-        cout << "foo_t::foo done:" << in_msg_.val << "\n";
-        usleep(1000*200);
+        cout << "foo_t::foo done:" << in_msg_.val ++ << "\n";
+        usleep(1000* (in_msg_.val % 100));
         cb_(in_msg_);
     }
     int foo1(const int& a){return 0;}
@@ -127,7 +129,13 @@ int main(int argc, char* argv[])
         static void callback(test_msg_t& in_msg_)
         {
             cout <<"oh nice\n";
-            //call(in_msg_);
+            if (in_msg_.val < 1000) {
+                g_rpc_service->async_call(in_msg_, &lambda_t::callback);
+            }
+            else
+            {
+                g_rpc_service = NULL;
+            }
         }
 
     };
@@ -135,9 +143,10 @@ int main(int argc, char* argv[])
     test_msg.val = 1;
     cout <<"\n\n";
     sleep(1);
-    //g_rpc_service->async_call(test_msg, &lambda_t::callback);
-    msg_bus.get_service_group("fooooo")->get_service(1)->async_call(test_msg, &lambda_t::callback);
-    sleep(10);
+    g_rpc_service = msg_bus.get_service_group("fooooo")->get_service(1);
+    g_rpc_service->async_call(test_msg, &lambda_t::callback);
+    while(g_rpc_service)
+        sleep(1);
     /*
     socket_ptr_t skt = net_factory_t::connect("tcp://127.0.0.1:10241", (msg_handler_i*)&msg_bus);
     cout << "skt:" << skt <<"\n";

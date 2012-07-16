@@ -12,6 +12,8 @@
 #include "epoll_fd_i.h"
 #include "detail/epoll_impl.h"
 
+using namespace ff;
+
 epoll_impl_t::epoll_impl_t():
     m_running(true),
     m_efd(-1)
