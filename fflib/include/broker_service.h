@@ -7,7 +7,7 @@ using namespace std;
 
 #include "msg_bus.h"
 
-using namespace ff;
+namespace ff {
 
 class broker_service_t: public msg_handler_i
 {
@@ -58,4 +58,6 @@ private:
     service_obj_map_t   m_service_obj_mgr;
     uint32_t            m_uuid;
 };
+
+}
 #endif

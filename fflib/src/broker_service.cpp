@@ -3,6 +3,8 @@
 #include "utility/timer_service.h"
 #include "utility/performance_daemon.h"
 
+using namespace ff;
+
 broker_service_t::broker_service_t():
     m_uuid(0)
 {

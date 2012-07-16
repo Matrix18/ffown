@@ -79,7 +79,14 @@ void performance_daemon_t::post(const string& mod_, long us_)
         long                  cost;
     };
     
-    m_task_queue.produce(task_t(&lambda_perf_data_t::add_perf_data, new lambda_perf_data_t(this, mod_, us_)));
+    if (m_started)
+    {
+        m_task_queue.produce(task_t(&lambda_perf_data_t::add_perf_data, new lambda_perf_data_t(this, mod_, us_)));
+    }
+    else
+    {
+        this->start("perf.txt", 60*10);
+    }
 }
 
 void performance_daemon_t::handle_timer()

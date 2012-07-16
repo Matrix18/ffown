@@ -58,6 +58,11 @@ public:
         }
     };
 
+    static int start(int thread_num_)
+    {
+        singleton_t<global_data_t>::instance().start(thread_num_);
+        return 0;
+    }
     static acceptor_i* listen(const string& host_, msg_handler_i* msg_handler_)
     {
         singleton_t<global_data_t>::instance().start();
