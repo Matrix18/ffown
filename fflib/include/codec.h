@@ -176,6 +176,12 @@ private:
     string         m_dest_buff;
 };
 
+template<typename T>
+struct  msg_traits_t
+{
+    msg_traits_t():msg_id(0){}
+    uint16_t msg_id;
+};
 
 struct msg_i : public codec_i
 {
@@ -187,23 +193,28 @@ struct msg_i : public codec_i
         msg_name(msg_name_)
     {}
     
-    void set(uint16_t group_id, uint16_t id_, uint32_t uuid_)
+    void set(uint16_t group_id, uint16_t id_, uint32_t uuid_, uint16_t msg_id_)
     {
         service_group_id = group_id;
         service_id       = id_;
         uuid             = uuid_;
+        msg_id           = msg_id_;
     }
 
     uint16_t cmd;
     uint16_t get_group_id()   const{ return service_group_id; }
     uint16_t get_service_id() const{ return service_id;       }
     uint32_t get_uuid()       const{ return uuid;             }
+    
+    uint16_t get_msg_id()     const{ return msg_id;           }
     const string& get_name()  const{ return msg_name;         }
     
-    void     set_uuid(uint32_t id_){ uuid = id_; }
+    void     set_uuid(uint32_t id_)   { uuid = id_;  }
+    void     set_msg_id(uint16_t id_) { msg_id = id_;}
     uint32_t uuid;
     uint16_t service_group_id;
     uint16_t service_id;
+    uint16_t msg_id;
     string   msg_name;
 
     virtual string encode(uint16_t cmd_)
@@ -214,7 +225,7 @@ struct msg_i : public codec_i
     virtual string encode() = 0;
     bin_encoder_t& init_encoder()
     {
-        return encoder.init(cmd)  << uuid << service_group_id << service_id<< msg_name;
+        return encoder.init(cmd)  << uuid << service_group_id << service_id<< msg_id << msg_name;
     }
     bin_encoder_t& init_encoder(uint16_t cmd_)
     {
@@ -222,7 +233,7 @@ struct msg_i : public codec_i
     }
     bin_decoder_t& init_decoder(const string& buff_)
     {
-        return decoder.init(buff_) >> uuid >> service_group_id >> service_id >> msg_name;
+        return decoder.init(buff_) >> uuid >> service_group_id >> service_id >> msg_id >> msg_name;
     }
     bin_decoder_t decoder;
     bin_encoder_t encoder;
@@ -346,20 +357,31 @@ struct reg_interface_t
         {}
         virtual string encode()
         {
-            return (init_encoder()<< new_service_group_id << new_service_id << in_msg_name << out_msg_name).get_buff();
+            return (init_encoder()<< sgid << sid << in_msg_name << out_msg_name).get_buff();
         }
         virtual void decode(const string& src_buff_)
         {
-            init_decoder(src_buff_) >> new_service_group_id >> new_service_id >> in_msg_name >> in_msg_name;
+            init_decoder(src_buff_) >> sgid >> sid >> in_msg_name >> in_msg_name;
         }
-        uint16_t new_service_group_id;
-        uint16_t new_service_id;
+        uint16_t sgid;
+        uint16_t sid;
         string in_msg_name;
         string out_msg_name;
     };
-    struct out_t: public bool_ret_msg_t
+    struct out_t: public msg_i
     {
-        out_t(): bool_ret_msg_t("reg_interface::out"){}
+        out_t():
+            msg_i("reg_interface_t::out")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()<< alloc_id).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> alloc_id;
+        }
+        uint16_t alloc_id;
     };
 };
 

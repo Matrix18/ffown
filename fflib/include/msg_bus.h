@@ -33,6 +33,7 @@ public:
     socket_ptr_t get_socket(const rpc_service_t* rs_);
 
     int register_service(const string& name_, uint16_t gid_, uint16_t id_);
+    int register_interface(const string& in_name_, const string& out_name_, uint16_t gid_, uint16_t id_);
     
 private:
     uint32_t            m_uuid;

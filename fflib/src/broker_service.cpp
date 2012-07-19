@@ -87,16 +87,22 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
                 rcb.set_socket(sock_);
                 create_service(in, rcb);
         }
+        else if (msg_tool.get_name() == "reg_interface_t::in")
+        {
+            reg_interface_t::in_t in;
+            in.decode(msg_.get_body());
+            
+            rpc_callcack_t<reg_interface_t::out_t> rcb;
+            rcb.set_cmd(rpc_msg_cmd_e::INTREFACE_CALLBACK);
+            rcb.set_socket(sock_);
+
+            reg_interface(in, rcb);
+        }
     }
     else
     {
         switch (msg_.get_cmd())
         {
-            case rpc_msg_cmd_e::REG_INTERFACE:
-            {
-                reg_interface_t::in_t in;
-                in.decode(msg_.get_body());
-            }break;
             case rpc_msg_cmd_e::CALL_INTERFACE:
             {
                 service_obj_t& sobj = m_service_obj_mgr[msg_tool.get_group_id()].service_objs[msg_tool.get_service_id()];
@@ -182,18 +188,20 @@ void broker_service_t::create_service(create_service_t::in_t& in_msg_, rpc_callc
 void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcack_t<reg_interface_t::out_t>& cb_)
 {
     reg_interface_t::out_t ret;
+    ret.alloc_id = -1;
+    ret.set_uuid(in_msg_.get_uuid());
 
-    rpc_service_group_t* rsg = m_msg_bus.get_service_group(in_msg_.new_service_group_id);
-    if (NULL != rsg)
+    logtrace((BROKER, "broker_service_t::reg_interface sgid[%u], sid[%u]", in_msg_.sgid, in_msg_.sid));
+
+    service_obj_mgr_t& som = m_service_obj_mgr[in_msg_.sgid];
+    map<uint16_t, service_obj_t>::iterator it = som.service_objs.find(in_msg_.sid);
+    
+    if (it != som.service_objs.end())
     {
-        rpc_service_t* rs = rsg->get_service(in_msg_.new_service_id);
-        if (NULL != rs)
-        {
-            //! ok
-            ret.value = true;
-        }
+        ret.alloc_id = ++ m_uuid;
+        
+        logtrace((BROKER, "broker_service_t::reg_interface sgid[%u], sid[%u] alloc_id[%u]", in_msg_.sgid, in_msg_.sid, ret.alloc_id));
     }
-
 
     cb_(ret);
 }

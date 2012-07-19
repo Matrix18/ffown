@@ -17,17 +17,18 @@ class msg_bus_t;
 
 class rpc_service_t
 {
-    typedef map<uint32_t, callback_wrapper_i*>    callback_map_t;
-    typedef map<string, msg_process_func_i*>      interface_map_t;
+    typedef map<uint32_t, callback_wrapper_i*>      callback_map_t;
+    typedef map<uint32_t, msg_process_func_i*>      interface_map_t;
+
 public:
     rpc_service_t(msg_bus_t* mb_, uint16_t service_group_id_, uint16_t servie_id_);
     virtual ~rpc_service_t();
     uint16_t get_group_id() const;
     uint16_t get_id() const;
 
-    void async_call(msg_i& msg_, callback_wrapper_i* callback_);
-    template<typename RET, typename MSGT>
-    void async_call(msg_i& msg_, RET (*callback_)(MSGT&));
+    void async_call(msg_i& msg_, uint16_t msg_id_, callback_wrapper_i* callback_);
+    template<typename RET, typename MSGT, typename IN_MSG>
+    void async_call(IN_MSG& msg_, RET (*callback_)(MSGT&));
 
     template <typename IN_MSG, typename RET, typename OUT_MSG>
     rpc_service_t& reg(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&));
@@ -39,9 +40,13 @@ public:
     rpc_service_t& reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&)) { return reg(interface_, (T*)m_bind_service_ptr); }
 
     int interface_callback(uint32_t uuid_, const string& buff_);
-    int call_interface(const string& interface_name_, const string& msg_buff_, socket_ptr_t sock_);
+    int call_interface(uint32_t interface_name_, const string& msg_buff_, socket_ptr_t sock_);
 
     virtual socket_ptr_t get_socket() const;
+
+private:
+    int add_interface(const string& in_name_, const string& out_name_, msg_process_func_i* func_);
+
 private:
     uint16_t        m_service_group_id;
     uint16_t        m_service_id;
@@ -50,34 +55,48 @@ private:
     interface_map_t m_interface_map;
     void*           m_bind_service_ptr;
     msg_bus_t*      m_msg_bus;
+    
+    map<string, uint32_t>   m_name_to_id;
 };
 
-template<typename RET, typename MSGT>
-void rpc_service_t::async_call(msg_i& msg_, RET (*callback_)(MSGT&))
+template<typename RET, typename MSGT, typename IN_MSG>
+void rpc_service_t::async_call(IN_MSG& msg_, RET (*callback_)(MSGT&))
 {
-    this->async_call(msg_, new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
+    this->async_call(msg_, singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id,
+                     new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
 }
 
 template <typename IN_MSG, typename RET, typename OUT_MSG>
 rpc_service_t& rpc_service_t::reg(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&))
 {
-    IN_MSG msg;
-    const string& msg_name = msg.get_name();
+    IN_MSG  in_msg;
+    OUT_MSG out_msg;
+
+    const string& in_msg_name  = in_msg.get_name();
+    const string& out_msg_name = out_msg.get_name();
+
     msg_process_func_i* msg_process_func = new msg_process_func_impl_t<IN_MSG, RET, OUT_MSG>(interface_);
-    assert(m_interface_map.insert(make_pair(msg_name, msg_process_func)).second == true  && "interface has existed");
+
+    singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = this->add_interface(in_msg_name, out_msg_name, msg_process_func);
     return *this;
 }
 
 template <typename IN_MSG, typename RET, typename T, typename OUT_MSG>
 rpc_service_t& rpc_service_t::reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&), T* obj_)
 {
-    IN_MSG msg;
-    const string& msg_name = msg.get_name();
+    IN_MSG  in_msg;
+    OUT_MSG out_msg;
+    
+    const string& in_msg_name  = in_msg.get_name();
+    const string& out_msg_name = out_msg.get_name();
+
     msg_process_func_i* msg_process_func = new msg_process_class_func_impl_t<IN_MSG, RET, T, OUT_MSG>(interface_, obj_);
-    assert(obj_ && m_interface_map.insert(make_pair(msg_name, msg_process_func)).second == true  && "interface has existed");
+
+    assert(obj_);
+    singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = this->add_interface(in_msg_name, out_msg_name, msg_process_func);
+
     return *this;
 }
 
 }
-
 #endif

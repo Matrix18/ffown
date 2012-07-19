@@ -98,7 +98,7 @@ int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
         }
         if (rpc_msg_cmd_e::CALL_INTERFACE == msg_.get_cmd())
         {
-            rs->call_interface(msg_tool.get_name(), msg_.get_body(), sock_);
+            rs->call_interface(msg_tool.get_msg_id(), msg_.get_body(), sock_);
         }
         else if (rpc_msg_cmd_e::INTREFACE_CALLBACK == msg_.get_cmd())
         {
@@ -147,3 +147,16 @@ int msg_bus_t::register_service(const string& name_, uint16_t gid_, uint16_t id_
     return out.value == true? 0: -1;
 }
 
+int msg_bus_t::register_interface(const string& in_name_, const string& out_name_, uint16_t gid_, uint16_t id_)
+{
+    rpc_future_t<reg_interface_t::out_t> rpc_future;
+    reg_interface_t::in_t in;
+    in.sgid = gid_;
+    in.sid  = id_;
+    in.in_msg_name  = in_name_;
+    in.out_msg_name = out_name_;
+
+    const reg_interface_t::out_t& out = rpc_future.call(m_broker_service, in);
+    cout << "msg_bus_t::register_interface:" << out.alloc_id <<"\n";
+    return out.alloc_id;
+}
