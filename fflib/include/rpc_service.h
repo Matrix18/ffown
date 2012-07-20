@@ -62,7 +62,7 @@ private:
 template<typename RET, typename MSGT, typename IN_MSG>
 void rpc_service_t::async_call(IN_MSG& msg_, RET (*callback_)(MSGT&))
 {
-    this->async_call(msg_, m_name_to_id[msg_.get_name()],
+    this->async_call(msg_, singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id,
                      new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
 }
 

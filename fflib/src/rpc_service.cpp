@@ -96,5 +96,5 @@ int rpc_service_t::add_interface(const string& in_name_, const string& out_name_
     assert(alloc_id > 0 && func_ && m_interface_map.insert(make_pair(alloc_id, func_)).second == true  && "interface has existed");
 
     m_name_to_id[in_name_] = alloc_id;
-    return 0; 
+    return alloc_id; 
 }
