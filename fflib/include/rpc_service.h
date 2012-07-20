@@ -62,8 +62,14 @@ private:
 template<typename RET, typename MSGT, typename IN_MSG>
 void rpc_service_t::async_call(IN_MSG& msg_, RET (*callback_)(MSGT&))
 {
-    this->async_call(msg_, singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id,
-                     new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
+    uint16_t msg_id = singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id;
+    if (msg_id <= 0)
+    {
+        msg_id = m_name_to_id[msg_.get_name()];
+        singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = msg_id;
+    }
+
+    this->async_call(msg_, msg_id, new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
 }
 
 template <typename IN_MSG, typename RET, typename OUT_MSG>
