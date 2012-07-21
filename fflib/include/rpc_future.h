@@ -25,7 +25,7 @@ public:
     template<typename MSGT>
     RET call(rpc_service_t* rs_, MSGT& in_)
     {
-        rs_->async_call(in_, singleton_t<msg_traits_t<MSGT> >::instance().msg_id,
+        rs_->async_call(in_, singleton_t<msg_traits_t<MSGT> >::instance().get_id(),
                         binder_t::callback(&rpc_future_t<RET>::callback, this));
         lock_guard_t lock(m_mutex);
         while(false == m_flag)

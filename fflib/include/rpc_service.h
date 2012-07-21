@@ -55,19 +55,12 @@ private:
     interface_map_t m_interface_map;
     void*           m_bind_service_ptr;
     msg_bus_t*      m_msg_bus;
-    
-    map<string, uint32_t>   m_name_to_id;
 };
 
 template<typename RET, typename MSGT, typename IN_MSG>
 void rpc_service_t::async_call(IN_MSG& msg_, RET (*callback_)(MSGT&))
 {
-    uint16_t msg_id = singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id;
-    if (msg_id <= 0)
-    {
-        msg_id = m_name_to_id[msg_.get_name()];
-        singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = msg_id;
-    }
+    uint16_t msg_id = singleton_t<msg_traits_t<MSGT> >::instance().get_id();
 
     this->async_call(msg_, msg_id, new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
 }
@@ -96,7 +89,7 @@ rpc_service_t& rpc_service_t::reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<O
     const string& in_msg_name  = in_msg.get_name();
     const string& out_msg_name = out_msg.get_name();
 
-    msg_process_func_i* msg_process_func = new msg_process_class_func_impl_t<IN_MSG, RET, T, OUT_MSG>(interface_, obj_);
+    msg_process_func_i* msg_process_func = new msg_process_class_func_impl_t<IN_MSG, RET, T, OUT_MSG>(interface_, obj_,  m_service_group_id, m_service_id);
 
     assert(obj_);
     singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = this->add_interface(in_msg_name, out_msg_name, msg_process_func);

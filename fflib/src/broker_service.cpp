@@ -6,7 +6,8 @@
 using namespace ff;
 
 broker_service_t::broker_service_t():
-    m_uuid(0)
+    m_uuid(0),
+    m_msg_uuid(100)
 {
 }
 
@@ -64,39 +65,50 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
         return -1;
     }
 
-    logtrace((BROKER, "broker_service_t::handle_msg begin... cmd[%u], name[%s], sgid[%u], sid[%u]",
-                      msg_.get_cmd(), msg_tool.get_name().c_str(), msg_tool.get_group_id(), msg_tool.get_service_id()));
+    logtrace((BROKER, "broker_service_t::handle_msg begin... cmd[%u], name[%s], sgid[%u], sid[%u], msgid[%u]",
+                      msg_.get_cmd(), msg_tool.get_name().c_str(), msg_tool.get_group_id(), msg_tool.get_service_id(), msg_tool.get_msg_id()));
     
     if (msg_tool.get_group_id() == 0 && msg_tool.get_service_id() == 0)
     {
-        if (msg_tool.get_name() == "create_service_group_t::in")
+        if (msg_tool.get_msg_id() == rpc_msg_cmd_e::CREATE_SERVICE_GROUP)
         {
                 create_service_group_t::in_t in;
                 in.decode(msg_.get_body());
                 rpc_callcack_t<create_service_group_t::out_t> rcb;
-                rcb.set_cmd(rpc_msg_cmd_e::INTREFACE_CALLBACK);
+                rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
                 rcb.set_socket(sock_);
                 create_service_group(in, rcb);
         }
-        else if (msg_tool.get_name() == "create_service_t::in")
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::CREATE_SERVICE)
         {
                 create_service_t::in_t in;
                 in.decode(msg_.get_body());
                 rpc_callcack_t<create_service_t::out_t> rcb;
-                rcb.set_cmd(rpc_msg_cmd_e::INTREFACE_CALLBACK);
+                rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
                 rcb.set_socket(sock_);
                 create_service(in, rcb);
         }
-        else if (msg_tool.get_name() == "reg_interface_t::in")
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::REG_INTERFACE)
         {
             reg_interface_t::in_t in;
             in.decode(msg_.get_body());
             
             rpc_callcack_t<reg_interface_t::out_t> rcb;
-            rcb.set_cmd(rpc_msg_cmd_e::INTREFACE_CALLBACK);
+            rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
             rcb.set_socket(sock_);
 
             reg_interface(in, rcb);
+        }
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::SYNC_ALL_SERVICE)
+        {
+            sync_all_service_t::in_t in;
+            in.decode(msg_.get_body());
+            
+            rpc_callcack_t<sync_all_service_t::out_t> rcb;
+            rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
+            rcb.set_socket(sock_);
+            
+            sync_all_service(in, rcb);
         }
     }
     else
@@ -107,7 +119,7 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
             {
                 service_obj_t& sobj = m_service_obj_mgr[msg_tool.get_group_id()].service_objs[msg_tool.get_service_id()];
 
-                sobj.async_call(msg_tool, msg_.get_body());
+                sobj.async_call(msg_tool, msg_.get_body(), sock_);
             }break;
             case rpc_msg_cmd_e::INTREFACE_CALLBACK:
             {
@@ -119,6 +131,39 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
     }
 
     return 0;
+}
+
+void broker_service_t::sync_all_service(sync_all_service_t::in_t& in_msg_, rpc_callcack_t<sync_all_service_t::out_t>& cb_)
+{
+    sync_all_service_t::out_t ret;
+
+    service_obj_map_t::iterator it = m_service_obj_mgr.begin();
+    
+    for (; it != m_service_obj_mgr.end(); ++it)
+    {
+        ret.group_name_vt.push_back(it->second.name);
+        ret.group_id_vt.push_back(it->second.id);
+        
+        map<uint16_t, service_obj_t>::iterator it2 = it->second.service_objs.begin();
+        for (; it2 != it->second.service_objs.end(); ++it2)
+        {
+            sync_all_service_t::id_info_t id_info;
+            id_info.sgid = it2->second.group_id;
+            id_info.sid  = it2->second.id;
+
+            ret.id_info_vt.push_back(id_info);
+        }
+    }
+    
+    map<string, uint16_t>& all_msg = singleton_t<msg_name_store_t>::instance().all_msg();
+    for (map<string, uint16_t>::iterator it3 = all_msg.begin(); it3 != all_msg.end(); ++it3)
+    {
+        ret.msg_name_vt.push_back(it3->first);
+        ret.msg_id_vt.push_back(it3->second);
+    }
+    
+    ret.set_uuid(in_msg_.get_uuid());
+    cb_(ret);
 }
 
 void broker_service_t::create_service_group(create_service_group_t::in_t& in_msg_, rpc_callcack_t<create_service_group_t::out_t>& cb_)
@@ -198,15 +243,16 @@ void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcac
     
     if (it != som.service_objs.end())
     {
-        ret.alloc_id = ++ m_uuid;
-        
+        ret.alloc_id = ++ m_msg_uuid;
+        singleton_t<msg_name_store_t>::instance().add_msg(in_msg_.in_msg_name, ret.alloc_id);
+
         logtrace((BROKER, "broker_service_t::reg_interface sgid[%u], sid[%u] alloc_id[%u]", in_msg_.sgid, in_msg_.sid, ret.alloc_id));
     }
 
     cb_(ret);
 }
 
-void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body_)
+void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body_, socket_ptr_t sp_)
 {
     proc_stack_t stack;
     struct timeval now;
@@ -216,6 +262,7 @@ void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body
 
     stack.uuid    = msg_.get_uuid();
     stack.req_msg = msg_.get_name(); 
+    stack.socket_ptr= sp_;
 
     uint32_t uuid = ++m_uuid;
 
@@ -237,7 +284,7 @@ int broker_service_t::service_obj_t::interface_callback(msg_i& msg_, const strin
         string dest = body_;
         *((uint32_t*)dest.data()) = it->second.uuid;
 
-        msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::INTREFACE_CALLBACK, dest);
+        msg_sender_t::send(it->second.socket_ptr, rpc_msg_cmd_e::INTREFACE_CALLBACK, dest);
         
         struct timeval now;
         gettimeofday(&now, NULL);
@@ -250,7 +297,7 @@ int broker_service_t::service_obj_t::interface_callback(msg_i& msg_, const strin
     }
     else
     {
-        logerror((BROKER, "broker_service_t::service_obj_t::interface_callback none uuid"));
+        logerror((BROKER, "broker_service_t::service_obj_t::interface_callback none uuid[%u]", msg_.get_uuid()));
     }
 
     return -1;

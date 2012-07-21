@@ -35,15 +35,32 @@ public:
     
     void exe(msg_i& msg_)
     {
+        if (0 != m_sgid)
+        {
+            msg_.set_sgid(m_sgid);
+            msg_.set_sid(m_sid);
+        }
+        msg_.set_uuid(m_uuid);
         msg_sender_t::send(m_socket, rpc_msg_cmd_e::INTREFACE_CALLBACK, msg_);
     }
 
     void set_socket(socket_ptr_t socket_){  m_socket = socket_; }
     void set_cmd(uint16_t cmd_)          {  m_cmd = cmd_;   }
     socket_ptr_t get_socket() const      {  return m_socket;}
+    
+    void init_data(uint16_t cmd_, uint16_t sgid_, uint16_t sid_, uint32_t uuid_)
+    {
+        m_cmd = cmd_;
+        m_sgid= sgid_;
+        m_sid = sid_;
+        m_uuid=uuid_;
+    }
 private:
     socket_ptr_t m_socket;
     uint16_t     m_cmd;
+    uint16_t     m_sgid;
+    uint16_t     m_sid;
+    uint32_t     m_uuid;
 };
 
 template <typename MSGT>
@@ -65,8 +82,10 @@ struct msg_process_func_i
 template <typename IN_MSG, typename RET, typename OUT_MSG>
 struct msg_process_func_impl_t: public msg_process_func_i
 {
-    msg_process_func_impl_t(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&)):
-        m_interface(interface_)
+    msg_process_func_impl_t(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&), uint16_t sgid_, uint16_t sid_):
+        m_interface(interface_),
+        sgid(sgid_),
+        sid(sid_)
     {
     }
     virtual void exe(const string& msg_, uint16_t cmd_, socket_ptr_t socket_)
@@ -75,20 +94,24 @@ struct msg_process_func_impl_t: public msg_process_func_i
         in_msg.decode(msg_);
 
         rpc_callcack_t<OUT_MSG> cb;
-        cb.set_cmd(cmd_);
+        cb.init_data(cmd_, sgid, sid, in_msg.get_uuid());
         cb.set_socket(socket_);
     
         (*m_interface)(in_msg, cb);
     }
     RET (*m_interface)(IN_MSG&, rpc_callcack_t<OUT_MSG>&);
+    uint16_t sgid;
+    uint16_t sid;
 };
 
 template <typename IN_MSG, typename RET, typename T, typename OUT_MSG>
 struct msg_process_class_func_impl_t: public msg_process_func_i
 {
-    msg_process_class_func_impl_t(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&), T* obj_):
+    msg_process_class_func_impl_t(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&), T* obj_, uint16_t sgid_, uint16_t sid_):
         m_interface(interface_),
-        m_obj(obj_)
+        m_obj(obj_),
+        sgid(sgid_),
+        sid(sid_)
     {
     }
     virtual void exe(const string& msg_, uint16_t cmd_, socket_ptr_t socket_)
@@ -96,12 +119,14 @@ struct msg_process_class_func_impl_t: public msg_process_func_i
         IN_MSG in_msg;
         in_msg.decode(msg_);
         rpc_callcack_t<OUT_MSG> cb;
-        cb.set_cmd(cmd_);
+        cb.init_data(cmd_, sgid, sid, in_msg.get_uuid());
         cb.set_socket(socket_);
         (m_obj->*(m_interface))(in_msg, cb);
     }
     RET (T::*m_interface)(IN_MSG&, rpc_callcack_t<OUT_MSG>&);
     T* m_obj;
+    uint16_t sgid;
+    uint16_t sid;
 };
 
 struct callback_wrapper_i

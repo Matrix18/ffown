@@ -6,9 +6,11 @@
 #include <stdexcept>
 #include <vector>
 #include <iostream>
+#include <map>
 using namespace std;
 
 #include "message.h"
+#include "utility/singleton.h"
 
 namespace ff {
 
@@ -176,10 +178,40 @@ private:
     string         m_dest_buff;
 };
 
+struct msg_name_store_t
+{
+    void add_msg(const string& name_, uint16_t id_)
+    {
+        m_name_to_id[name_] = id_;
+        m_id_to_name[id_]   = name_;
+    }
+    uint16_t name_to_id(const string& name_)
+    {
+        return m_name_to_id[name_];
+    }
+    const string& id_to_name(uint16_t id_)
+    {
+        return m_id_to_name[id_];
+    }
+    map<string, uint16_t>& all_msg() { return m_name_to_id; }
+    map<string, uint16_t> m_name_to_id;
+    map<uint16_t, string> m_id_to_name;
+};
+
 template<typename T>
 struct  msg_traits_t
 {
     msg_traits_t():msg_id(0){}
+    
+    uint16_t get_id()
+    {
+        if (0 == msg_id)
+        {
+            T tmp;
+            msg_id = singleton_t<msg_name_store_t>::instance().name_to_id(tmp.get_name());   
+        }
+        return msg_id;
+    }
     uint16_t msg_id;
 };
 
@@ -190,6 +222,7 @@ struct msg_i : public codec_i
         uuid(0),
         service_group_id(0),
         service_id(0),
+        msg_id(0),
         msg_name(msg_name_)
     {}
     
@@ -211,6 +244,8 @@ struct msg_i : public codec_i
     
     void     set_uuid(uint32_t id_)   { uuid = id_;  }
     void     set_msg_id(uint16_t id_) { msg_id = id_;}
+    void     set_sgid(uint16_t sgid_) { service_group_id = sgid_;}
+    void     set_sid(uint16_t sid_)   { service_id = sid_; }
     uint32_t uuid;
     uint16_t service_group_id;
     uint16_t service_id;
@@ -229,7 +264,7 @@ struct msg_i : public codec_i
     }
     bin_encoder_t& init_encoder(uint16_t cmd_)
     {
-        return encoder.init(cmd_) << uuid << service_group_id << service_id << msg_name;
+        return encoder.init(cmd_) << uuid << service_group_id << service_id << msg_id << msg_name;
     }
     bin_decoder_t& init_decoder(const string& buff_)
     {
@@ -268,8 +303,9 @@ struct rpc_msg_cmd_e
         CREATE_SERVICE_GROUP = 1,
         CREATE_SERVICE       = 2,
         REG_INTERFACE        = 3,
-        CALL_INTERFACE       = 4,
-        INTREFACE_CALLBACK   = 5,
+        SYNC_ALL_SERVICE     = 4,
+        CALL_INTERFACE       = 5,
+        INTREFACE_CALLBACK   = 6,
     };
 };
 
@@ -382,6 +418,50 @@ struct reg_interface_t
             init_decoder(src_buff_) >> alloc_id;
         }
         uint16_t alloc_id;
+    };
+};
+
+struct sync_all_service_t
+{
+    struct id_info_t
+    {
+        uint16_t sgid;
+        uint16_t sid;
+    };
+
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("sync_all_service_t::in")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()).get_buff() ;
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_);
+        }
+    };
+    struct out_t: public msg_i
+    {
+        out_t():
+            msg_i("sync_all_service_t::out")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder()<< group_name_vt << group_id_vt << id_info_vt << msg_name_vt << msg_id_vt).get_buff() ;
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> group_name_vt >> group_id_vt >> id_info_vt >> msg_name_vt >> msg_id_vt;
+        }
+        vector<string>      group_name_vt;
+        vector<uint16_t>    group_id_vt;
+        
+        vector<id_info_t>   id_info_vt;
+        vector<string>      msg_name_vt;
+        vector<uint16_t>    msg_id_vt;
     };
 };
 
