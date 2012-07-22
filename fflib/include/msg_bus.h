@@ -10,6 +10,7 @@ using namespace std;
 #include "rpc_service.h"
 #include "rpc_service_group.h"
 #include "rpc_future.h"
+#include "utility/signal_helper.h"
 
 namespace ff {
 
