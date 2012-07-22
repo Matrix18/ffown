@@ -22,6 +22,7 @@ int broker_service_t::handle_broken(socket_ptr_t sock_)
     
     vector<uint32_t> del_sgid;
     vector<uint32_t> del_sid;
+    vector<uint32_t> del_callback_uuid;
 
     service_obj_map_t::iterator it = m_service_obj_mgr.begin();
     for (; it != m_service_obj_mgr.end(); ++it)
@@ -29,11 +30,27 @@ int broker_service_t::handle_broken(socket_ptr_t sock_)
         map<uint16_t, service_obj_t>::iterator it2 = it->second.service_objs.begin();
         for (; it2 != it->second.service_objs.end(); ++it2)
         {
+            callback_map_t::iterator uuid_it = it2->second.m_callback_map.begin();
+            for (; uuid_it != it2->second.m_callback_map.end(); ++uuid_it)
+            {
+                if (uuid_it->second.socket_ptr == sock_)
+                {
+                    del_callback_uuid.push_back(uuid_it->first);
+                }
+            }
+            
             if (it2->second.socket_ptr == sock_)
             {
                 del_sgid.push_back(it->first);
                 del_sid.push_back(it2->first);
             }
+            
+            //! del all tmp callback uuid
+            for (size_t i = 0; i < del_callback_uuid.size(); ++i)
+            {
+                it2->second.m_callback_map.erase(del_callback_uuid[i]);
+            }
+            del_callback_uuid.clear();
         }
     }
     
@@ -101,6 +118,9 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
         }
         else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::SYNC_ALL_SERVICE)
         {
+            loginfo((BROKER, "broker_service_t::handle_msg begin... cmd[%u], name[%s], sgid[%u], sid[%u], msgid[%u] sock[%p]",
+                      msg_.get_cmd(), msg_tool.get_name().c_str(), msg_tool.get_group_id(), msg_tool.get_service_id(), msg_tool.get_msg_id(), sock_));
+
             sync_all_service_t::in_t in;
             in.decode(msg_.get_body());
             
@@ -113,19 +133,31 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
     }
     else
     {
+        service_obj_map_t::iterator obj_mgr_it = m_service_obj_mgr.find(msg_tool.get_group_id());
+        if (obj_mgr_it == m_service_obj_mgr.end())
+        {
+            logerror((BROKER, "broker_service_t::handle_msg sgid not found cmd[%u], name[%s], sgid[%u], sid[%u], msgid[%u]",
+                              msg_.get_cmd(), msg_tool.get_name().c_str(), msg_tool.get_group_id(), msg_tool.get_service_id(), msg_tool.get_msg_id()));
+            return -1;
+        }
+
+        map<uint16_t, service_obj_t>::iterator sobj_it = obj_mgr_it->second.service_objs.find(msg_tool.get_service_id());
+        if (sobj_it == obj_mgr_it->second.service_objs.end())
+        {
+            logerror((BROKER, "broker_service_t::handle_msg sid not found cmd[%u], name[%s], sgid[%u], sid[%u], msgid[%u]",
+                      msg_.get_cmd(), msg_tool.get_name().c_str(), msg_tool.get_group_id(), msg_tool.get_service_id(), msg_tool.get_msg_id()));
+            return -1;
+        }
+
         switch (msg_.get_cmd())
         {
             case rpc_msg_cmd_e::CALL_INTERFACE:
             {
-                service_obj_t& sobj = m_service_obj_mgr[msg_tool.get_group_id()].service_objs[msg_tool.get_service_id()];
-
-                sobj.async_call(msg_tool, msg_.get_body(), sock_);
+                sobj_it->second.async_call(msg_tool, msg_.get_body(), sock_);
             }break;
             case rpc_msg_cmd_e::INTREFACE_CALLBACK:
             {
-                service_obj_t& sobj = m_service_obj_mgr[msg_tool.get_group_id()].service_objs[msg_tool.get_service_id()];
-                
-                sobj.interface_callback(msg_tool, msg_.get_body());
+                sobj_it->second.interface_callback(msg_tool, msg_.get_body());
             }break;
         }
     }

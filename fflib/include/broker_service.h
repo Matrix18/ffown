@@ -18,7 +18,7 @@ class broker_service_t: public msg_handler_i
         uint32_t uuid;
         socket_ptr_t socket_ptr;
     };
-    typedef map<uint32_t, proc_stack_t>    callback_map_t;
+    typedef map<uint32_t, proc_stack_t>           callback_map_t;
     typedef map<string, msg_process_func_i*>      interface_map_t;
     
     struct service_obj_t
@@ -30,8 +30,10 @@ class broker_service_t: public msg_handler_i
         uint16_t     id;
         socket_ptr_t socket_ptr;
         uint32_t     m_uuid;
+
         void async_call(msg_i& msg_, const string& body_, socket_ptr_t sp_);
         int interface_callback(msg_i& msg_, const string& body_);
+
         callback_map_t  m_callback_map;
         interface_map_t m_interface_map;
     };

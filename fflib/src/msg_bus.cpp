@@ -182,6 +182,15 @@ int msg_bus_t::open(const string& host_)
     return 0;
 }
 
+int msg_bus_t::close()
+{
+    if (m_socket)
+    {
+        m_socket->close();
+    }
+    return 0;
+}
+
 socket_ptr_t msg_bus_t::get_socket(const rpc_service_t* rs_)
 {
     return m_socket;

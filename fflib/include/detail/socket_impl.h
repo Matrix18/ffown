@@ -41,6 +41,8 @@ public:
     int handle_epoll_error_impl();
     void send_impl(const string& buff_);
     void close_impl();
+    
+    socket_controller_i* get_sc() { return m_sc; }
 private:
     bool is_open() { return m_fd > 0; }
 

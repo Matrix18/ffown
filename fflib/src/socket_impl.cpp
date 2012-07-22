@@ -107,7 +107,16 @@ int socket_impl_t::handle_epoll_read_impl()
 
 int socket_impl_t::handle_epoll_error()
 {
-    return m_sc->handle_error(this);
+    struct lambda_t
+    {
+        static void exe(void* p_)
+        {
+            ((socket_impl_t*)p_)->get_sc()->handle_error((socket_impl_t*)p_);
+        }
+    };
+
+    m_tq->produce(task_t(&lambda_t::exe, this));
+    return 0;
 }
 
 int socket_impl_t::handle_epoll_write()
