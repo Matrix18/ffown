@@ -19,7 +19,8 @@ broker_service_t::~broker_service_t()
 int broker_service_t::handle_broken(socket_ptr_t sock_)
 {
     logwarn((BROKER, "broker_service_t::handle_broken bagin soket_ptr<%p>", sock_));
-    
+    lock_guard_t lock(m_mutex);
+
     vector<uint32_t> del_sgid;
     vector<uint32_t> del_sid;
     vector<uint32_t> del_callback_uuid;
@@ -72,7 +73,8 @@ int broker_service_t::handle_broken(socket_ptr_t sock_)
 
 int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 {
-    
+    lock_guard_t lock(m_mutex);
+
     msg_tool_t msg_tool;
     try{
         msg_tool.decode(msg_.get_body());

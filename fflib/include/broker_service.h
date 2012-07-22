@@ -58,7 +58,7 @@ public:
     void reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcack_t<reg_interface_t::out_t>& cb_);
     void sync_all_service(sync_all_service_t::in_t& in_msg_, rpc_callcack_t<sync_all_service_t::out_t>& cb_);
 private:
-    msg_bus_t           m_msg_bus;
+    mutex_t             m_mutex;
     service_obj_map_t   m_service_obj_mgr;
     uint32_t            m_uuid;
     uint32_t            m_msg_uuid;
