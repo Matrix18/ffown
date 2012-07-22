@@ -1,5 +1,6 @@
 #include "rpc_service.h"
 #include "msg_bus.h"
+#include "log/log.h"
 
 using namespace ff;
 
@@ -38,7 +39,6 @@ socket_ptr_t rpc_service_t::get_socket() const
 
 void rpc_service_t::async_call(msg_i& msg_, uint16_t msg_id_, callback_wrapper_i* callback_)
 {
-    cout <<"rpc_service_t::async_call msg_id:"<< msg_id_ <<"\n";
     uint32_t uuid = ++m_uuid;
     msg_.set(m_service_group_id, m_service_id, uuid, msg_id_);
     
@@ -59,7 +59,7 @@ int rpc_service_t::interface_callback(uint32_t uuid_, const string& buff_)
     }
     else
     {
-        cout <<"rpc_service_t::interface_callback none uuid:"<< uuid_ <<"\n";
+        logerror((RPC, "rpc_service_t::interface_callback none uuid_[%u]", uuid_));
     }
     return -1;
 }
@@ -79,7 +79,7 @@ int rpc_service_t::call_interface(uint32_t interface_name_, const string& msg_bu
             return 0;
         }
 
-        cout << "rpc_service_t::call_interface none msg id:" << interface_name_ <<"\n";
+        logerror((RPC, "rpc_service_t::call_interface none msg id[%u]", interface_name_));
         rcb.exe("interface not existed");
     }
     catch (exception& e_)
@@ -91,10 +91,13 @@ int rpc_service_t::call_interface(uint32_t interface_name_, const string& msg_bu
 
 int rpc_service_t::add_interface(const string& in_name_, const string& out_name_, msg_process_func_i* func_)
 {
-    int alloc_id = m_msg_bus->register_interface(in_name_, out_name_, get_group_id(), get_id());
+    uint16_t in_msg_id  = 0;
+    uint16_t out_msg_id = 0;
+    int ret = m_msg_bus->register_interface(in_name_, out_name_, get_group_id(), get_id(), in_msg_id, out_msg_id);
 
-    assert(alloc_id > 0 && func_ && m_interface_map.insert(make_pair(alloc_id, func_)).second == true  && "interface has existed");
+    assert(ret == 0 && func_ && m_interface_map.insert(make_pair(in_msg_id, func_)).second == true  && "interface has existed");
 
-    singleton_t<msg_name_store_t>::instance().add_msg(in_name_, alloc_id);
-    return alloc_id; 
+    singleton_t<msg_name_store_t>::instance().add_msg(in_name_, in_msg_id);
+    singleton_t<msg_name_store_t>::instance().add_msg(out_name_, out_msg_id);
+    return 0; 
 }

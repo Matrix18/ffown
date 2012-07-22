@@ -31,7 +31,7 @@ BIN=app_out
 #源文件目录
 SrcDir= . src 
 #头文件目录
-IncDir= ./include  ./lib
+IncDir= ./include  ./ext
 #连接库目录
 LibDir= 
 SRCS=$(foreach dir,$(SrcDir),$(wildcard $(dir)/*.cpp))

@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     char buff[128];
     snprintf(buff, sizeof(buff), "tcp://%s:%s", "127.0.0.1", "10241");
 
-    singleton_t<msg_bus_t>::instance().open(buff);
+    assert(0 == singleton_t<msg_bus_t>::instance().open(buff));
 
     struct lambda_t
     {
@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
 
     assert(singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(1) && "echo servie 1 not exist");
 
+    sleep(1);
     echo_t::in_t in;
     in.value = "XXX_echo_test_XXX";
 

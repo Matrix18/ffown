@@ -244,7 +244,9 @@ void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcac
     if (it != som.service_objs.end())
     {
         ret.alloc_id = ++ m_msg_uuid;
+        ret.out_alloc_id = ++ m_msg_uuid;
         singleton_t<msg_name_store_t>::instance().add_msg(in_msg_.in_msg_name, ret.alloc_id);
+        singleton_t<msg_name_store_t>::instance().add_msg(in_msg_.out_msg_name, ret.out_alloc_id);
 
         logtrace((BROKER, "broker_service_t::reg_interface sgid[%u], sid[%u] alloc_id[%u]", in_msg_.sgid, in_msg_.sid, ret.alloc_id));
     }

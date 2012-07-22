@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     snprintf(buff, sizeof(buff), "tcp://%s:%s", "127.0.0.1", "10241");
     
     msg_bus_t msg_bus;
-    msg_bus.open("tcp://127.0.0.1:10241");
+    assert(0 == msg_bus.open("tcp://127.0.0.1:10241") && "can't connnect to broker");
 
     echo_service_t f;
 
@@ -35,9 +35,8 @@ int main(int argc, char* argv[])
             .bind_service(&f)
             .reg(&echo_service_t::echo);
     
-    while(1)
-        sleep(10);
-    cout <<"oh end\n";
-    
+    signal_helper_t::wait();
+
+    cout <<"\noh end\n";
     return 0;
 }

@@ -177,9 +177,46 @@ private:
 private:
     string         m_dest_buff;
 };
+    
+struct rpc_msg_cmd_e
+{
+    enum
+    {
+        CREATE_SERVICE_GROUP     = 1,
+        CREATE_SERVICE_GROUP_RET = 2,
+        CREATE_SERVICE           = 3,
+        CREATE_SERVICE_RET       = 4,
+        REG_INTERFACE            = 5,
+        REG_INTERFACE_RET        = 6,
+        SYNC_ALL_SERVICE         = 7,
+        SYNC_ALL_SERVICE_RET     = 8,
+        CALL_INTERFACE           = 9,
+        CALL_INTERFACE_RET       = 10,
+        INTREFACE_CALLBACK       = 11,
+        INTREFACE_CALLBACK_RE    = 12,
+    };
+};
 
 struct msg_name_store_t
 {
+    msg_name_store_t()
+    {
+        this->add_msg("create_service_group_t::in_t", rpc_msg_cmd_e::CREATE_SERVICE_GROUP);
+        this->add_msg("create_service_group_t::out_t", rpc_msg_cmd_e::CREATE_SERVICE_GROUP_RET);
+        this->add_msg("create_service_t::in_t", rpc_msg_cmd_e::CREATE_SERVICE);
+        this->add_msg("create_service_t::out_t", rpc_msg_cmd_e::CREATE_SERVICE_RET);
+        this->add_msg("reg_interface_t::in_t", rpc_msg_cmd_e::REG_INTERFACE);
+        this->add_msg("reg_interface_t::out_t", rpc_msg_cmd_e::REG_INTERFACE_RET);
+        this->add_msg("sync_all_service_t::in_t", rpc_msg_cmd_e::SYNC_ALL_SERVICE);
+        this->add_msg("sync_all_service_t::out_t", rpc_msg_cmd_e::SYNC_ALL_SERVICE_RET);
+    }
+    
+    template<typename MSG>
+    void add_msg(uint16_t id_)
+    {
+        MSG tmp;
+        this->add_msg(tmp.get_name(), id_);
+    }
     void add_msg(const string& name_, uint16_t id_)
     {
         m_name_to_id[name_] = id_;
@@ -240,7 +277,14 @@ struct msg_i : public codec_i
     uint32_t get_uuid()       const{ return uuid;             }
     
     uint16_t get_msg_id()     const{ return msg_id;           }
-    const string& get_name()  const{ return msg_name;         }
+    const string& get_name()  const
+    {
+        if (msg_name.empty() == false)
+        {
+            return msg_name;
+        }
+        return singleton_t<msg_name_store_t>::instance().id_to_name(this->get_msg_id());
+    }
     
     void     set_uuid(uint32_t id_)   { uuid = id_;  }
     void     set_msg_id(uint16_t id_) { msg_id = id_;}
@@ -260,15 +304,15 @@ struct msg_i : public codec_i
     virtual string encode() = 0;
     bin_encoder_t& init_encoder()
     {
-        return encoder.init(cmd)  << uuid << service_group_id << service_id<< msg_id << msg_name;
+        return encoder.init(cmd)  << uuid << service_group_id << service_id<< msg_id;
     }
     bin_encoder_t& init_encoder(uint16_t cmd_)
     {
-        return encoder.init(cmd_) << uuid << service_group_id << service_id << msg_id << msg_name;
+        return encoder.init(cmd_) << uuid << service_group_id << service_id << msg_id;
     }
     bin_decoder_t& init_decoder(const string& buff_)
     {
-        return decoder.init(buff_) >> uuid >> service_group_id >> service_id >> msg_id >> msg_name;
+        return decoder.init(buff_) >> uuid >> service_group_id >> service_id >> msg_id;
     }
     bin_decoder_t decoder;
     bin_encoder_t encoder;
@@ -296,19 +340,6 @@ struct msg_tool_t: public base_msg_t
     {}
 };
 
-struct rpc_msg_cmd_e
-{
-    enum
-    {
-        CREATE_SERVICE_GROUP = 1,
-        CREATE_SERVICE       = 2,
-        REG_INTERFACE        = 3,
-        SYNC_ALL_SERVICE     = 4,
-        CALL_INTERFACE       = 5,
-        INTREFACE_CALLBACK   = 6,
-    };
-};
-
 struct bool_ret_msg_t: public msg_i
 {
     bool_ret_msg_t(const char* name_ = ""):
@@ -331,7 +362,7 @@ struct create_service_group_t
     struct in_t: public msg_i
     {
         in_t():
-            msg_i("create_service_group_t::in")
+            msg_i("create_service_group_t::in_t")
         {}
         virtual string encode()
         {
@@ -346,7 +377,7 @@ struct create_service_group_t
     struct out_t: public msg_i
     {
         out_t():
-            msg_i("create_service_group_t::out")
+            msg_i("create_service_group_t::out_t")
         {}
         virtual string encode()
         {
@@ -365,7 +396,7 @@ struct create_service_t
     struct in_t: public msg_i
     {
         in_t():
-            msg_i("create_service_t::in")
+            msg_i("create_service_t::in_t")
         {}
         virtual string encode()
         {
@@ -380,7 +411,7 @@ struct create_service_t
     };
     struct out_t: public bool_ret_msg_t
     {
-        out_t(): bool_ret_msg_t("create_service_group_t::out"){}
+        out_t(): bool_ret_msg_t("create_service_group_t::out_t"){}
     };
 };
 
@@ -389,7 +420,7 @@ struct reg_interface_t
     struct in_t: public msg_i
     {
         in_t():
-            msg_i("reg_interface_t::in")
+            msg_i("reg_interface_t::in_t")
         {}
         virtual string encode()
         {
@@ -397,7 +428,7 @@ struct reg_interface_t
         }
         virtual void decode(const string& src_buff_)
         {
-            init_decoder(src_buff_) >> sgid >> sid >> in_msg_name >> in_msg_name;
+            init_decoder(src_buff_) >> sgid >> sid >> in_msg_name >> out_msg_name;
         }
         uint16_t sgid;
         uint16_t sid;
@@ -407,17 +438,20 @@ struct reg_interface_t
     struct out_t: public msg_i
     {
         out_t():
-            msg_i("reg_interface_t::out")
+            msg_i("reg_interface_t::out_t"),
+            alloc_id(0),
+            out_alloc_id(0)
         {}
         virtual string encode()
         {
-            return (init_encoder()<< alloc_id).get_buff();
+            return (init_encoder()<< alloc_id << out_alloc_id).get_buff();
         }
         virtual void decode(const string& src_buff_)
         {
-            init_decoder(src_buff_) >> alloc_id;
+            init_decoder(src_buff_) >> alloc_id >> out_alloc_id;
         }
         uint16_t alloc_id;
+        uint16_t out_alloc_id;
     };
 };
 
@@ -432,7 +466,7 @@ struct sync_all_service_t
     struct in_t: public msg_i
     {
         in_t():
-            msg_i("sync_all_service_t::in")
+            msg_i("sync_all_service_t::in_t")
         {}
         virtual string encode()
         {
@@ -446,7 +480,7 @@ struct sync_all_service_t
     struct out_t: public msg_i
     {
         out_t():
-            msg_i("sync_all_service_t::out")
+            msg_i("sync_all_service_t::out_t")
         {}
         virtual string encode()
         {

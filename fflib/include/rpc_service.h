@@ -60,7 +60,7 @@ private:
 template<typename RET, typename MSGT, typename IN_MSG>
 void rpc_service_t::async_call(IN_MSG& msg_, RET (*callback_)(MSGT&))
 {
-    uint16_t msg_id = singleton_t<msg_traits_t<MSGT> >::instance().get_id();
+    uint16_t msg_id = singleton_t<msg_traits_t<IN_MSG> >::instance().get_id();
 
     this->async_call(msg_, msg_id, new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
 }
@@ -76,7 +76,7 @@ rpc_service_t& rpc_service_t::reg(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_
 
     msg_process_func_i* msg_process_func = new msg_process_func_impl_t<IN_MSG, RET, OUT_MSG>(interface_);
 
-    singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = this->add_interface(in_msg_name, out_msg_name, msg_process_func);
+    this->add_interface(in_msg_name, out_msg_name, msg_process_func);
     return *this;
 }
 
@@ -92,7 +92,7 @@ rpc_service_t& rpc_service_t::reg(RET (T::*interface_)(IN_MSG&, rpc_callcack_t<O
     msg_process_func_i* msg_process_func = new msg_process_class_func_impl_t<IN_MSG, RET, T, OUT_MSG>(interface_, obj_,  m_service_group_id, m_service_id);
 
     assert(obj_);
-    singleton_t<msg_traits_t<IN_MSG> >::instance().msg_id = this->add_interface(in_msg_name, out_msg_name, msg_process_func);
+    this->add_interface(in_msg_name, out_msg_name, msg_process_func);
 
     return *this;
 }

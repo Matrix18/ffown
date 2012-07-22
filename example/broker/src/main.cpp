@@ -11,8 +11,7 @@ int main(int argc, char* argv[])
 {
     broker_application_t::run(argc, argv);
 
-    while(1)
-        sleep(100);
-    
+    signal_helper_t::wait();
+    cout << "\noh end\n";
     return 0;
 }

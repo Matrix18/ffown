@@ -68,6 +68,7 @@ struct rpc_callcack_t: public rpc_callcack_base_t
 {
     void operator()(MSGT& msg_)
     {
+        msg_.set_msg_id(singleton_t<msg_traits_t<MSGT> >::instance().get_id());
         rpc_callcack_base_t::exe(msg_);
     }
 };
