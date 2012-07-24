@@ -39,15 +39,18 @@ socket_ptr_t rpc_service_t::get_socket() const
 
 void rpc_service_t::async_call(msg_i& msg_, uint16_t msg_id_, callback_wrapper_i* callback_)
 {
-    uint32_t uuid = ++m_uuid;
+    uint32_t uuid = (++ m_uuid);
+
     msg_.set(m_service_group_id, m_service_id, uuid, msg_id_);
     
     m_callback_map[uuid] = callback_;
     msg_sender_t::send(get_socket(), rpc_msg_cmd_e::CALL_INTERFACE, msg_);
+    logtrace((RPC, "rpc_service_t::async_call m_service_id[%u], uuid[%u]", m_service_id, msg_.get_uuid()));
 }
 
 int rpc_service_t::interface_callback(uint32_t uuid_, const string& buff_)
 {
+    logtrace((RPC, "rpc_service_t::interface_callback m_service_id[%u], uuid[%u]", m_service_id, uuid_));
     callback_map_t::iterator it = m_callback_map.find(uuid_);
     if (it != m_callback_map.end())
     {

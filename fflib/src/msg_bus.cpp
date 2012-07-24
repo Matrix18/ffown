@@ -72,6 +72,7 @@ rpc_service_group_t* msg_bus_t::get_service_group(const string& name_)
 
 int msg_bus_t::handle_broken(socket_ptr_t sock_)
 {
+    lock_guard_t lock(m_mutex);
     if (m_socket == sock_)
     {
         m_socket = NULL;
@@ -83,6 +84,7 @@ int msg_bus_t::handle_broken(socket_ptr_t sock_)
 
 int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 {
+    lock_guard_t lock(m_mutex);
     msg_tool_t msg_tool;
 
     try

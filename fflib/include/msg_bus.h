@@ -39,6 +39,7 @@ public:
     int register_interface(const string& in_name_, const string& out_name_, uint16_t gid_, uint16_t id_, uint16_t& in_alloc_id_, uint16_t& out_alloc_id_);
     
 private:
+    mutex_t             m_mutex;
     uint32_t            m_uuid;
     service_map_t       m_service_map;
     rpc_service_t*      m_broker_service;

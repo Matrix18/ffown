@@ -277,8 +277,25 @@ void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcac
     
     if (it != som.service_objs.end())
     {
-        ret.alloc_id = ++ m_msg_uuid;
-        ret.out_alloc_id = ++ m_msg_uuid;
+        uint16_t tmp_id = singleton_t<msg_name_store_t>::instance().name_to_id(in_msg_.in_msg_name);
+        if (tmp_id != 0)
+        {
+            ret.alloc_id = tmp_id;
+        }
+        else
+        {
+            ret.alloc_id = ++ m_msg_uuid;
+        }
+        tmp_id = singleton_t<msg_name_store_t>::instance().name_to_id(in_msg_.out_msg_name);
+        if (tmp_id != 0)
+        {
+            ret.out_alloc_id = tmp_id;
+        }
+        else
+        {
+            ret.out_alloc_id = ++ m_msg_uuid;
+        }
+        
         singleton_t<msg_name_store_t>::instance().add_msg(in_msg_.in_msg_name, ret.alloc_id);
         singleton_t<msg_name_store_t>::instance().add_msg(in_msg_.out_msg_name, ret.out_alloc_id);
 

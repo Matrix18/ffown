@@ -15,7 +15,7 @@ static int log_impl(const char* mod, const char* fmt, ...)
     va_start(vl, fmt);
     vsnprintf(buff + len, sizeof(buff) - len - 1, fmt, vl);
     va_end(vl);
-    printf(buff);
+    printf("%s", buff);
     return 0;
 }
 };

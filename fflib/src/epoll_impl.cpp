@@ -30,25 +30,6 @@ epoll_impl_t::~epoll_impl_t()
     ::close(m_efd);
     m_efd = -1;
 }
-/*
-static void post_read_event(void* p)
-{
-    epoll_fd_i* fd_ptr = (epoll_fd_i*)p;
-    fd_ptr->handle_epoll_read();
-}
-
-static void post_write_event(void* p)
-{
-    epoll_fd_i* fd_ptr = (epoll_fd_i*)p;
-    fd_ptr->handle_epoll_write();
-}
-
-static void post_error_event(void* p)
-{
-    epoll_fd_i* fd_ptr = (epoll_fd_i*)p;
-    fd_ptr->handle_epoll_error();
-}
-*/
 
 int epoll_impl_t::event_loop()
 {

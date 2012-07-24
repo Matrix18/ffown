@@ -224,7 +224,12 @@ struct msg_name_store_t
     }
     uint16_t name_to_id(const string& name_)
     {
-        return m_name_to_id[name_];
+        map<string, uint16_t>::iterator it = m_name_to_id.find(name_);
+        if (it != m_name_to_id.end())
+        {
+            return it ->second;
+        }
+        return 0;
     }
     const string& id_to_name(uint16_t id_)
     {
@@ -457,8 +462,16 @@ struct reg_interface_t
 
 struct sync_all_service_t
 {
-    struct id_info_t
+    struct id_info_t: public codec_helper_i
     {
+        virtual void encode(bin_encoder_t& be_) const
+        {
+            be_ << sgid << sid;
+        }
+        virtual void decode(bin_decoder_t& bd_)
+        {
+            bd_ >> sgid >> sid;
+        }
         uint16_t sgid;
         uint16_t sid;
     };

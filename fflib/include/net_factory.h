@@ -36,7 +36,7 @@ public:
             global_data_t* p = (global_data_t*)e_;
             p->epoll.event_loop();
         }
-        void start(int thread_num_ = 1)
+        void start(int thread_num_ = 2)
         {
             if (false == started_flag)
             {

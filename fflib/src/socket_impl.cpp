@@ -1,5 +1,7 @@
 #include <errno.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #include "detail/socket_impl.h"
 #include "epoll_i.h"
@@ -137,34 +139,33 @@ int socket_impl_t::handle_epoll_write_impl()
     int ret = 0;
     string left_buff;
 
-    if (true == m_send_buffer.empty())
+    if (false == is_open() || true == m_send_buffer.empty())
     {
         return 0;
     }
 
+    do
     {
-        do
+        const string& msg = m_send_buffer.front();
+        ret = do_send(msg, left_buff);
+
+        if (ret < 0)
         {
-            const string& msg = m_send_buffer.front();
-            ret = do_send(msg, left_buff);
-    
-            if (ret < 0)
-            {
-                this ->close();
-                return -1;
-            }
-            else if (ret > 0)
-            {
-                m_send_buffer.pop_front();
-                m_send_buffer.push_front(left_buff);
-                return 0;
-            }
-            else
-            {
-                m_send_buffer.pop_front();
-            }
-        } while (false == m_send_buffer.empty());
-    }
+            this ->close();
+            return -1;
+        }
+        else if (ret > 0)
+        {
+            m_send_buffer.pop_front();
+            m_send_buffer.push_front(left_buff);
+            return 0;
+        }
+        else
+        {
+            m_send_buffer.pop_front();
+        }
+    } while (false == m_send_buffer.empty());
+
     m_sc->handle_write_completed(this);
     return 0;
 }
@@ -193,7 +194,7 @@ void socket_impl_t::send_impl(const string& src_buff_)
 {
     string buff_ = src_buff_;
 
-    if (/*false == is_open() || */m_sc->check_pre_send(this, buff_))
+    if (false == is_open() || m_sc->check_pre_send(this, buff_))
     {
         return;
     }
@@ -230,7 +231,7 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
 
     while(nleft > 0)
     {
-        if((nwritten = ::write(m_fd, buffer, nleft)) <= 0)
+        if((nwritten = ::send(m_fd, buffer, nleft, MSG_NOSIGNAL)) <= 0)
         {
             if (EINTR == errno)
             {
@@ -243,6 +244,7 @@ int socket_impl_t::do_send(const string& buff_, string& left_buff_)
             }
             else
             {
+                this->close();
                 return -1;
             }
         }
