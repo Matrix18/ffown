@@ -8,9 +8,14 @@ using namespace std;
 using namespace ff;
 
 int g_count = 0;
+int g_index = 1;
+
 int main(int argc, char* argv[])
 {
-    
+    if (argc > 1)
+    {
+        g_index = atoi(argv[1]);
+    }
     char buff[128];
     snprintf(buff, sizeof(buff), "tcp://%s:%s", "127.0.0.1", "10241");
 
@@ -18,34 +23,37 @@ int main(int argc, char* argv[])
 
     assert(singleton_t<msg_bus_t>::instance().get_service_group("echo") && "echo service group not exist");
 
-    assert(singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(1) && "echo servie 1 not exist");
+    assert(singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(g_index) && "echo servie 1 not exist");
 
     sleep(1);
-    echo_t::in_t in;
-    in.value = "XXX_echo_test_XXX";
 
-    
     struct lambda_t
     {
         static void callback(echo_t::out_t& msg_)
         {
             if (g_count % 5000 == 0)
             {
-                loginfo((FF, "index[%d] echo callback msg value<%s>", g_count, msg_.value.c_str()));
+                loginfo((FF, "%d, index[%d] echo callback msg value<%s>", g_index, g_count, msg_.value.c_str()));
             }
 
             if (++g_count > 500000) {
-                return;
+                //return;
             }
             
             echo_t::in_t in;
             in.value = "XXX_echo_test_XXX";
             
-            singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(1)->async_call(in, &lambda_t::callback);
+            singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(g_index)->async_call(in, &lambda_t::callback);
         }
         
     };
-    singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(1)->async_call(in, &lambda_t::callback);
+
+    for (int i = 0; i < 10; ++i)
+    {
+    	echo_t::in_t in;
+        in.value = "XXX_echo_test_XXX";
+    	singleton_t<msg_bus_t>::instance().get_service_group("echo")->get_service(g_index)->async_call(in, &lambda_t::callback);
+    }
 
     signal_helper_t::wait();
     singleton_t<msg_bus_t>::instance().close();
