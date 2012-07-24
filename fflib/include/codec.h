@@ -162,7 +162,7 @@ public:
 private:
     inline bin_encoder_t& copy_value(const string& str_)
     {
-        size_t str_size = str_.size();
+        uint32_t str_size = str_.size();
         copy_value((const char*)(&str_size), sizeof(str_size));
         copy_value(str_.data(), str_.size());
         return *this;
