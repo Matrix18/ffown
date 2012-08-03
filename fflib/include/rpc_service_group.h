@@ -28,6 +28,7 @@ public:
     int add_service(uint16_t id_, rpc_service_t* service_);
     rpc_service_t& create_service(uint16_t id_);
 
+    size_t size() const { return m_all_rpc_service.size(); }
 private:
     uint16_t            m_id;
     string              m_name;
