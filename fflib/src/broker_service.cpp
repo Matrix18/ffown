@@ -67,6 +67,8 @@ int broker_service_t::handle_broken(socket_ptr_t sock_)
     }
     
     sock_->safe_delete();
+    m_all_sockets.erase(sock_);
+
     logwarn((BROKER, "broker_service_t::handle_broken en ok"));
     return 0;
 }
@@ -91,21 +93,21 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
     {
         if (msg_tool.get_msg_id() == rpc_msg_cmd_e::CREATE_SERVICE_GROUP)
         {
-                create_service_group_t::in_t in;
-                in.decode(msg_.get_body());
-                rpc_callcack_t<create_service_group_t::out_t> rcb;
-                rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
-                rcb.set_socket(sock_);
-                create_service_group(in, rcb);
+            create_service_group_t::in_t in;
+            in.decode(msg_.get_body());
+            rpc_callcack_t<create_service_group_t::out_t> rcb;
+            rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
+            rcb.set_socket(sock_);
+            create_service_group(in, rcb);
         }
         else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::CREATE_SERVICE)
         {
-                create_service_t::in_t in;
-                in.decode(msg_.get_body());
-                rpc_callcack_t<create_service_t::out_t> rcb;
-                rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
-                rcb.set_socket(sock_);
-                create_service(in, rcb);
+            create_service_t::in_t in;
+            in.decode(msg_.get_body());
+            rpc_callcack_t<create_service_t::out_t> rcb;
+            rcb.init_data(rpc_msg_cmd_e::INTREFACE_CALLBACK, 0, 0, in.get_uuid());
+            rcb.set_socket(sock_);
+            create_service(in, rcb);
         }
         else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::REG_INTERFACE)
         {
@@ -131,6 +133,7 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
             rcb.set_socket(sock_);
             
             sync_all_service(in, rcb);
+            m_all_sockets.insert(sock_);
         }
     }
     else
@@ -232,6 +235,11 @@ void broker_service_t::create_service_group(create_service_group_t::in_t& in_msg
 
     ret.set_uuid(in_msg_.get_uuid());
     cb_(ret);
+    
+    push_add_service_group_t::in_t push_msg;
+    push_msg.name = in_msg_.service_name;
+    push_msg.sgid = ret.service_id;
+    push_msg_except(cb_.get_socket(), rpc_msg_cmd_e::PUSH_ADD_SERVICE_GROUP, push_msg);
 }
 
 void broker_service_t::create_service(create_service_t::in_t& in_msg_, rpc_callcack_t<create_service_t::out_t>& cb_)
@@ -262,6 +270,11 @@ void broker_service_t::create_service(create_service_t::in_t& in_msg_, rpc_callc
     }
     ret.set_uuid(in_msg_.get_uuid());
     cb_(ret);
+    
+    push_add_service_t::in_t push_msg;
+    push_msg.sgid = in_msg_.new_service_group_id;
+    push_msg.sid  = in_msg_.new_service_id;
+    push_msg_except(cb_.get_socket(), rpc_msg_cmd_e::PUSH_ADD_SERVICE, push_msg);
 }
 
 void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcack_t<reg_interface_t::out_t>& cb_)
@@ -303,6 +316,18 @@ void broker_service_t::reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcac
     }
 
     cb_(ret);
+    {
+        push_add_msg_t::in_t push_msg;
+        push_msg.name    = in_msg_.in_msg_name;
+        push_msg.msg_id  = ret.alloc_id;
+        push_msg_except(cb_.get_socket(), rpc_msg_cmd_e::PUSH_ADD_MSG, push_msg);
+    }
+    {
+        push_add_msg_t::in_t push_msg;
+        push_msg.name    = in_msg_.out_msg_name;
+        push_msg.msg_id  = ret.out_alloc_id;
+        push_msg_except(cb_.get_socket(), rpc_msg_cmd_e::PUSH_ADD_MSG, push_msg);
+    }
 }
 
 void broker_service_t::service_obj_t::async_call(msg_i& msg_, const string& body_, socket_ptr_t sp_)
@@ -354,4 +379,19 @@ int broker_service_t::service_obj_t::interface_callback(msg_i& msg_, const strin
     }
 
     return -1;
+}
+
+void broker_service_t::push_msg_except(socket_ptr_t socket_, uint16_t cmd_, msg_i& msg_)
+{
+    msg_.set_msg_id(singleton_t<msg_name_store_t>::instance().name_to_id(msg_.get_name()));
+    set<socket_ptr_t>::iterator it = m_all_sockets.begin();
+    for (; it != m_all_sockets.end(); ++it)
+    {
+        if (*it != socket_)
+        {
+            //msg_sender_t::send(*it, cmd_, msg_);
+            msg_sender_t::send(*it, rpc_msg_cmd_e::CALL_INTERFACE , msg_);
+            logtrace((BROKER, "broker_service_t::push_msg_except socket_[%p], msg<%s>", *it, msg_.get_name().c_str()));
+        }
+    }
 }

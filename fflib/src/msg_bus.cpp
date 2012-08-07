@@ -97,7 +97,34 @@ int msg_bus_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
 
         if (msg_tool.get_group_id() == 0 && msg_tool.get_service_id() == 0)
         {
-            m_broker_service->interface_callback(msg_tool.get_uuid(), msg_.get_body());
+            switch (msg_tool.get_msg_id())
+            {
+                case rpc_msg_cmd_e::PUSH_ADD_SERVICE_GROUP:
+                {
+                    push_add_service_group_t::in_t in;
+                    in.decode(msg_.get_body());
+                    rpc_service_group_t* rsg = new rpc_service_group_t(this, in.name, in.sgid);
+                    m_service_map[rsg->get_id()] = rsg;
+                }break;
+                case rpc_msg_cmd_e::PUSH_ADD_SERVICE:
+                {
+                    push_add_service_t::in_t in;
+                    in.decode(msg_.get_body());
+                    rpc_service_group_t* rsg = get_service_group(in.sgid);
+                    rsg->add_service(in.sid, new rpc_service_t(this, in.sgid, in.sid));
+                }break;
+                case rpc_msg_cmd_e::PUSH_ADD_MSG:
+                {
+                    push_add_msg_t::in_t in;
+                    in.decode(msg_.get_body());
+                    singleton_t<msg_name_store_t>::instance().add_msg(in.name, in.msg_id);
+                }break;
+                default:
+                {
+                    m_broker_service->interface_callback(msg_tool.get_uuid(), msg_.get_body());                    
+                }break;
+            }
+
             return 0;
         }
 

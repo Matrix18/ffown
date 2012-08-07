@@ -194,6 +194,9 @@ struct rpc_msg_cmd_e
         CALL_INTERFACE_RET       = 10,
         INTREFACE_CALLBACK       = 11,
         INTREFACE_CALLBACK_RE    = 12,
+        PUSH_ADD_SERVICE_GROUP   = 13,
+        PUSH_ADD_SERVICE         = 14,
+        PUSH_ADD_MSG             = 15
     };
 };
 
@@ -209,6 +212,9 @@ struct msg_name_store_t
         this->add_msg("reg_interface_t::out_t", rpc_msg_cmd_e::REG_INTERFACE_RET);
         this->add_msg("sync_all_service_t::in_t", rpc_msg_cmd_e::SYNC_ALL_SERVICE);
         this->add_msg("sync_all_service_t::out_t", rpc_msg_cmd_e::SYNC_ALL_SERVICE_RET);
+        this->add_msg("push_add_service_group_t::in_t", rpc_msg_cmd_e::PUSH_ADD_SERVICE_GROUP);
+        this->add_msg("push_add_service_t::in_t", rpc_msg_cmd_e::PUSH_ADD_SERVICE);
+        this->add_msg("push_add_msg_t::in_t", rpc_msg_cmd_e::PUSH_ADD_MSG);
     }
     
     template<typename MSG>
@@ -347,7 +353,7 @@ struct msg_tool_t: public base_msg_t
 
 struct bool_ret_msg_t: public msg_i
 {
-    bool_ret_msg_t(const char* name_ = ""):
+    bool_ret_msg_t(const char* name_ = "bool_ret_msg_t"):
         msg_i(name_),
         value(false)
     {}
@@ -512,5 +518,64 @@ struct sync_all_service_t
     };
 };
 
+struct push_add_service_group_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("push_add_service_group_t::in_t")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder() << name << sgid).get_buff() ;
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> name >> sgid;
+        }
+        string      name;
+        uint16_t    sgid;
+    };
+};
+
+struct push_add_service_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("push_add_service_t::in_t")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder() << sgid << sid).get_buff() ;
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> sgid >> sid;
+        }
+        uint16_t    sgid;
+        uint16_t    sid;
+    };
+};
+
+struct push_add_msg_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("push_add_msg_t::in_t")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder() << name << msg_id).get_buff() ;
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> name >> msg_id;
+        }
+        string      name;
+        uint16_t    msg_id;
+    };
+};
 }
 #endif

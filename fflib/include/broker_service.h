@@ -2,6 +2,7 @@
 #define _BROKER_SERVICE_H_
 
 #include <map>
+#include <set>
 #include <string>
 using namespace std;
 
@@ -57,11 +58,13 @@ public:
     void create_service(create_service_t::in_t& in_msg_, rpc_callcack_t<create_service_t::out_t>& cb_);
     void reg_interface(reg_interface_t::in_t& in_msg_, rpc_callcack_t<reg_interface_t::out_t>& cb_);
     void sync_all_service(sync_all_service_t::in_t& in_msg_, rpc_callcack_t<sync_all_service_t::out_t>& cb_);
+    void push_msg_except(socket_ptr_t socket_, uint16_t cmd_, msg_i& msg_);
 private:
     mutex_t             m_mutex;
     service_obj_map_t   m_service_obj_mgr;
     uint32_t            m_uuid;
     uint32_t            m_msg_uuid;
+    set<socket_ptr_t>   m_all_sockets;
 };
 
 }
