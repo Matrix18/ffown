@@ -73,6 +73,22 @@ public:
         return *this;
     }
     
+    template<typename T, typename R>
+    bin_decoder_t& operator >>(map<T, R>& dest_)
+    {
+        uint32_t size = 0;
+        copy_value(&size, sizeof(size));
+        
+        for (size_t i = 0; i < size; ++i)
+        {
+            T key;
+            R value;
+            (*this) >> key >> value;
+            dest_[key] = value;
+        }
+        return *this;
+    }
+    
     template<typename T>
     bin_decoder_t& operator >>(codec_helper_i& dest_)
     {
@@ -153,7 +169,19 @@ public:
         }
         return *this;
     }
-    
+    template<typename T, typename R>
+    bin_encoder_t& operator <<(const map<T, R>& src_)
+    {
+        uint32_t size = (uint32_t)src_.size();
+        copy_value((const char*)(&size), sizeof(size));
+        
+        typename map<T, R>::const_iterator it = src_.begin();
+        for (; it != src_.end(); ++it)
+        {
+            (*this) << it->first << it->second;
+        }
+        return *this;
+    }    
     bin_encoder_t& operator <<(const codec_helper_i& dest_)
     {
         dest_.encode(*this);
