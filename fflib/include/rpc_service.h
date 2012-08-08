@@ -29,6 +29,8 @@ public:
     void async_call(msg_i& msg_, uint16_t msg_id_, callback_wrapper_i* callback_);
     template<typename RET, typename MSGT, typename IN_MSG>
     void async_call(IN_MSG& msg_, RET (*callback_)(MSGT&));
+    template<typename IN_MSG>
+    void async_call(IN_MSG& msg_, callback_wrapper_i* func_);
 
     template <typename IN_MSG, typename RET, typename OUT_MSG>
     rpc_service_t& reg(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&));
@@ -63,6 +65,13 @@ void rpc_service_t::async_call(IN_MSG& msg_, RET (*callback_)(MSGT&))
     uint16_t msg_id = singleton_t<msg_traits_t<IN_MSG> >::instance().get_id();
 
     this->async_call(msg_, msg_id, new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
+}
+template<typename IN_MSG>
+void rpc_service_t::async_call(IN_MSG& msg_, callback_wrapper_i* func_)
+{
+    uint16_t msg_id = singleton_t<msg_traits_t<IN_MSG> >::instance().get_id();
+    
+    this->async_call(msg_, msg_id, func_);
 }
 
 template <typename IN_MSG, typename RET, typename OUT_MSG>

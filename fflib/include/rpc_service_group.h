@@ -29,12 +29,26 @@ public:
     rpc_service_t& create_service(uint16_t id_);
 
     size_t size() const { return m_all_rpc_service.size(); }
+    
+    template<typename T>
+    void foreach(T func_);
 private:
     uint16_t            m_id;
     string              m_name;
     rpc_service_map_t   m_all_rpc_service;
     msg_bus_t*          m_msg_bus;
 };
+
+
+template<typename T>
+void rpc_service_group_t::foreach(T func_)
+{
+    typename rpc_service_group_t::rpc_service_map_t::iterator it = m_all_rpc_service.begin();
+    for (; it != m_all_rpc_service.end(); ++it)
+    {
+        func_(it->second);
+    }
+}
 
 }
 #endif
