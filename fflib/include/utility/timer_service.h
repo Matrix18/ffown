@@ -81,7 +81,22 @@ public:
         long   dest_ms = tv.tv_sec*1000 + tv.tv_usec / 1000 + ms_;
         
         lock_guard_t lock(m_mutex);
-        m_registered_data[m_cache_list].push_back(registered_info_t(dest_ms, func));
+
+        registered_info_list_t::iterator it = m_registered_store.begin();
+        while (it != m_registered_store.end())
+        {
+            if (dest_ms > it->dest_tm)
+            {
+                m_registered_store.insert(it, registered_info_t(dest_ms, func));
+                break;
+            }
+            ++ it;
+        }
+
+        if (it == m_registered_store.end())
+        {
+            m_registered_store.insert(it, registered_info_t(dest_ms, func));
+        }
     }
 
     void run()
@@ -116,38 +131,20 @@ private:
         
         ::epoll_ctl(m_efd, EPOLL_CTL_ADD, m_interupt_info.read_fd(), &ev);
     }
-    void process_timer_callback(long cost_ms_)
+    void process_timer_callback(long now_)
     {
-        {
-            lock_guard_t lock(m_mutex);
-            std::swap(m_checking_list, m_cache_list);
-        }
-        
-        registered_info_list_t::iterator it = m_registered_data[m_checking_list].begin();
-        while (it != m_registered_data[m_checking_list].end()) 
-        {
-            if (it->is_timeout(cost_ms_))
-            {
-                it->callback.run();
-                registered_info_list_t::iterator tmp = it++;
-                m_registered_data[m_checking_list].erase(tmp);
-            }
-            else
-            {
-                ++it;
-            }
-        }
-        
         lock_guard_t lock(m_mutex);
-        if (false == m_registered_data[m_cache_list].empty())
+        
+        while (false == m_registered_store.empty())
         {
-            m_registered_data[m_checking_list].insert(m_registered_data[m_checking_list].end(),
-                                                      m_registered_data[m_cache_list].begin(),
-                                                      m_registered_data[m_cache_list].end());
-            
-            m_registered_data[m_cache_list].clear();
+            registered_info_t& last = m_registered_store.back();
+            if (false == last.is_timeout(now_))
+            {
+                break;
+            }
+            last.callback.run();
+            m_registered_store.pop_back();
         }
-        std::swap(m_checking_list, m_cache_list);
     }
 
 private:
@@ -156,7 +153,7 @@ private:
     volatile long            m_min_timeout;
     int                      m_cache_list;
     int                      m_checking_list;
-    registered_info_list_t   m_registered_data[2];
+    registered_info_list_t   m_registered_store;
     interupt_info_t          m_interupt_info;
     thread_t                 m_thread;
     mutex_t                  m_mutex;
