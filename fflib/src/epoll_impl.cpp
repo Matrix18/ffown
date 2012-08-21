@@ -1,4 +1,3 @@
-
 #include <sys/epoll.h>
 #include <errno.h>
 #include <unistd.h>
@@ -58,12 +57,14 @@ int epoll_impl_t::event_loop()
                 //! m_task_queue->produce(task_t(post_read_event, fd_ptr));
                 fd_ptr->handle_epoll_read();
             }
-            else if(cur_ev.events & EPOLLOUT)
+
+            if(cur_ev.events & EPOLLOUT)
             {
                 //! m_task_queue->produce(task_t(post_write_event, fd_ptr));
                 fd_ptr->handle_epoll_write();
             }
-            else
+
+            if (cur_ev.events & (EPOLLERR | EPOLLHUP))
             {
                 fd_ptr->close();
             }
