@@ -4,7 +4,7 @@
 
 using namespace ff;
 
-rpc_service_t::rpc_service_t(msg_bus_t* mb_, uint16_t service_group_id_, uint16_t servie_id_):
+rpc_service_t::rpc_service_t(msg_bus_i* mb_, uint16_t service_group_id_, uint16_t servie_id_):
     m_service_group_id(service_group_id_),
     m_service_id(servie_id_),
     m_uuid(0),

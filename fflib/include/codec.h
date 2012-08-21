@@ -224,7 +224,8 @@ struct rpc_msg_cmd_e
         INTREFACE_CALLBACK_RE    = 12,
         PUSH_ADD_SERVICE_GROUP   = 13,
         PUSH_ADD_SERVICE         = 14,
-        PUSH_ADD_MSG             = 15
+        PUSH_ADD_MSG             = 15,
+        REG_SLAVE_BROKER         = 16
     };
 };
 
@@ -243,6 +244,7 @@ struct msg_name_store_t
         this->add_msg("push_add_service_group_t::in_t", rpc_msg_cmd_e::PUSH_ADD_SERVICE_GROUP);
         this->add_msg("push_add_service_t::in_t", rpc_msg_cmd_e::PUSH_ADD_SERVICE);
         this->add_msg("push_add_msg_t::in_t", rpc_msg_cmd_e::PUSH_ADD_MSG);
+        this->add_msg("reg_slave_broker_t::in_t", rpc_msg_cmd_e::REG_SLAVE_BROKER);
     }
     
     template<typename MSG>
@@ -500,14 +502,15 @@ struct sync_all_service_t
     {
         virtual void encode(bin_encoder_t& be_) const
         {
-            be_ << sgid << sid;
+            be_ << sgid << sid << node_id;
         }
         virtual void decode(bin_decoder_t& bd_)
         {
-            bd_ >> sgid >> sid;
+            bd_ >> sgid >> sid >> node_id;
         }
         uint16_t sgid;
         uint16_t sid;
+        uint16_t node_id;
     };
 
     struct in_t: public msg_i
@@ -517,12 +520,14 @@ struct sync_all_service_t
         {}
         virtual string encode()
         {
-            return (init_encoder()).get_buff() ;
+            return (init_encoder() << slave_host).get_buff() ;
         }
         virtual void decode(const string& src_buff_)
         {
-            init_decoder(src_buff_);
+            init_decoder(src_buff_) >> slave_host;
         }
+
+        string slave_host;
     };
     struct out_t: public msg_i
     {
@@ -531,11 +536,11 @@ struct sync_all_service_t
         {}
         virtual string encode()
         {
-            return (init_encoder()<< group_name_vt << group_id_vt << id_info_vt << msg_name_vt << msg_id_vt).get_buff() ;
+            return (init_encoder()<< group_name_vt << group_id_vt << id_info_vt << msg_name_vt << msg_id_vt << node_id << bind_id << broker_slave_host).get_buff() ;
         }
         virtual void decode(const string& src_buff_)
         {
-            init_decoder(src_buff_) >> group_name_vt >> group_id_vt >> id_info_vt >> msg_name_vt >> msg_id_vt;
+            init_decoder(src_buff_) >> group_name_vt >> group_id_vt >> id_info_vt >> msg_name_vt >> msg_id_vt >> node_id >> bind_id >> broker_slave_host;
         }
         vector<string>      group_name_vt;
         vector<uint16_t>    group_id_vt;
@@ -543,6 +548,11 @@ struct sync_all_service_t
         vector<id_info_t>   id_info_vt;
         vector<string>      msg_name_vt;
         vector<uint16_t>    msg_id_vt;
+        
+        uint32_t            node_id;
+        uint32_t            bind_id;
+        
+        vector<string>      broker_slave_host;
     };
 };
 
@@ -575,14 +585,15 @@ struct push_add_service_t
         {}
         virtual string encode()
         {
-            return (init_encoder() << sgid << sid).get_buff() ;
+            return (init_encoder() << sgid << sid << node_id).get_buff() ;
         }
         virtual void decode(const string& src_buff_)
         {
-            init_decoder(src_buff_) >> sgid >> sid;
+            init_decoder(src_buff_) >> sgid >> sid >> node_id;
         }
         uint16_t    sgid;
         uint16_t    sid;
+        uint16_t    node_id;
     };
 };
 
@@ -603,6 +614,25 @@ struct push_add_msg_t
         }
         string      name;
         uint16_t    msg_id;
+    };
+};
+
+struct reg_slave_broker_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+            msg_i("reg_slave_broker_t::in_t")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder() << node_id).get_buff() ;
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> node_id;
+        }
+        uint16_t    node_id;
     };
 };
 }

@@ -32,6 +32,11 @@ public:
         singleton_t<app_info_t>::instance().acceptor = net_factory_t::listen(arg.get_option_value("-l"), &(singleton_t<app_info_t>::instance().broker_service));
 
         assert(singleton_t<app_info_t>::instance().acceptor && "can not listen this address");
+
+        if (arg.get_option_value("-node") == "slave")
+        {
+            singleton_t<app_info_t>::instance().broker_service.init_slave(arg.get_option_value("-master_host"), arg.get_option_value("-l"));
+        }
         return 0;
     }
 };

@@ -14,14 +14,15 @@ using namespace std;
 namespace ff {
 
 class msg_bus_t;
-
+class msg_bus_i;
+    
 class rpc_service_t
 {
     typedef map<uint32_t, callback_wrapper_i*>      callback_map_t;
     typedef map<uint32_t, msg_process_func_i*>      interface_map_t;
 
 public:
-    rpc_service_t(msg_bus_t* mb_, uint16_t service_group_id_, uint16_t servie_id_);
+    rpc_service_t(msg_bus_i* mb_, uint16_t service_group_id_, uint16_t servie_id_);
     virtual ~rpc_service_t();
     uint16_t get_group_id() const;
     uint16_t get_id() const;
@@ -56,7 +57,7 @@ private:
     callback_map_t  m_callback_map;
     interface_map_t m_interface_map;
     void*           m_bind_service_ptr;
-    msg_bus_t*      m_msg_bus;
+    msg_bus_i*      m_msg_bus;
 };
 
 template<typename RET, typename MSGT, typename IN_MSG>

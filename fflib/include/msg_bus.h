@@ -4,6 +4,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 using namespace std;
 
 #include "net_factory.h"
@@ -11,10 +12,11 @@ using namespace std;
 #include "rpc_service_group.h"
 #include "rpc_future.h"
 #include "utility/signal_helper.h"
+#include "msg_bus_i.h"
 
 namespace ff {
 
-class msg_bus_t: public msg_handler_i
+class msg_bus_t: public msg_bus_i
 {
     typedef map<uint16_t, rpc_service_group_t*>  service_map_t;
 public:
@@ -44,6 +46,8 @@ private:
     service_map_t       m_service_map;
     rpc_service_t*      m_broker_service;
     socket_ptr_t        m_socket;
+    
+    vector<socket_ptr_t>m_broker_slaves;
 };
 
 }

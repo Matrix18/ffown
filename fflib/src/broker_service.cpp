@@ -7,13 +7,75 @@ using namespace ff;
 
 broker_service_t::broker_service_t():
     m_uuid(0),
-    m_msg_uuid(100)
+    m_msg_uuid(100),
+    m_master_broker(NULL),
+    m_master_socket(NULL)
 {
+}
+
+socket_ptr_t broker_service_t::get_socket(const rpc_service_t* rs_)
+{
+    return m_master_socket;
 }
 
 broker_service_t::~broker_service_t()
 {
     
+}
+
+int broker_service_t::init_slave(const string& host_, const string& listen_host_)
+{
+    m_master_socket = net_factory_t::connect(host_, this);
+
+    if (NULL == m_master_socket)
+    {
+        logerror((BROKER, "broker_service_t::init_slave failed, can't connect to master broker<%s>", host_.c_str()));
+        return -1;
+    }
+
+    m_master_broker = new rpc_service_t(this, 0, 0);
+    
+    rpc_future_t<sync_all_service_t::out_t> rpc_future;
+    sync_all_service_t::in_t in;
+    in.slave_host = listen_host_;
+    
+    const sync_all_service_t::out_t& out = rpc_future.call(m_master_broker, in);
+    
+    for (size_t i = 0; i < out.group_name_vt.size(); ++i)
+    {
+        service_obj_mgr_t obj_mgr;
+        obj_mgr.id     = out.group_id_vt[i];
+        obj_mgr.name   = out.group_name_vt[i];
+
+        m_service_obj_mgr.insert(make_pair(obj_mgr.id, obj_mgr));
+    }
+    
+    for (size_t i = 0; i < out.id_info_vt.size(); ++i)
+    {
+        map<uint16_t, service_obj_mgr_t>::iterator it = m_service_obj_mgr.find(out.id_info_vt[i].sgid);
+        
+        if (it == m_service_obj_mgr.end())
+        {
+            logerror((BROKER, "broker_service_t::init_slave failed... sgid<%u> not exist", out.id_info_vt[i].sgid));
+        }
+        else
+        {
+            service_obj_t obj;
+            obj.name       = it->second.name;
+            obj.group_id   = out.id_info_vt[i].sgid;
+            obj.id         = out.id_info_vt[i].sid;
+            obj.socket_ptr = NULL;
+            obj.node_id    = out.id_info_vt[i].node_id;
+
+            it->second.service_objs[out.id_info_vt[i].sid] = obj;
+        }
+    }
+    
+    for (size_t i = 0; i < out.msg_name_vt.size(); ++i)
+    {
+        singleton_t<msg_name_store_t>::instance().add_msg(out.msg_name_vt[i], out.msg_id_vt[i]);
+    }
+    return 0;
 }
 
 int broker_service_t::handle_broken(socket_ptr_t sock_)
@@ -66,6 +128,21 @@ int broker_service_t::handle_broken(socket_ptr_t sock_)
         }
     }
     
+    if (NULL != sock_->get_data<socket_session_info_t>())
+    {
+        for (vector<string>::iterator vit = m_all_slave_host.begin(); vit != m_all_slave_host.end(); ++vit)
+        {
+            if (*vit == sock_->get_data<socket_session_info_t>()->slave_host)
+            {
+                m_all_slave_host.erase(vit);
+                break;
+            }
+        }
+
+        delete sock_->get_data<socket_session_info_t>();
+        sock_->set_data(NULL);
+    }
+
     sock_->safe_delete();
     m_all_sockets.erase(sock_);
 
@@ -135,6 +212,69 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
             sync_all_service(in, rcb);
             m_all_sockets.insert(sock_);
         }
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::REG_SLAVE_BROKER)
+        {
+            reg_slave_broker_t::in_t in;
+            in.decode(msg_.get_body());
+            loginfo((BROKER, "broker_service_t::handle_msg REG_SLAVE_BROKER node_id[%u]", in.node_id));
+            
+            service_obj_map_t::iterator it = m_service_obj_mgr.begin();
+            
+            for (; it != m_service_obj_mgr.end(); ++it)
+            {
+                map<uint16_t, service_obj_t>::iterator it2 = it->second.service_objs.begin();
+                for (; it2 != it->second.service_objs.end(); ++it2)
+                {
+                    if (it2->second.node_id == in.node_id)
+                    {
+                        it2->second.socket_ptr = sock_;
+                    }
+                }
+            }
+            sock_->set_data(new socket_session_info_t(in.node_id));
+            m_all_sockets.insert(sock_);
+        }
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::PUSH_ADD_SERVICE_GROUP)
+        {
+            push_add_service_group_t::in_t in;
+            in.decode(msg_.get_body());
+            
+            service_obj_mgr_t obj_mgr;
+            obj_mgr.id     = in.sgid;
+            obj_mgr.name   = in.name;
+            
+            m_service_obj_mgr.insert(make_pair(obj_mgr.id, obj_mgr));
+        }
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::PUSH_ADD_SERVICE)
+        {
+            push_add_service_t::in_t in;
+            in.decode(msg_.get_body());
+            
+            loginfo((BROKER, "broker_service_t::handle_msg PUSH_ADD_SERVICE node_id[%u]", in.node_id));
+
+            map<uint16_t, service_obj_mgr_t>::iterator it = m_service_obj_mgr.find(in.sgid);
+            if (it == m_service_obj_mgr.end())
+            {
+                logerror((BROKER, "broker_service_t::handle_msg failed... sgid<%u> not exist", in.sgid));
+            }
+            else
+            {
+                service_obj_t obj;
+                obj.name       = it->second.name;
+                obj.group_id   = in.sgid;
+                obj.id         = in.sid;
+                obj.socket_ptr = find_socket_by_node(in.node_id);
+                obj.node_id    = in.node_id;
+                
+                it->second.service_objs[in.sid] = obj;
+            }
+        }
+        else if (msg_tool.get_msg_id() == rpc_msg_cmd_e::PUSH_ADD_MSG)
+        {
+            push_add_msg_t::in_t in;
+            in.decode(msg_.get_body());
+            singleton_t<msg_name_store_t>::instance().add_msg(in.name, in.msg_id);
+        }
     }
     else
     {
@@ -170,6 +310,18 @@ int broker_service_t::handle_msg(const message_t& msg_, socket_ptr_t sock_)
     return 0;
 }
 
+socket_ptr_t broker_service_t::find_socket_by_node(uint16_t node_id_)
+{
+    for (set<socket_ptr_t>::iterator it = m_all_sockets.begin(); it != m_all_sockets.end(); ++it)
+    {
+        if (node_id_ == (*it)->get_data<socket_session_info_t>()->node_id)
+        {
+            return (*it);
+        }
+    }
+    return NULL;
+}
+
 void broker_service_t::sync_all_service(sync_all_service_t::in_t& in_msg_, rpc_callcack_t<sync_all_service_t::out_t>& cb_)
 {
     sync_all_service_t::out_t ret;
@@ -187,6 +339,7 @@ void broker_service_t::sync_all_service(sync_all_service_t::in_t& in_msg_, rpc_c
             sync_all_service_t::id_info_t id_info;
             id_info.sgid = it2->second.group_id;
             id_info.sid  = it2->second.id;
+            id_info.node_id = it2->second.node_id;
 
             ret.id_info_vt.push_back(id_info);
         }
@@ -200,6 +353,19 @@ void broker_service_t::sync_all_service(sync_all_service_t::in_t& in_msg_, rpc_c
     }
     
     ret.set_uuid(in_msg_.get_uuid());
+    ret.node_id = ++m_uuid;
+    ret.bind_id = 0;//! 绑定到某个broker slave上
+
+    logtrace((BROKER, "broker_service_t::sync_all_service slave_host<%s>", in_msg_.slave_host.c_str()));
+    if (false == in_msg_.slave_host.empty())
+    {
+        m_all_slave_host.push_back(in_msg_.slave_host);
+    }
+    ret.broker_slave_host.insert(ret.broker_slave_host.end(), m_all_slave_host.begin(), m_all_slave_host.end());
+
+    //! 为socket 设置session info
+    cb_.get_socket()->set_data(new socket_session_info_t(ret.node_id, in_msg_.slave_host));
+
     cb_(ret);
 }
 
@@ -262,6 +428,7 @@ void broker_service_t::create_service(create_service_t::in_t& in_msg_, rpc_callc
         obj.name = som.name;
         obj.group_id = in_msg_.new_service_group_id;
         obj.id       = in_msg_.new_service_id;
+        obj.node_id  = cb_.get_socket()->get_data<socket_session_info_t>()->node_id;
         obj.socket_ptr = cb_.get_socket();
 
         som.service_objs[in_msg_.new_service_id] = obj;
@@ -274,6 +441,7 @@ void broker_service_t::create_service(create_service_t::in_t& in_msg_, rpc_callc
     push_add_service_t::in_t push_msg;
     push_msg.sgid = in_msg_.new_service_group_id;
     push_msg.sid  = in_msg_.new_service_id;
+    push_msg.node_id = cb_.get_socket()->get_data<socket_session_info_t>()->node_id;
     push_msg_except(cb_.get_socket(), rpc_msg_cmd_e::PUSH_ADD_SERVICE, push_msg);
 }
 

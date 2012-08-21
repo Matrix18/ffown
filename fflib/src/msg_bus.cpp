@@ -208,6 +208,24 @@ int msg_bus_t::open(const string& host_)
         singleton_t<msg_name_store_t>::instance().add_msg(out.msg_name_vt[i], out.msg_id_vt[i]);
         logtrace((MSG_BUS, "msg_bus_t::open add interface<%s>, msgid[%u]", out.msg_name_vt[i].c_str(), out.msg_id_vt[i]));
     }
+    
+    for (size_t i = 0; i< out.broker_slave_host.size(); ++i)
+    {
+        logtrace((MSG_BUS, "msg_bus_t::open add slave broker host<%s>", out.broker_slave_host[i].c_str()));
+        socket_ptr_t socket_ptr = net_factory_t::connect(out.broker_slave_host[i], this);
+        if (NULL == socket_ptr)
+        {
+            logerror((MSG_BUS, "msg_bus_t::open connect slave broker host<%s> failed", out.broker_slave_host[i].c_str()));
+            return -1;
+        }
+        m_broker_slaves.push_back(socket_ptr);
+
+        reg_slave_broker_t::in_t msg_to_slave;
+        msg_to_slave.node_id = out.node_id;
+        msg_to_slave.set_msg_id(singleton_t<msg_name_store_t>::instance().name_to_id(msg_to_slave.get_name()));
+        msg_sender_t::send(socket_ptr, rpc_msg_cmd_e::CALL_INTERFACE , msg_to_slave);
+    }
+    
     return 0;
 }
 
@@ -222,6 +240,10 @@ int msg_bus_t::close()
 
 socket_ptr_t msg_bus_t::get_socket(const rpc_service_t* rs_)
 {
+    if (m_broker_service != rs_ && false == m_broker_slaves.empty())
+    {
+        return m_broker_slaves[(long)rs_ % m_broker_slaves.size()];
+    }
     return m_socket;
 }
 
