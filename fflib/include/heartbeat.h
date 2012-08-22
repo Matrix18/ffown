@@ -28,6 +28,7 @@ public:
     int del(const type_t& v_);
     int update(const type_t& v_);
 
+    int timer_check();
 private:
     long                        m_timeout;
     data_map_t                  m_data_map;
@@ -93,5 +94,11 @@ int heartbeat_t::del(const type_t& v_)
     
     return 0;
 }
+
+int heartbeat_t::timer_check()
+{
+    
+}
+
 };
 #endif
