@@ -10,6 +10,7 @@
 #include <assert.h>
 
 #include <list>
+#include <map>
 using namespace std;
 
 #include "thread.h"
@@ -45,7 +46,8 @@ class timer_service_t
         long    dest_tm;
         task_t  callback;
     };
-    typedef list<registered_info_t> registered_info_list_t;
+    typedef list<registered_info_t>             registered_info_list_t;
+    typedef multimap<long, registered_info_t>   registered_info_map_t;
 public:
     timer_service_t(long tick):
         m_runing(true),
@@ -82,21 +84,7 @@ public:
         
         lock_guard_t lock(m_mutex);
 
-        registered_info_list_t::iterator it = m_registered_store.begin();
-        while (it != m_registered_store.end())
-        {
-            if (dest_ms > it->dest_tm)
-            {
-                m_registered_store.insert(it, registered_info_t(dest_ms, func));
-                break;
-            }
-            ++ it;
-        }
-
-        if (it == m_registered_store.end())
-        {
-            m_registered_store.insert(it, registered_info_t(dest_ms, func));
-        }
+        m_registered_store.insert(make_pair(dest_ms, registered_info_t(dest_ms, func)));
     }
 
     void run()
@@ -135,15 +123,22 @@ private:
     {
         lock_guard_t lock(m_mutex);
         
-        while (false == m_registered_store.empty())
+        registered_info_map_t::iterator it_begin = m_registered_store.begin();
+        registered_info_map_t::iterator it       = it_begin;
+
+        for (; it != m_registered_store.end(); ++it)
         {
-            registered_info_t& last = m_registered_store.back();
+            registered_info_t& last = it->second;
             if (false == last.is_timeout(now_))
             {
                 break;
             }
             last.callback.run();
-            m_registered_store.pop_back();
+        }
+        
+        if (it != it_begin)//! some timeout 
+        {
+            m_registered_store.erase(it_begin, it);
         }
     }
 
@@ -153,7 +148,7 @@ private:
     volatile long            m_min_timeout;
     int                      m_cache_list;
     int                      m_checking_list;
-    registered_info_list_t   m_registered_store;
+    registered_info_map_t    m_registered_store;
     interupt_info_t          m_interupt_info;
     thread_t                 m_thread;
     mutex_t                  m_mutex;
