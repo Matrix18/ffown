@@ -2,29 +2,40 @@
 #define _ARG_HELPER_H_
 
 #include <string>
+#include <vector>
 using namespace std;
+
+#include "utility/strtool.h"
 
 class arg_helper_t
 {
 public:
-	arg_helper_t(int argc, char* argv[]):
-		m_argc(argc),
-		m_argv(argv)
+	arg_helper_t(int argc, char* argv[])
 	{
+        for (int i = 0; i < argc; ++i)
+        {
+            m_args.push_back(argv[i]);
+        }
+	}
+    arg_helper_t(string arg_str_)
+	{
+        vector<string> v;
+        strtool::split(arg_str_, v, " ");
+        m_args.insert(m_args.end(), v.begin(), v.end());
 	}
 	string get_option(int idx_)
 	{   
-		if (idx_ >= m_argc)
+		if ((size_t)idx_ >= m_args.size())
 		{   
 			return ""; 
 		}   
-		return m_argv[idx_];
+		return m_args[idx_];
 	}   
 	bool is_enable_option(string opt_)
 	{
-		for (int i = 0; i < m_argc; ++i)
+		for (size_t i = 0; i < m_args.size(); ++i)
 		{
-			if (opt_ == m_argv[i])
+			if (opt_ == m_args[i])
 			{
 				return true;
 			}
@@ -35,24 +46,23 @@ public:
 	string get_option_value(string opt_)
 	{
 		string ret;
-		for (int i = 0; i < m_argc; ++i)
+		for (size_t i = 0; i < m_args.size(); ++i)
 		{   
-			if (opt_ == m_argv[i])
+			if (opt_ == m_args[i])
 			{   
-				int value_idx = ++ i;
-				if (value_idx >= m_argc)
+				size_t value_idx = ++ i;
+				if (value_idx >= m_args.size())
 				{
 					return ret;
 				}
-				ret = m_argv[value_idx];
+				ret = m_args[value_idx];
 				return ret;
 			}   
 		}	
 		return ret;
 	}
 private:
-	int    m_argc;
-	char** m_argv;
+    vector<string>  m_args;
 };
 
 #endif
