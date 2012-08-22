@@ -1,5 +1,5 @@
-#ifndef _HEARTBEAT_H_
-#define _HEARTBEAT_H_
+#ifndef _BASE_HEARTBEAT_H_
+#define _BASE_HEARTBEAT_H_
 
 #include <map>
 #include <list>
