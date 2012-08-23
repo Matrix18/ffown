@@ -1,6 +1,8 @@
 #ifndef _BASE_HEARTBEAT_H_
 #define _BASE_HEARTBEAT_H_
 
+#include <stdint.h>
+
 #include <map>
 #include <list>
 using namespace std;
@@ -24,7 +26,7 @@ class base_heartbeat_t
     };
     typedef list<node_info_t>                           soft_timeout_list_t;
     typedef map<type_t, typename soft_timeout_list_t::iterator>  data_map_t;
-    typedef void (*timeout_callback_t)();
+    typedef void (*timeout_callback_t)(type_t);
 public:
     base_heartbeat_t();
     ~base_heartbeat_t();
@@ -38,9 +40,13 @@ public:
 
     int timer_check();
 
+    time_t tick() const { return m_cur_tick; }
+    
+    int timeout() const { return (int)m_timeout; }
 private:
     mutex_t                     m_mutex;
     time_t                      m_timeout;
+    time_t                      m_cur_tick;
     data_map_t                  m_data_map;
     soft_timeout_list_t         m_time_sort_list;
     timeout_callback_t          m_timeout_callback;
@@ -48,9 +54,10 @@ private:
 
 template <typename T>
 base_heartbeat_t<T>::base_heartbeat_t():
-    m_timeout(60*60*24*365*10),//! love you 1w year
+    m_timeout(2147483647 - ::time(NULL)),//! love you 1w year
     m_timeout_callback(NULL)
 {
+    m_cur_tick = ::time(NULL);
 }
 
 template <typename T>
@@ -145,13 +152,13 @@ int base_heartbeat_t<T>::del(const type_t& v_)
 template <typename T>
 int base_heartbeat_t<T>::timer_check()
 {
-    time_t now = ::time(NULL);
+    m_cur_tick = ::time(NULL);
     lock_guard_t lock(m_mutex);
 
     while (false == m_time_sort_list.empty())
     {
         node_info_t& info = m_time_sort_list.back();
-        if (now >= info.timeout)
+        if (m_cur_tick >= info.timeout)
         {
             (*m_timeout_callback)(info.value);
             m_time_sort_list.pop_back();

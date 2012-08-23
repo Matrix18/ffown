@@ -23,7 +23,7 @@ public:
         strtool::split(arg_str_, v, " ");
         m_args.insert(m_args.end(), v.begin(), v.end());
 	}
-	string get_option(int idx_)
+	string get_option(int idx_) const
 	{   
 		if ((size_t)idx_ >= m_args.size())
 		{   
@@ -31,7 +31,7 @@ public:
 		}   
 		return m_args[idx_];
 	}   
-	bool is_enable_option(string opt_)
+	bool is_enable_option(string opt_) const
 	{
 		for (size_t i = 0; i < m_args.size(); ++i)
 		{
@@ -43,7 +43,7 @@ public:
 		return false;
 	}
 
-	string get_option_value(string opt_)
+	string get_option_value(string opt_) const
 	{
 		string ret;
 		for (size_t i = 0; i < m_args.size(); ++i)
