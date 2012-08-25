@@ -59,7 +59,6 @@ int epoll_impl_t::event_loop()
 
             if(cur_ev.events & EPOLLOUT)
             {
-                //! m_task_queue->produce(task_t(post_write_event, fd_ptr));
                 fd_ptr->handle_epoll_write();
             }
 
@@ -108,11 +107,9 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
     ee.data.ptr  = (void*)0;
     int ret = ::epoll_ctl(m_efd, EPOLL_CTL_DEL, fd_ptr_->socket(), &ee);
 
-    if (0 == ret)
-    {
-        lock_guard_t lock(m_mutex);
-        m_error_fd_set.push_back(fd_ptr_);
-    }
+    lock_guard_t lock(m_mutex);
+    m_error_fd_set.push_back(fd_ptr_);
+    
     return ret;
 }
 
