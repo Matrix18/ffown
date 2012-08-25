@@ -39,6 +39,9 @@ int epoll_impl_t::event_loop()
     {
         nfds  = ::epoll_wait(m_efd, ev_set, EPOLL_EVENTS_SIZE, EPOLL_WAIT_TIME);
 
+        //! 删除那些已经出现error的socket 对象
+        destory_error_fd();
+
         if (false == m_running) return 0;
 
         if (nfds < 0 && EINTR == errno)
@@ -107,8 +110,11 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
     ee.data.ptr  = (void*)0;
     int ret = ::epoll_ctl(m_efd, EPOLL_CTL_DEL, fd_ptr_->socket(), &ee);
 
-    if (0 == ret) fd_ptr_->handle_epoll_error();
-    //! m_task_queue->produce(task_t(post_error_event, fd_ptr_));
+    if (0 == ret)
+    {
+        lock_guard_t lock(m_mutex);
+        m_error_fd_set.push_back(fd_ptr_);
+    }
     return ret;
 }
 
@@ -122,3 +128,13 @@ int epoll_impl_t::mod_fd(epoll_fd_i* fd_ptr_)
     return ::epoll_ctl(m_efd, EPOLL_CTL_MOD, fd_ptr_->socket(), &ee);
 }
 
+void epoll_impl_t::destory_error_fd()
+{
+    lock_guard_t lock(m_mutex);
+    list<epoll_fd_i*>::iterator it = m_error_fd_set.begin();
+    for (; it != m_error_fd_set.end(); ++it)
+    {
+        (*it)->handle_epoll_error();
+    }
+    m_error_fd_set.clear();
+}
