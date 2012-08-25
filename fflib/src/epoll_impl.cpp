@@ -39,9 +39,6 @@ int epoll_impl_t::event_loop()
     {
         nfds  = ::epoll_wait(m_efd, ev_set, EPOLL_EVENTS_SIZE, EPOLL_WAIT_TIME);
 
-        //! 删除那些已经出现error的socket 对象
-        destory_error_fd();
-
         if (false == m_running) return 0;
 
         if (nfds < 0 && EINTR == errno)
@@ -57,7 +54,6 @@ int epoll_impl_t::event_loop()
     
             if (cur_ev.events & (EPOLLIN | EPOLLPRI))
             {
-                //! m_task_queue->produce(task_t(post_read_event, fd_ptr));
                 fd_ptr->handle_epoll_read();
             }
 
@@ -72,7 +68,9 @@ int epoll_impl_t::event_loop()
                 fd_ptr->close();
             }
         }
-
+        
+        //! 删除那些已经出现error的socket 对象
+        destory_error_fd();
     }while(nfds >= 0);
 
     return 0;
