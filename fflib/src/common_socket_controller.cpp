@@ -1,4 +1,4 @@
-#include "detail/socket_controller_impl.h"
+#include "detail/common_socket_controller.h"
 #include "socket_i.h"
 #include "utility/strtool.h"
 
@@ -11,13 +11,13 @@ using namespace std;
 
 using namespace ff;
 
-socket_controller_impl_t::socket_controller_impl_t(msg_handler_ptr_t msg_handler_):
+common_socket_controller_t::common_socket_controller_t(msg_handler_ptr_t msg_handler_):
     m_msg_handler(msg_handler_),
     m_have_recv_size(0)
 {
 }
 
-socket_controller_impl_t::~socket_controller_impl_t()
+common_socket_controller_t::~common_socket_controller_t()
 {
 }
 
@@ -25,13 +25,13 @@ socket_controller_impl_t::~socket_controller_impl_t()
 //! this func just callback logic layer to process this event
 //! each socket broken event only can happen once
 //! logic layer has responsibily to deconstruct the socket object
-int socket_controller_impl_t::handle_error(socket_i* sp_)
+int common_socket_controller_t::handle_error(socket_i* sp_)
 {
     m_msg_handler->handle_broken(sp_);
     return 0;
 }
 
-int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
+int common_socket_controller_t::handle_read(socket_i* sp_, char* buff, size_t len)
 {
     size_t left_len = len;
     size_t tmp      = 0;
@@ -64,12 +64,12 @@ int socket_controller_impl_t::handle_read(socket_i* sp_, char* buff, size_t len)
 }
 
 //! 当数据全部发送完毕后，此函数会被回调
-int socket_controller_impl_t::handle_write_completed(socket_i* sp_)
+int common_socket_controller_t::handle_write_completed(socket_i* sp_)
 {
     return 0;
 }
 
-int socket_controller_impl_t::check_pre_send(socket_i* sp_, string& buff_)
+int common_socket_controller_t::check_pre_send(socket_i* sp_, string& buff_)
 {
     if (sp_->socket() < 0)
     {

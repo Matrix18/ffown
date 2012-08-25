@@ -1,5 +1,5 @@
-#ifndef _SOCKET_CONTROLLER_IMPL_H_
-#define _SOCKET_CONTROLLER_IMPL_H_
+#ifndef _COMMON_SOCKET_CONTROLLER_H_
+#define _COMMON_SOCKET_CONTROLLER_H_
 
 #include <string>
 using namespace std;
@@ -12,11 +12,11 @@ namespace ff {
 
 class socket_i;
 
-class socket_controller_impl_t: public socket_controller_i
+class common_socket_controller_t: public socket_controller_i
 {
 public:
-    socket_controller_impl_t(msg_handler_ptr_t msg_handler_);
-    ~socket_controller_impl_t();
+    common_socket_controller_t(msg_handler_ptr_t msg_handler_);
+    ~common_socket_controller_t();
     virtual int handle_error(socket_i*);
     virtual int handle_read(socket_i*, char* buff, size_t len);
     virtual int handle_write_completed(socket_i*);

@@ -15,7 +15,7 @@
 #include "detail/socket_impl.h"
 #include "utility/strtool.h"
 #include "msg_handler_i.h"
-#include "detail/socket_controller_impl.h"
+#include "detail/common_socket_controller.h"
 
 namespace ff {
 
@@ -54,7 +54,7 @@ public:
             return ret;
         }
         
-        ret = new socket_impl_t(e_, new socket_controller_impl_t(msg_handler_), s, tq_);
+        ret = new socket_impl_t(e_, new common_socket_controller_t(msg_handler_), s, tq_);
         ret->open();
         return ret;
     }

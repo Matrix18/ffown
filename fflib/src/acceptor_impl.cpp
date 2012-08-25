@@ -12,7 +12,7 @@ using namespace std;
 #include "epoll_i.h"
 #include "detail/acceptor_impl.h"
 #include "detail/socket_impl.h"
-#include "detail/socket_controller_impl.h"
+#include "detail/common_socket_controller.h"
 #include "utility/strtool.h"
 #include "utility/socket_op.h"
 #include "msg_handler_i.h"
@@ -140,6 +140,6 @@ int acceptor_impl_t::handle_epoll_error()
 
 socket_i* acceptor_impl_t::create_socket(int new_fd_)
 {
-    return new socket_impl_t(m_epoll, new socket_controller_impl_t(m_msg_handler), new_fd_, m_tq->alloc(new_fd_));
+    return new socket_impl_t(m_epoll, new common_socket_controller_t(m_msg_handler), new_fd_, m_tq->alloc(new_fd_));
 }
 
