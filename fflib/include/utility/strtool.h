@@ -64,10 +64,10 @@ static string replace(const string& str, const string& src, const string& dest)
     string::size_type pos       = str.find(src);
     while (pos != string::npos)
     {
-        cout <<"replacexxx:" << pos_begin <<" " << pos <<"\n";
-        ret.append(str.data() + pos_begin, pos - pos_begin);
+        //cout <<"replacexxx:" << pos_begin <<" " << pos <<"\n";
+        ret.append(str.c_str() + pos_begin, pos - pos_begin);
         ret += dest;
-        pos_begin = pos + 1;
+        pos_begin = pos + src.length();
         pos       = str.find(src, pos_begin);
     }
     if (pos_begin < str.length())
