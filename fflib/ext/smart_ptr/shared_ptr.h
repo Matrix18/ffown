@@ -129,12 +129,13 @@ template<typename T>
 typename shared_ptr_t<T>::self_type_t& shared_ptr_t<T>::operator=(const self_type_t& src_)
 {
     reset();
-    m_dest_ptr = src_->get();
-    m_ref_count = src_->ger_ref_count();
+    m_dest_ptr = src_.get();
+    m_ref_count = src_.ger_ref_count();
     if (NULL != m_dest_ptr)
     {
         m_ref_count->inc();
     }
+    return *this;
 }
     
 }
