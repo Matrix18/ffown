@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
         
     };
 
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i < 1; ++i)
     {
     	echo_t::in_t in;
         in.value = "XXX_echo_test_XXX";
