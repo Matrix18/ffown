@@ -20,7 +20,7 @@ class bin_decoder_t;
 struct codec_i
 {
     virtual ~codec_i(){}
-    virtual string encode(uint16_t cmd_)         = 0;
+    virtual string encode()                      = 0;
     virtual void decode(const string& src_buff_) = 0;
 };
 
@@ -132,15 +132,8 @@ class bin_encoder_t
 {
 public:
     bin_encoder_t(){}
-    explicit bin_encoder_t(uint16_t cmd_)
+    bin_encoder_t& init()
     {
-        message_head_t h(cmd_);
-        m_dest_buff.append((const char*)(&h), sizeof(h));
-    }
-    bin_encoder_t& init(uint32_t cmd_)
-    {
-        message_head_t h(cmd_);
-        m_dest_buff.append((const char*)(&h), sizeof(h));
         return *this;
     }
 
@@ -198,7 +191,6 @@ private:
     inline bin_encoder_t& copy_value(const void* src_, size_t size_)
     {
         m_dest_buff.append((const char*)(src_), size_);
-        ((message_head_t*)m_dest_buff.data())->size += size_;
         return *this;
     }
 
@@ -301,7 +293,8 @@ struct msg_i : public codec_i
         service_group_id(0),
         service_id(0),
         msg_id(0),
-        msg_name(msg_name_)
+        msg_name(msg_name_),
+        encode_name(false)
     {}
     
     void set(uint16_t group_id, uint16_t id_, uint32_t uuid_, uint16_t msg_id_)
@@ -337,26 +330,27 @@ struct msg_i : public codec_i
     uint16_t msg_id;
     string   msg_name;
 
-    virtual string encode(uint16_t cmd_)
-    {
-        this->cmd = cmd_;
-        return encode();
-    }
-    virtual string encode() = 0;
+
     bin_encoder_t& init_encoder()
     {
-        return encoder.init(cmd)  << uuid << service_group_id << service_id<< msg_id;
-    }
-    bin_encoder_t& init_encoder(uint16_t cmd_)
-    {
-        return encoder.init(cmd_) << uuid << service_group_id << service_id << msg_id;
+        if (false == encode_name)
+        {
+            return encoder.init() << uuid << service_group_id << service_id << msg_id;
+        }
+        else
+        {
+            return encoder.init() << msg_name;
+        }
     }
     bin_decoder_t& init_decoder(const string& buff_)
     {
         return decoder.init(buff_) >> uuid >> service_group_id >> service_id >> msg_id;
     }
+    
+    void set_gate() { encode_name = true; }
     bin_decoder_t decoder;
     bin_encoder_t encoder;
+    bool          encode_name;
 };
 
 struct base_msg_t: public msg_i
@@ -380,6 +374,51 @@ struct msg_tool_t: public base_msg_t
         base_msg_t("")
     {}
 };
+    
+struct gate_msg_tool_t: public msg_i
+{
+    gate_msg_tool_t():
+        msg_i("")
+    {}
+    virtual string encode()
+    {
+        string dest = init_encoder().get_buff();
+        return dest += packet_body.substr(4 + msg_name.size());
+    }
+    virtual void gate_decode(const string& src_buff_)
+    {
+        packet_body = src_buff_;
+        decoder.init(src_buff_) >> msg_i::msg_name;
+    }
+    virtual void decode(const string& src_buff_)
+    {
+        init_decoder(src_buff_);
+    }
+    string packet_body;
+};
+
+struct client_msg_i : public codec_i
+{
+    client_msg_i(const char* msg_name_):
+        msg_name(msg_name_)
+    {}
+    
+    const string& get_name()  const {return msg_name;}
+
+    bin_encoder_t& init_encoder()
+    {
+        return encoder.init() << msg_name;
+    }
+    bin_decoder_t& init_decoder(const string& buff_)
+    {
+        return decoder.init(buff_) >> msg_name;
+    }
+
+    string        msg_name;
+    bin_decoder_t decoder;
+    bin_encoder_t encoder;
+};
+
 
 struct bool_ret_msg_t: public msg_i
 {
@@ -636,4 +675,5 @@ struct reg_slave_broker_t
     };
 };
 }
+
 #endif

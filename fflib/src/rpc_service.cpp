@@ -48,6 +48,12 @@ void rpc_service_t::async_call(msg_i& msg_, uint16_t msg_id_, callback_wrapper_i
     logtrace((RPC, "rpc_service_t::async_call m_service_id[%u], uuid[%u]", m_service_id, msg_.get_uuid()));
 }
 
+void rpc_service_t::async_call(gate_msg_tool_t& msg_, callback_wrapper_i* func_)
+{
+    uint16_t msg_id = singleton_t<msg_name_store_t>::instance().name_to_id(msg_.get_name());    
+    this->async_call(msg_, msg_id, func_);
+}
+
 int rpc_service_t::interface_callback(uint32_t uuid_, const string& buff_)
 {
     logtrace((RPC, "rpc_service_t::interface_callback m_service_id[%u], uuid[%u]", m_service_id, uuid_));

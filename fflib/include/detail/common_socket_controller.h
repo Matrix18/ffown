@@ -23,7 +23,7 @@ public:
 
     virtual int check_pre_send(socket_i*, string& buff_);
 
-private:
+protected:
     msg_handler_ptr_t   m_msg_handler;
     size_t              m_have_recv_size;
     message_t           m_message;

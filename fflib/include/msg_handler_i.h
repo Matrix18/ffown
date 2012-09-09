@@ -1,19 +1,13 @@
-#ifndef _MSG_HANDLER_H_
-#define _MSG_HANDLER_H_
+#ifndef _MSG_HANDLER_XX_H_
+#define _MSG_HANDLER_XX_H_
 
 #include "message.h"
 #include "socket_i.h"
 
 namespace ff {
-    
-class socket_i;
-class message_t;
 
 class msg_handler_i
 {
-public:
-    typedef socket_i* socket_ptr_t;
-
 public:
     virtual ~msg_handler_i() {} ;
 

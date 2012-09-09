@@ -234,6 +234,7 @@ int msg_bus_t::close()
     if (m_socket)
     {
         m_socket->close();
+        while (m_socket) usleep(1000);
     }
     return 0;
 }

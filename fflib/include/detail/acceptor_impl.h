@@ -27,7 +27,7 @@ public:
 protected:
     virtual socket_i* create_socket(int);
 
-private:
+protected:
     int                 m_listen_fd;
     epoll_i*            m_epoll;
     msg_handler_i*      m_msg_handler;

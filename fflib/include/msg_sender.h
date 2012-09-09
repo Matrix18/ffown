@@ -24,11 +24,17 @@ public:
             socket_ptr_->async_send(dest);
         }
     }
-    static void send(socket_ptr_t socket_ptr_, uint16_t cmd_, codec_i& src_msg_)
+    static void send(socket_ptr_t socket_ptr_, uint16_t cmd_, codec_i& msg_)
     {
         if (socket_ptr_)
         {
-            socket_ptr_->async_send(src_msg_.encode(cmd_));
+            string body = msg_.encode();
+            message_head_t h(cmd_);
+            h.size = body.size();
+            string dest((const char*)&h, sizeof(h));
+            dest += body;
+
+            socket_ptr_->async_send(dest);
         }
     }
     static void send(socket_ptr_t socket_ptr_, const string& str_)
@@ -36,6 +42,18 @@ public:
         if (socket_ptr_)
         {
             socket_ptr_->async_send(str_);
+        }
+    }
+    static void send_to_client(socket_ptr_t socket_ptr_, codec_i& msg_)
+    {
+        if (socket_ptr_)
+        {
+            string body = msg_.encode();
+            message_head_t h(0);
+            h.size = body.size();
+            string dest((const char*)&h, sizeof(h));
+            dest += body;
+            socket_ptr_->async_send(body);
         }
     }
 };

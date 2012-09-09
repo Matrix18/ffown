@@ -3,6 +3,7 @@
 #define _NET_FACTORY_H_
 
 #include "detail/acceptor_impl.h"
+#include "detail/gateway_acceptor.h"
 #include "detail/epoll_impl.h"
 #include "connector.h"
 #include "utility/singleton.h"
@@ -67,6 +68,20 @@ public:
     {
         singleton_t<global_data_t>::instance().start();
         acceptor_impl_t* ret = new acceptor_impl_t(&(singleton_t<global_data_t>::instance().epoll),
+                                                   msg_handler_, 
+                                                   &(singleton_t<global_data_t>::instance().tg));
+        
+        if (ret->open(host_))
+        {
+            delete ret;
+            return NULL;
+        }
+        return ret;
+    }
+    static acceptor_i* gateway_listen(const string& host_, msg_handler_i* msg_handler_)
+    {
+        singleton_t<global_data_t>::instance().start();
+        acceptor_impl_t* ret = new gateway_acceptor_t(&(singleton_t<global_data_t>::instance().epoll),
                                                    msg_handler_, 
                                                    &(singleton_t<global_data_t>::instance().tg));
         

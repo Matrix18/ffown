@@ -33,6 +33,11 @@ public:
     template<typename IN_MSG>
     void async_call(IN_MSG& msg_, callback_wrapper_i* func_);
 
+    //! special for gateway msg
+    template<typename RET, typename MSGT>
+    void async_call(gate_msg_tool_t& msg_, RET (*callback_)(MSGT&));
+    void async_call(gate_msg_tool_t& msg_, callback_wrapper_i* func_);
+
     template <typename IN_MSG, typename RET, typename OUT_MSG>
     rpc_service_t& reg(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&));
     template <typename IN_MSG, typename RET, typename T, typename OUT_MSG>
@@ -74,6 +79,14 @@ void rpc_service_t::async_call(IN_MSG& msg_, callback_wrapper_i* func_)
     
     this->async_call(msg_, msg_id, func_);
 }
+
+template<typename RET, typename MSGT>
+void rpc_service_t::async_call(gate_msg_tool_t& msg_, RET (*callback_)(MSGT&))
+{
+    uint16_t msg_id = singleton_t<msg_name_store_t>::instance().name_to_id(msg_.get_name());    
+    this->async_call(msg_, msg_id, new callback_wrapper_cfunc_impl_t<RET, MSGT>(callback_));
+}
+
 
 template <typename IN_MSG, typename RET, typename OUT_MSG>
 rpc_service_t& rpc_service_t::reg(RET (*interface_)(IN_MSG&, rpc_callcack_t<OUT_MSG>&))
