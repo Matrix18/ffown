@@ -174,7 +174,7 @@ public:
 
     void produce(const task_t& task_)
     {
-        m_tqs[(long)(task_.task_impl->get_arg()) % m_tqs.size()]->produce(task_);
+        m_tqs[(long)(&task_) % m_tqs.size()]->produce(task_);
     }
     void multi_produce(const task_list_t& task_)
     {
