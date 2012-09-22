@@ -38,13 +38,17 @@ class timer_service_t
     };
     struct registered_info_t
     {
-        registered_info_t(long ms_, const task_t& t_):
-            dest_tm(ms_),
-            callback(t_)
+        registered_info_t(long ms_, long dest_ms_, const task_t& t_, bool is_loop_):
+            timeout(ms_),
+            dest_tm(dest_ms_),
+            callback(t_),
+            is_loop(is_loop_)
         {}
         bool is_timeout(long cur_ms_)       { return dest_tm <= cur_ms_; }
+        long    timeout;
         long    dest_tm;
         task_t  callback;
+        bool    is_loop;
     };
     typedef list<registered_info_t>             registered_info_list_t;
     typedef multimap<long, registered_info_t>   registered_info_map_t;
@@ -76,15 +80,27 @@ public:
         m_thread.join();
     }
 
-    void timer_callback(long ms_, task_t func)
+    void loop_timer(long ms_, task_t func)
+    {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        long   dest_ms = tv.tv_sec*1000 + tv.tv_usec / 1000 + ms_;
+
+        lock_guard_t lock(m_mutex);
+        m_tmp_register_list.push_back(registered_info_t(ms_, dest_ms, func, true));
+    }
+    void once_timer(long ms_, task_t func)
     {
         struct timeval tv;
         gettimeofday(&tv, NULL);
         long   dest_ms = tv.tv_sec*1000 + tv.tv_usec / 1000 + ms_;
         
         lock_guard_t lock(m_mutex);
-
-        m_registered_store.insert(make_pair(dest_ms, registered_info_t(dest_ms, func)));
+        m_tmp_register_list.push_back(registered_info_t(ms_, dest_ms, func, false));
+    }
+    void timer_callback(long ms_, task_t func)
+    {
+        once_timer(ms_, func);
     }
 
     void run()
@@ -106,12 +122,24 @@ public:
             gettimeofday(&tv, NULL);
             long cur_ms = tv.tv_sec*1000 + tv.tv_usec / 1000;
             
+            add_new_timer();
             process_timer_callback(cur_ms);
             
         }while (true) ;
     }
 
 private:
+    void add_new_timer()
+    {
+        lock_guard_t lock(m_mutex);
+        registered_info_list_t::iterator it = m_tmp_register_list.begin();
+        for (; it != m_tmp_register_list.end(); ++it)
+        {
+            m_registered_store.insert(make_pair(it->dest_tm, *it));
+        }
+        m_tmp_register_list.clear();
+    }
+
     void interupt()
     {
         epoll_event ev = { 0, { 0 } };
@@ -121,8 +149,6 @@ private:
     }
     void process_timer_callback(long now_)
     {
-        lock_guard_t lock(m_mutex);
-        
         registered_info_map_t::iterator it_begin = m_registered_store.begin();
         registered_info_map_t::iterator it       = it_begin;
 
@@ -134,6 +160,10 @@ private:
                 break;
             }
             last.callback.run();
+            if (last.is_loop)//! 如果是循环定时器，还要重新加入到定时器队列中
+            {
+                loop_timer(last.timeout, last.callback);
+            }
         }
         
         if (it != it_begin)//! some timeout 
@@ -148,6 +178,7 @@ private:
     volatile long            m_min_timeout;
     int                      m_cache_list;
     int                      m_checking_list;
+    registered_info_list_t   m_tmp_register_list;
     registered_info_map_t    m_registered_store;
     interupt_info_t          m_interupt_info;
     thread_t                 m_thread;

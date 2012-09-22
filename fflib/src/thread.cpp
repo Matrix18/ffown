@@ -15,7 +15,7 @@ int thread_t::create_thread(task_t func, int num)
     for (int i = 0; i < num; ++i)
     {
         pthread_t ntid;
-        task_t* t = new task_t(func.func, func.data);
+        task_t* t = new task_t(func);
         if (0 == ::pthread_create(&ntid, NULL, thread_func, t))
         {
             m_tid_list.push_back(ntid);
