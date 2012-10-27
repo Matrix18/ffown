@@ -8,7 +8,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    rank_obj_mgr_t rank_obj_mgr；
+    rank_obj_mgr_t rank_obj_mgr;
     rank_system_t  rank_system(&rank_obj_mgr);
     
     enum
