@@ -2,6 +2,7 @@
 #define _SINGLETON_H_
 
 #include <stdlib.h>
+#include <pthread.h>
 
 template<class T>
 class singleton_t
