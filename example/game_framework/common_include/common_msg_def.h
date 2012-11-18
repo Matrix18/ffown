@@ -156,4 +156,39 @@ struct broadcast_t
     };
 };
 
+struct common_msg_t
+{
+    struct in_t: public msg_i
+    {
+        in_t():
+        msg_i("common_msg_t::in_t")
+        {}
+        virtual string encode()
+        {
+            return (init_encoder() << uid << content).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> uid >> content;
+        }
+        long    uid;
+        string  content;
+    };
+    struct out_t: public msg_i
+    {
+        out_t():
+        msg_i("common_msg_t::out_t"),
+        ret(true)
+        {}
+        virtual string encode()
+        {
+            return (init_encoder() << ret).get_buff();
+        }
+        virtual void decode(const string& src_buff_)
+        {
+            init_decoder(src_buff_) >> ret;
+        }
+        bool ret;
+    };
+};
 #endif

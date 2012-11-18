@@ -65,16 +65,19 @@ int gateway_service_t::handle_common_logic(gate_msg_tool_t& msg_, socket_ptr_t s
 {
     struct lambda_t
     {
-        static void callback(gate_msg_tool_t& msg_, long uid_)
+        static void callback(common_msg_t::out_t& msg_, long uid_)
         {
             //! send to client, add to gateway user map
             //! msg_sender_t::send_to_client(sock_, msg_);
         }
     };
     long uid = sock_->get_data<client_session_t>()->uid;
+    common_msg_t::in_t dest_msg;
+    dest_msg.uid = uid;
+    dest_msg.content = msg_.packet_body;
     singleton_t<msg_bus_t>::instance().get_service_group("logic")
                                         ->get_service(0)
-                                        ->async_call(msg_, binder_t::callback(&lambda_t::callback, uid));
+                                        ->async_call(dest_msg, binder_t::callback(&lambda_t::callback, uid));
     return 0;
 }
 
