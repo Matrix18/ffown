@@ -1,0 +1,43 @@
+
+#ifndef _FF_TASK_COMMAND_H_
+#define _FF_TASK_COMMAND_H_
+
+#include "command_i.h"
+
+namespace ff
+{
+
+class accept_task_cmd_t: public user_command_t<accept_task_cmd_t>
+{
+public:
+    virtual void enc()
+    {
+        encoder() << tid << uid;
+    }
+    virtual void dec()
+    {
+        decoder() >> tid >> uid;
+    }
+
+    uint32_t tid;
+    int64_t  uid;
+};
+
+class complete_task_cmd_t: public user_command_t<complete_task_cmd_t>
+{
+public:
+    virtual void enc()
+    {
+        encoder() << tid << uid;
+    }
+    virtual void dec()
+    {
+        decoder() >> tid >> uid;
+    }
+
+    uint32_t tid;
+    int64_t  uid;
+};
+
+}
+#endif

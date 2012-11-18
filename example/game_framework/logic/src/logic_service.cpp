@@ -4,7 +4,8 @@
 #include "logic_msg_def.h"
 #include "rpc_callback.h"
 #include "msg_sender.h"
-
+#include "user/user_mgr.h"
+#include "bus_i.h"
 using namespace ff;
 
 logic_service_t::logic_service_t()
@@ -19,10 +20,10 @@ logic_service_t::~logic_service_t()
 
 int logic_service_t::login(login_t::in_t& msg_, rpc_callcack_t<login_t::out_t>& cb_)
 {
-    m_all_clients[msg_.uid];
-        login_t::out_t ret;
-        cb_(ret);
-    
+    USER_MGR.add_user(new user_t(msg_.uid));
+    login_t::out_t ret;
+    cb_(ret);
+
     struct lambda_t
     {
         static void callback(broadcast_t::out_t& msg_)
@@ -46,7 +47,7 @@ int logic_service_t::login(login_t::in_t& msg_, rpc_callcack_t<login_t::out_t>& 
 
 int logic_service_t::logout(logout_t::in_t& msg_, rpc_callcack_t<logout_t::out_t>& cb_)
 {
-    m_all_clients.erase(msg_.uid);
+    USER_MGR.del_user(msg_.uid);
     logout_t::out_t ret;
     cb_(ret);
     
@@ -68,3 +69,16 @@ int logic_service_t::logout(logout_t::in_t& msg_, rpc_callcack_t<logout_t::out_t
                                         ->async_call(broadcast, &lambda_t::callback);
     return 0;
 }
+
+int logic_service_t::common_msg(common_msg_t::in_t& msg_, rpc_callcack_t<common_msg_t::out_t>& cb_)
+{
+    common_msg_t::out_t ret;
+    cb_(ret);
+    
+    uint32_t* len = (uint32_t*)(msg_.content.c_str());
+    string name(msg_.content.c_str()+4, *len);
+    BUS.publish(name, msg_.content);
+    return 0;
+}
+
+

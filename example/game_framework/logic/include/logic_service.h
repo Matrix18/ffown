@@ -21,6 +21,7 @@ public:
 
     virtual int login(login_t::in_t& msg_, rpc_callcack_t<login_t::out_t>& cb_);
     virtual int logout(logout_t::in_t& msg_, rpc_callcack_t<logout_t::out_t>& cb_);
+    virtual int common_msg(common_msg_t::in_t& msg_, rpc_callcack_t<common_msg_t::out_t>& cb_);
 private:
     map<long, client_session_t>     m_all_clients;
 };
