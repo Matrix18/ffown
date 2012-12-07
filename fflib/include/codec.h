@@ -89,7 +89,6 @@ public:
         return *this;
     }
     
-    template<typename T>
     bin_decoder_t& operator >>(codec_helper_i& dest_)
     {
         dest_.decode(*this);
@@ -537,16 +536,16 @@ struct reg_interface_t
 
 struct sync_all_service_t
 {
-    struct id_info_t: public codec_helper_i
+    struct id_info_t//: public codec_helper_i
     {
-        virtual void encode(bin_encoder_t& be_) const
+        /*virtual void encode(bin_encoder_t& be_) const
         {
             be_ << sgid << sid << node_id;
         }
         virtual void decode(bin_decoder_t& bd_)
         {
             bd_ >> sgid >> sid >> node_id;
-        }
+        }*/
         uint16_t sgid;
         uint16_t sid;
         uint16_t node_id;

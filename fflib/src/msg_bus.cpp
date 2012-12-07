@@ -194,12 +194,13 @@ int msg_bus_t::open(const string& host_)
         rpc_service_group_t* rsg = new rpc_service_group_t(this, out.group_name_vt[i], out.group_id_vt[i]);
         m_service_map[rsg->get_id()] = rsg;
         
-        logtrace((MSG_BUS, "msg_bus_t::open add service<%s>", out.group_name_vt[i].c_str()));
+        logtrace((MSG_BUS, "msg_bus_t::open add service<%s> sgid[%u]", out.group_name_vt[i].c_str(), rsg->get_id()));
     }
 
     for (size_t i = 0; i< out.id_info_vt.size(); ++i)
     {
         rpc_service_t* rs = new rpc_service_t(this, out.id_info_vt[i].sgid, out.id_info_vt[i].sid);
+        logtrace((MSG_BUS, "msg_bus_t::open id_info_vt sgid<%u>", out.id_info_vt[i].sgid));
         get_service_group(out.id_info_vt[i].sgid)->add_service(out.id_info_vt[i].sid, rs);
     }
     
