@@ -244,7 +244,7 @@ socket_ptr_t msg_bus_t::get_socket(const rpc_service_t* rs_)
 {
     if (m_broker_service != rs_ && false == m_broker_slaves.empty())
     {
-        return m_broker_slaves[(long)rs_ % m_broker_slaves.size()];
+        return m_broker_slaves[m_broker_slaves.size()-1];
     }
     return m_socket;
 }
