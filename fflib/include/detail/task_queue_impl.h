@@ -3,6 +3,8 @@
 
 #include<pthread.h>
 #include <list>
+#include <stdexcept>
+#include <stdio.h>
 using namespace std;
 
 #include "task_queue_i.h"
@@ -106,8 +108,9 @@ private:
     condition_var_t                 m_cond;
 };
 
-class task_queue_pool_t: public task_queue_i
+class task_queue_pool_t
 {
+	typedef task_queue_i::task_list_t task_list_t;
     typedef vector<task_queue_t*>    task_queue_vt_t;
     static void task_func(void* pd_)
     {
@@ -120,22 +123,28 @@ public:
         return task_t(&task_func, p);
     }
 public:
-    task_queue_pool_t()
+    task_queue_pool_t(int n):
+    	m_index(0)
     {
-        pthread_mutex_init(&m_mutex, NULL);
+        for (int i = 0; i < n; ++i)
+        {
+        	task_queue_t* p = new task_queue_t();
+			m_tqs.push_back(p);
+        }
     }
-
-    int   consume(task_t& task_){ return -1; }
-    int   consume_all(task_list_t&){ return -1; }
 
     void run()
     {
-        task_queue_t* p = new task_queue_t();
-
-        pthread_mutex_lock(&m_mutex);
-        m_tqs.push_back(p);
-        pthread_mutex_unlock(&m_mutex);
-
+    	task_queue_t* p = NULL;
+    	{
+			lock_guard_t lock(m_mutex);
+			if (m_index >= (int)m_tqs.size())
+			{
+				throw runtime_error("too more thread running!!");
+			}
+		    p = m_tqs[m_index++];
+		    printf("XXXXXX m_index[%d]\n", m_index);
+    	}
         task_list_t tasklist;
         int ret = p->consume_all(tasklist);
         while (0 == ret)
@@ -157,7 +166,6 @@ public:
             delete (*it);
         }
         m_tqs.clear();
-        pthread_mutex_destroy(&m_mutex);
     }
 
     void close()
@@ -169,21 +177,16 @@ public:
         }
     }
 
-    void produce(const task_t& task_)
-    {
-        m_tqs[(long)(&task_) % m_tqs.size()]->produce(task_);
-    }
-    void multi_produce(const task_list_t& task_)
-    {
-        static unsigned int i = 0;
-        m_tqs[i++ % m_tqs.size()]->multi_produce(task_);
-    }
     size_t size() const { return m_tqs.size(); }
     
-    task_queue_i* alloc(long id_ = 0) { return m_tqs[id_ % m_tqs.size()]; }
+    task_queue_i* alloc(long id_ = 0)
+    {
+    	return m_tqs[id_ %  m_tqs.size()];
+    }
 private:
-    pthread_mutex_t       m_mutex;
-    task_queue_vt_t         m_tqs;
+    mutex_t               m_mutex;
+    task_queue_vt_t       m_tqs;
+    int					  m_index;
 };
 
 }

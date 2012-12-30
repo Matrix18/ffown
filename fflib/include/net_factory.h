@@ -1,4 +1,4 @@
-//! 接口
+//! �ュ�
 #ifndef _NET_FACTORY_H_
 #define _NET_FACTORY_H_
 
@@ -19,12 +19,13 @@ class net_factory_t
 public:
     struct global_data_t
     {
-        volatile bool     started_flag;
-        task_queue_pool_t tg;
-        thread_t          thread;
-        epoll_impl_t      epoll;
+        volatile bool      started_flag;
+        task_queue_pool_t* tg;
+        thread_t           thread;
+        epoll_impl_t       epoll;
         global_data_t():
             started_flag(false),
+            tg(NULL),
             epoll()
         {
         }
@@ -43,18 +44,20 @@ public:
             {
                 assert(thread_num_ > 0);
                 started_flag = true;
+                tg = new task_queue_pool_t(thread_num_);
                 thread.create_thread(task_t(&run_epoll, this), 1);
-                thread.create_thread(task_queue_pool_t::gen_task(&tg), thread_num_);
-                while (tg.size() != (size_t)thread_num_){}
+                thread.create_thread(task_queue_pool_t::gen_task(tg), thread_num_);
             }
         }
         void stop()
         {
             if (true == started_flag)
             {
-                tg.close();
+                tg->close();
                 epoll.close();
                 thread.join();
+                delete tg;
+				tg = NULL;
             }
         }
     };
@@ -69,7 +72,7 @@ public:
         singleton_t<global_data_t>::instance().start();
         acceptor_impl_t* ret = new acceptor_impl_t(&(singleton_t<global_data_t>::instance().epoll),
                                                    msg_handler_, 
-                                                   &(singleton_t<global_data_t>::instance().tg));
+                                                   (singleton_t<global_data_t>::instance().tg));
         
         if (ret->open(host_))
         {
@@ -83,7 +86,7 @@ public:
         singleton_t<global_data_t>::instance().start();
         acceptor_impl_t* ret = new gateway_acceptor_t(&(singleton_t<global_data_t>::instance().epoll),
                                                    msg_handler_, 
-                                                   &(singleton_t<global_data_t>::instance().tg));
+                                                   (singleton_t<global_data_t>::instance().tg));
         
         if (ret->open(host_))
         {
@@ -97,7 +100,7 @@ public:
     {
         singleton_t<global_data_t>::instance().start();
         return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_,
-                                    &(singleton_t<global_data_t>::instance().tg));
+                                    (singleton_t<global_data_t>::instance().tg->alloc(long(msg_handler_))));
     }
 };
 
