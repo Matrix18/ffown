@@ -100,7 +100,7 @@ public:
     {
         singleton_t<global_data_t>::instance().start();
         return connector_t::connect(host_, &(singleton_t<global_data_t>::instance().epoll), msg_handler_,
-                                    (singleton_t<global_data_t>::instance().tg->alloc(long(msg_handler_))));
+                                    (singleton_t<global_data_t>::instance().tg->rand_alloc()));
     }
 };
 
