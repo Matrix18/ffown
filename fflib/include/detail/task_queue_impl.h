@@ -4,7 +4,6 @@
 #include<pthread.h>
 #include <list>
 #include <stdexcept>
-#include <stdio.h>
 using namespace std;
 
 #include "task_queue_i.h"
@@ -143,7 +142,6 @@ public:
 				throw runtime_error("too more thread running!!");
 			}
 		    p = m_tqs[m_index++];
-		    printf("XXXXXX m_index[%d]\n", m_index);
     	}
         task_list_t tasklist;
         int ret = p->consume_all(tasklist);
