@@ -86,8 +86,10 @@ public:
     virtual void close() = 0;
     virtual void produce(const task_t& task_) =0;
     virtual void multi_produce(const task_list_t& task_) =0;
-    virtual int   consume(task_t& task_) = 0;
-    virtual int consume_all(task_list_t&) = 0;
+    virtual int  consume(task_t& task_) = 0;
+    virtual int  consume_all(task_list_t&) = 0;
+    virtual int run() = 0;
+    virtual int batch_run() = 0;
 };
 
 struct task_binder_t

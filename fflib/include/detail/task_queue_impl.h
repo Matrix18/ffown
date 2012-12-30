@@ -24,8 +24,9 @@ public:
     }
     void close()
     {
-        m_flag = false;
-        m_cond.broadcast();
+    	lock_guard_t lock(m_mutex);
+    	m_flag = false;
+    	m_cond.broadcast();
     }
 
     void multi_produce(const task_list_t& task_)
@@ -73,6 +74,16 @@ public:
         return 0;
     }
 
+    int run()
+    {
+        task_t t;
+        while (0 == consume(t))
+        {
+            t.run();
+        }
+        return 0;
+    }
+
     int consume_all(task_list_t& tasks_)
     {
         lock_guard_t lock(m_mutex);
@@ -91,15 +102,22 @@ public:
 
         return 0;
     }
-    int run()
-    {
-        task_t t;
-        while (0 == consume(t))
-        {
-            t.run();
-        }
-        return 0;
-    }
+
+    int batch_run()
+	{
+    	task_list_t tasks;
+    	int ret = consume_all(tasks);
+		while (0 == ret)
+		{
+			for (task_list_t::iterator it = tasks.begin(); it != tasks.end(); ++it)
+			{
+				(*it).run();
+			}
+			tasks.clear();
+			ret = consume_all(tasks);
+		}
+		return 0;
+	}
 private:
     volatile bool                   m_flag;
     task_list_t                     m_tasklist;
@@ -143,17 +161,8 @@ public:
 			}
 		    p = m_tqs[m_index++];
     	}
-        task_list_t tasklist;
-        int ret = p->consume_all(tasklist);
-        while (0 == ret)
-        {
-            for(task_list_t::iterator it = tasklist.begin(); it != tasklist.end(); ++it)
-            {
-                (*it).run();
-            }
-            tasklist.clear();
-            ret = p->consume_all(tasklist);
-        }
+
+    	p->batch_run();
     }
 
     ~task_queue_pool_t()
