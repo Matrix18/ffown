@@ -15,8 +15,6 @@ class task_queue_t: public task_queue_i
 public:
     task_queue_t():
         m_flag(true),
-        m_index(0),
-        m_tasklist(&m_tasklist_cache[m_index]),
         m_cond(m_mutex)
     {
     }
@@ -32,32 +30,34 @@ public:
     void multi_produce(const task_list_t& task_)
     {
         lock_guard_t lock(m_mutex);
-        //! 条件满足唤醒等待线程
-        if (m_tasklist->empty())
-        {
-            m_cond.signal();
-        }
+        bool need_sig = m_tasklist.empty();
+
         for(task_list_t::const_iterator it = task_.begin(); it != task_.end(); ++it)
         {
-            m_tasklist->push_back(*it);
+            m_tasklist.push_back(*it);
+        }
+
+        if (need_sig)
+        {
+        	m_cond.signal();
         }
     }
     void produce(const task_t& task_)
     {        
         lock_guard_t lock(m_mutex);
-        //! 条件满足唤醒等待线程
-        if (m_tasklist->empty())
-        {
-            m_cond.signal();
-        }
-        m_tasklist->push_back(task_);
+        bool need_sig = m_tasklist.empty();
+
+        m_tasklist.push_back(task_);
+        if (need_sig)
+		{
+			m_cond.signal();
+		}
     }
 
     int   consume(task_t& task_)
     {
         lock_guard_t lock(m_mutex);
-        //! 当没有作业时，就等待直到条件满足被唤醒
-        while (m_tasklist->empty())
+        while (m_tasklist.empty())
         {
             if (false == m_flag)
             {
@@ -66,30 +66,29 @@ public:
             m_cond.wait();
         }
 
-        task_ = m_tasklist->front();
-        m_tasklist->pop_front();
+        task_ = m_tasklist.front();
+        m_tasklist.pop_front();
 
         return 0;
     }
 
-    task_list_t* consume_all()
+    int consume_all(task_list_t& tasks_)
     {
         lock_guard_t lock(m_mutex);
 
-        //! 当没有作业时，就等待直到条件满足被唤醒
-        while (m_tasklist->empty())
+        while (m_tasklist.empty())
         {
             if (false == m_flag)
             {
-                return NULL;
+                return -1;
             }
             m_cond.wait();
         }
 
-        task_list_t* tmp = m_tasklist;
-        m_tasklist = &m_tasklist_cache[(++m_index) % 2];
+        tasks_ = m_tasklist;
+        m_tasklist.clear();
 
-        return tmp;
+        return 0;
     }
     int run()
     {
@@ -101,12 +100,9 @@ public:
         return 0;
     }
 private:
-    volatile bool                     m_flag;
-    int                                    m_index;
-    task_list_t                         m_tasklist_cache[2];
-    task_list_t* volatile            m_tasklist;
-
-    mutex_t                            m_mutex;
+    volatile bool                   m_flag;
+    task_list_t                     m_tasklist;
+    mutex_t                         m_mutex;
     condition_var_t                 m_cond;
 };
 
@@ -130,7 +126,7 @@ public:
     }
 
     int   consume(task_t& task_){ return -1; }
-    task_list_t*   consume_all(){ return NULL; }
+    int   consume_all(task_list_t&){ return -1; }
 
     void run()
     {
@@ -140,15 +136,16 @@ public:
         m_tqs.push_back(p);
         pthread_mutex_unlock(&m_mutex);
 
-        task_list_t* tasklist = p->consume_all();
-        while (tasklist)
+        task_list_t tasklist;
+        int ret = p->consume_all(tasklist);
+        while (0 == ret)
         {
-            for(task_list_t::iterator it = tasklist->begin(); it != tasklist->end(); ++it)
+            for(task_list_t::iterator it = tasklist.begin(); it != tasklist.end(); ++it)
             {
                 (*it).run();
             }
-            tasklist->clear();
-            tasklist = p->consume_all();
+            tasklist.clear();
+            ret = p->consume_all(tasklist);
         }
     }
 
