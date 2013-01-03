@@ -9,17 +9,8 @@ using namespace ff;
 
 int main(int argc, char* argv[])
 {
-	str_format_t fmt("@@@@@%2ld#####%09d^^%s^^^%08sYYY");
-	unsigned long long a = (-1);
-	fmt.append(&a);
-	fmt.append(222.4554);
-	fmt.append("-WWWWW-");
-	fmt.append("-TTTT-");
-	printf("result:%s\n", fmt.gen_result().c_str());
 
-	//logdebug(("XX", "TTTT:%09s", "abc"));
-
-	LOG.start("-log_class FF,XX -log_print_screen true -log_level 6");
+	LOG.start("-log_path ./log -log_filename log -log_class FF,XX -log_print_screen true -log_print_file true -log_level 6");
 	LOGDEBUG(("XX", "FFFFF"));
 	LOGTRACE(("XX", "FFFFF"));
 	LOGINFO(("XX", "FFFFF"));
