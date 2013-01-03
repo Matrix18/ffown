@@ -7,7 +7,14 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
+#include <set>
+#include <vector>
+#include <fstream>
 using namespace std;
+
+#include "detail/task_queue_impl.h"
+#include "thread.h"
+#include "utility/singleton.h"
 
 namespace ff
 {
@@ -18,15 +25,18 @@ class str_format_t
 	{
 		fmt_type_t():
 			type('\0'),
-			min_len(0)
+			min_len(0),
+			fill_char(' ')
 		{}
 		void clear()
 		{
 			type = '\0';
 			min_len = 0;
+			fill_char = ' ';
 		}
 		char 			type;//! % d,x,f,s,
 		unsigned int 	min_len;
+		char            fill_char;
 	};
 public:
 	//! fmt_ like "xxx%d,xx%s"
@@ -52,7 +62,7 @@ public:
 			int width = m_fmt_type.min_len > m_num_buff.length()? m_fmt_type.min_len - m_num_buff.length(): 0;
 			for (; width > 0; -- width)
 			{
-				m_result += ' ';
+				m_result += m_fmt_type.fill_char;
 			}
 		}
 		else
@@ -81,33 +91,228 @@ protected:
 	string          m_num_buff;
 };
 
+enum log_level_e
+{
+	LOG_FATAL = 0,
+	LOG_ERROR,
+	LOG_WARN,
+	LOG_INFO,
+	LOG_TRACE,
+	LOG_DEBUG,
+	LOG_LEVEL_NUM
+};
+
 class log_t
 {
-public:
-static int log_impl(const char* mod, const char* fmt, ...)
-{
-    char buff[256];
-    int len = snprintf(buff, sizeof(buff), "%s ", mod);
-
-    va_list vl;
-    va_start(vl, fmt);
-    vsnprintf(buff + len, sizeof(buff) - len - 1, fmt, vl);
-    va_end(vl);
-    printf("%s", buff);
-    return 0;
-}
+	enum log_e
+	{
+		MAX_LINE_NUM = 5000
+	};
 
 public:
-	log_t();
+	log_t(int level_, const string& all_class_, const string& path_, const string& file_,
+		  bool print_file_, bool print_screen_);
 	virtual ~log_t();
 
-	inline bool enable_level(int level_);
-	inline bool enable_class(const char* class_);
+	void mod_level(int level_, bool flag_);
+	void mod_class(const string& class_, bool flag_);
+	void mod_print_file(bool flag_);
+	void mod_print_screen(bool flag_);
+	bool is_level_enabled(int level_);
+	const char* find_class_name(const char* class_);
 
-	void log_content(const char* class_, const string& content_);
+	void log_content(int level_, const char* str_class_, const string& content_);
 
 protected:
-	int 	m_enabled_level;
+	bool check_and_create_dir(struct tm* tm_val_);
+
+protected:
+	int 						m_enabled_level;
+	typedef set<string>			str_set_t;
+	typedef vector<str_set_t*>	ptr_vt_t;
+	str_set_t*					m_enable_class_set;
+	ptr_vt_t					m_class_set_history;
+
+	struct tm					m_last_create_dir_tm;
+	bool						m_enable_file;
+	bool             			m_enable_screen;
+
+	ofstream 					m_file;
+	string                      m_path;
+	string                      m_filename;
+	unsigned int                m_file_name_index;
+	unsigned int                m_line_num;
+};
+
+#define LOG_IMPL_NONE_ARG(func, LOG_LEVEL) 															\
+	void func(const char* class_, const char* fmt_)													\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, string(fmt_)));								\
+			}																						\
+		}																							\
+	}
+
+#define LOG_IMPL_ARG1(func, LOG_LEVEL) 																\
+	template <typename ARG1>																		\
+	void func(const char* class_, const char* fmt_, const ARG1& arg1_)								\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				str_format_t dest(fmt_);															\
+				dest.append(arg1_);																	\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, dest.gen_result()));						 	\
+			}																						\
+		}																							\
+	}
+
+
+#define LOG_IMPL_ARG2(func, LOG_LEVEL) 																\
+	template <typename ARG1, typename ARG2>															\
+	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_)			\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				str_format_t dest(fmt_);															\
+				dest.append(arg1_);																	\
+				dest.append(arg2_);																	\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, dest.gen_result()));						 	\
+			}																						\
+		}																							\
+	}
+
+#define LOG_IMPL_ARG3(func, LOG_LEVEL) 																\
+	template <typename ARG1, typename ARG2, typename ARG3>											\
+	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+			  const ARG3& arg3_)																	\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				str_format_t dest(fmt_);															\
+				dest.append(arg1_);																	\
+				dest.append(arg2_);																	\
+				dest.append(arg3_);																	\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, dest.gen_result()));						 	\
+			}																						\
+		}																							\
+	}
+
+#define LOG_IMPL_ARG4(func, LOG_LEVEL) 																\
+	template <typename ARG1, typename ARG2, typename ARG3, typename ARG4>							\
+	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+			  const ARG3& arg3_, const ARG4& arg4_)													\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				str_format_t dest(fmt_);															\
+				dest.append(arg1_);																	\
+				dest.append(arg2_);																	\
+				dest.append(arg3_);																	\
+				dest.append(arg4_);																	\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, dest.gen_result()));						 	\
+			}																						\
+		}																							\
+	}
+
+#define LOG_IMPL_ARG5(func, LOG_LEVEL) 																\
+	template <typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>			\
+	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+			  const ARG3& arg3_, const ARG4& arg4_, const ARG5& arg5_)								\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				str_format_t dest(fmt_);															\
+				dest.append(arg1_);																	\
+				dest.append(arg2_);																	\
+				dest.append(arg3_);																	\
+				dest.append(arg4_);																	\
+				dest.append(arg5_);																	\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, dest.gen_result()));						 	\
+			}																						\
+		}																							\
+	}
+
+#define LOG_IMPL_ARG6(func, LOG_LEVEL) 																\
+	template <typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5,			\
+			  typename ARG6>																		\
+	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+			  const ARG3& arg3_, const ARG4& arg4_, const ARG5& arg5_, const ARG6& arg6_)			\
+	{																								\
+		if (m_log->is_level_enabled(LOG_LEVEL))														\
+		{																							\
+			const char* class_name_str = m_log->find_class_name(class_);							\
+			if (class_name_str)																		\
+			{																						\
+				str_format_t dest(fmt_);															\
+				dest.append(arg1_);																	\
+				dest.append(arg2_);																	\
+				dest.append(arg3_);																	\
+				dest.append(arg4_);																	\
+				dest.append(arg5_);																	\
+				dest.append(arg6_);																	\
+				m_task_queue.produce(task_binder_t::gen(&log_t::log_content, m_log, LOG_LEVEL,		\
+									 class_name_str, dest.gen_result()));						 	\
+			}																						\
+		}																							\
+	}
+
+#define LOG_IMPL_MACRO(async_logdebug, LOG_DEBUG) 	\
+	LOG_IMPL_NONE_ARG(async_logdebug, LOG_DEBUG)  	\
+	LOG_IMPL_ARG1(async_logdebug, LOG_DEBUG)	  	\
+	LOG_IMPL_ARG2(async_logdebug, LOG_DEBUG)	  	\
+	LOG_IMPL_ARG3(async_logdebug, LOG_DEBUG)		\
+	LOG_IMPL_ARG4(async_logdebug, LOG_DEBUG)		\
+	LOG_IMPL_ARG5(async_logdebug, LOG_DEBUG)		\
+	LOG_IMPL_ARG6(async_logdebug, LOG_DEBUG)
+
+class log_service_t
+{
+public:
+	log_service_t();
+	~log_service_t();
+	int start(const string& opt_);
+	int stop();
+
+	LOG_IMPL_MACRO(async_logdebug, LOG_DEBUG);
+	LOG_IMPL_MACRO(async_logtrace, LOG_TRACE);
+	LOG_IMPL_MACRO(async_loginfo, LOG_INFO);
+	LOG_IMPL_MACRO(async_logwarn, LOG_WARN);
+	LOG_IMPL_MACRO(async_logerror, LOG_ERROR);
+	LOG_IMPL_MACRO(async_logfatal, LOG_FATAL);
+
+	void mod_level(int level_, bool flag_);
+	void mod_class(const string& class_, bool flag_);
+	void mod_print_file(bool flag_);
+	void mod_print_screen(bool flag_);
+private:
+	log_t*			m_log;
+	thread_t        m_thread;
+	task_queue_t    m_task_queue;
 };
 
 #define BROKER  "BROKER"
@@ -115,14 +320,13 @@ protected:
 #define FF      "FF"
 #define MSG_BUS "MSG_BUS"
 
-#define logdebug(content) printf("\033[1;33mDEBUG "); log_t::log_impl content ; printf("\033[0m\n")
-#define logtrace(content) printf("TRACE "); log_t::log_impl content ; printf("\n")
-#define loginfo(content) printf("\033[1;32mINFO  "); log_t::log_impl content ; printf("\033[0m\n")
-#define logwarn(content) printf("\033[1;34mWARN  "); log_t::log_impl content ; printf("\033[0m\n")
-#define logerror(content) printf("\033[0;31mERROR "); log_t::log_impl content ; printf("\033[0m\n")
-#define logfatal(content) printf("\033[0;35mFATAL "); log_t::log_impl content ; printf("\033[0m")
-
-
+#define LOG singleton_t<log_service_t>::instance()
+#define LOGDEBUG(content)  singleton_t<log_service_t>::instance().async_logdebug content
+#define LOGTRACE(content)  singleton_t<log_service_t>::instance().async_logtrace content
+#define LOGINFO(content)   singleton_t<log_service_t>::instance().async_loginfo  content
+#define LOGWARN(content)   singleton_t<log_service_t>::instance().async_logwarn  content
+#define LOGERROR(content)  singleton_t<log_service_t>::instance().async_logerror content
+#define LOGFATAL(content)  singleton_t<log_service_t>::instance().async_logfatal content
 }
 
 #endif
