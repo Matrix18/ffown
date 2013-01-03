@@ -30,7 +30,7 @@ public:
     ~shared_ptr_t();
 
     ref_count_t* ger_ref_count()  const  { return m_ref_count; }
-    size_t       ref_count() const       { return m_ref_count != NULL? (size_t)m_ref_count->size(): 0; }
+    size_t       ref_count() const       { return m_ref_count != NULL? (size_t)m_ref_count->value(): 0; }
     object_t*    get() const             { return m_dest_ptr; }
     void         reset();
     object_t&    operator*();
@@ -64,6 +64,7 @@ shared_ptr_t<T>::shared_ptr_t(object_t* p):
     if (NULL != m_dest_ptr)
     {
         m_ref_count = new ref_count_t();
+        m_ref_count->inc();
     }
 }
 
