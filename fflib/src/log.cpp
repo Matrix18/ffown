@@ -234,21 +234,21 @@ static const char* g_log_level_desp[] =
 
 static const char* g_log_color_head[] =
 {
-		"\033[0;35m",
-		"\033[0;31m",
-		"\033[1;34m",
-		"\033[1;32m",
-		"",
-		"\033[1;33m"
+	"\033[0;35m",
+	"\033[0;31m",
+	"\033[1;34m",
+	"\033[1;32m",
+	"",
+	"\033[1;33m"
 };
 static const char* g_log_color_tail[] =
 {
-		"\033[0m",
-		"\033[0m",
-		"\033[0m",
-		"\033[0m",
-		"",
-		"\033[0m"
+	"\033[0m",
+	"\033[0m",
+	"\033[0m",
+	"\033[0m",
+	"",
+	"\033[0m"
 };
 void log_t::log_content(int level_, const char* str_class_, const string& content_)
 {
