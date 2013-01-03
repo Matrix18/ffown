@@ -1,7 +1,7 @@
 #ifndef _SHARED_PTR_H_
 #define _SHARED_PTR_H_
 
-#include "ref_count.h"
+#include "atomic_op.h"
 #include <assert.h>
 
 namespace ff {
