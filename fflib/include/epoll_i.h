@@ -5,17 +5,8 @@
 namespace ff {
 
 
-class epoll_i
+class epoll_i: public io_demultiplexer_i
 {
-public:
-    virtual ~epoll_i(){}
-
-    virtual int event_loop()  = 0;
-    virtual int close() = 0;
-    virtual int register_fd(fd_i*)      = 0;
-    virtual int unregister_fd(fd_i*)  = 0;
-    virtual int mod_fd(fd_i*)           = 0;
 };
-
 }
 #endif
