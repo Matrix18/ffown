@@ -27,14 +27,15 @@ public:
     virtual int unregister_fd(epoll_fd_i*);
     virtual int mod_fd(epoll_fd_i*);
 
+    int interupt_loop();//! 中断事件循环
 protected:
-    void destory_error_fd();
+    void fd_del_callback();
 
 private:
     volatile bool            m_running;
     int                      m_efd;
     task_queue_i*            m_task_queue;
-    int                      m_interunpt_sockets[2];
+    int                      m_interupt_sockets[2];
     //! 待销毁的error socket
     list<epoll_fd_i*>        m_error_fd_set;
     mutex_t                  m_mutex;
