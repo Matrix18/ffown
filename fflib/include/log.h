@@ -145,7 +145,7 @@ protected:
 };
 
 #define LOG_IMPL_NONE_ARG(func, LOG_LEVEL) 															\
-	void func(const char* class_, const char* fmt_)													\
+	inline void func(const char* class_, const char* fmt_)													\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
 		{																							\
@@ -160,7 +160,7 @@ protected:
 
 #define LOG_IMPL_ARG1(func, LOG_LEVEL) 																\
 	template <typename ARG1>																		\
-	void func(const char* class_, const char* fmt_, const ARG1& arg1_)								\
+	inline void func(const char* class_, const char* fmt_, const ARG1& arg1_)								\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
 		{																							\
@@ -178,7 +178,7 @@ protected:
 
 #define LOG_IMPL_ARG2(func, LOG_LEVEL) 																\
 	template <typename ARG1, typename ARG2>															\
-	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_)			\
+	inline void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_)			\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
 		{																							\
@@ -196,7 +196,7 @@ protected:
 
 #define LOG_IMPL_ARG3(func, LOG_LEVEL) 																\
 	template <typename ARG1, typename ARG2, typename ARG3>											\
-	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+	inline void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
 			  const ARG3& arg3_)																	\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
@@ -216,7 +216,7 @@ protected:
 
 #define LOG_IMPL_ARG4(func, LOG_LEVEL) 																\
 	template <typename ARG1, typename ARG2, typename ARG3, typename ARG4>							\
-	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+	inline void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
 			  const ARG3& arg3_, const ARG4& arg4_)													\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
@@ -237,7 +237,7 @@ protected:
 
 #define LOG_IMPL_ARG5(func, LOG_LEVEL) 																\
 	template <typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5>			\
-	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+	inline void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
 			  const ARG3& arg3_, const ARG4& arg4_, const ARG5& arg5_)								\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
@@ -260,7 +260,7 @@ protected:
 #define LOG_IMPL_ARG6(func, LOG_LEVEL) 																\
 	template <typename ARG1, typename ARG2, typename ARG3, typename ARG4, typename ARG5,			\
 			  typename ARG6>																		\
-	void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
+	inline void func(const char* class_, const char* fmt_, const ARG1& arg1_, const ARG2& arg2_,			\
 			  const ARG3& arg3_, const ARG4& arg4_, const ARG5& arg5_, const ARG6& arg6_)			\
 	{																								\
 		if (m_log->is_level_enabled(LOG_LEVEL))														\
