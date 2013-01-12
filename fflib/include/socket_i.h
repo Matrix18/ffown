@@ -8,7 +8,7 @@ using namespace std;
 
 namespace ff {
     
-class socket_i: public epoll_fd_i
+class socket_i: public fd_i
 {
 public:
     socket_i():

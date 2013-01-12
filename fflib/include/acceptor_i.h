@@ -4,11 +4,11 @@
 #include <string>
 using namespace std;
 
-#include "epoll_fd_i.h"
+#include "netbase.h"
 
 namespace ff {
 
-class acceptor_i: public epoll_fd_i
+class acceptor_i: public fd_i
 {
 public:
     virtual ~acceptor_i(){}

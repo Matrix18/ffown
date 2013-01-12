@@ -23,9 +23,9 @@ public:
 
     virtual int event_loop();
     virtual int close();
-    virtual int register_fd(epoll_fd_i*);
-    virtual int unregister_fd(epoll_fd_i*);
-    virtual int mod_fd(epoll_fd_i*);
+    virtual int register_fd(fd_i*);
+    virtual int unregister_fd(fd_i*);
+    virtual int mod_fd(fd_i*);
 
     int interupt_loop();//! 中断事件循环
 protected:
@@ -37,7 +37,7 @@ private:
     task_queue_i*            m_task_queue;
     int                      m_interupt_sockets[2];
     //! 待销毁的error socket
-    list<epoll_fd_i*>        m_error_fd_set;
+    list<fd_i*>   		     m_error_fd_set;
     mutex_t                  m_mutex;
 };
 

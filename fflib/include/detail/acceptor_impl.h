@@ -22,7 +22,7 @@ public:
 
     int socket() {return m_listen_fd;}
     int handle_epoll_read();
-    int handle_epoll_error() ;
+    int handle_epoll_del() ;
     
 protected:
     virtual socket_i* create_socket(int);
