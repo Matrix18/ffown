@@ -35,14 +35,7 @@ void socket_impl_t::open()
 
 void socket_impl_t::close()
 {
-    struct lambda_t
-    {
-        static void exe(void* p_)
-        {
-            ((socket_impl_t*)p_)->close_impl();
-        }
-    };
-    m_tq->produce(task_t(&lambda_t::exe, this));
+    m_tq->produce(task_binder_t::gen(&socket_impl_t::close_impl, this));
 }
 
 void socket_impl_t::close_impl()
@@ -57,29 +50,27 @@ void socket_impl_t::close_impl()
 
 int socket_impl_t::handle_epoll_read()
 {
-    struct lambda_t
-    {
-        static void exe(void* p_)
-        {
-            ((socket_impl_t*)p_)->handle_epoll_read_impl();
-        }
-    };
-    m_tq->produce(task_t(&lambda_t::exe, this));
+    m_tq->produce(task_binder_t::gen(&socket_impl_t::handle_epoll_read_impl, this));
     return 0;
 }
+
 int socket_impl_t::handle_epoll_read_impl()
 {
     if (is_open())
     {
         int nread = 0;
+        char recv_buffer[RECV_BUFFER_SIZE];
         do
         {
-            char recv_buffer[RECV_BUFFER_SIZE];
             nread = ::read(m_fd, recv_buffer, sizeof(recv_buffer) - 1);
             if (nread > 0)
             {
                 recv_buffer[nread] = '\0';
                 m_sc->handle_read(this, recv_buffer, size_t(nread));
+                if (nread < int(sizeof(recv_buffer) - 1))
+                {
+                	break;//! equal EWOULDBLOCK
+                }
             }
             else if (0 == nread) //! eof
             {
@@ -107,30 +98,15 @@ int socket_impl_t::handle_epoll_read_impl()
     return 0;
 }
 
-int socket_impl_t::handle_epoll_error()
+int socket_impl_t::handle_epoll_del()
 {
-    struct lambda_t
-    {
-        static void exe(void* p_)
-        {
-            ((socket_impl_t*)p_)->get_sc()->handle_error((socket_impl_t*)p_);
-        }
-    };
-
-    m_tq->produce(task_t(&lambda_t::exe, this));
+    m_tq->produce(task_binder_t::gen(&socket_controller_i::handle_error, this->get_sc(), this));
     return 0;
 }
 
 int socket_impl_t::handle_epoll_write()
 {
-    struct lambda_t
-    {
-        static void exe(void* p_)
-        {
-            ((socket_impl_t*)p_)->handle_epoll_write_impl();
-        }
-    };
-    m_tq->produce(task_t(&lambda_t::exe, this));
+    m_tq->produce(task_binder_t::gen(&socket_impl_t::handle_epoll_write_impl, this));
     return 0;
 }
 
@@ -172,22 +148,7 @@ int socket_impl_t::handle_epoll_write_impl()
 
 void socket_impl_t::async_send(const string& msg_)
 {
-    struct lambda_t
-    {
-        static void exe(void* p_)
-        {
-            lambda_t* tmp = (lambda_t*)p_;
-            tmp->sp->send_impl(tmp->msg);
-            delete tmp;
-        }
-        lambda_t (socket_impl_t* s_, const string& m_):
-            sp(s_),
-            msg(m_)
-        {}
-        socket_impl_t* sp;
-        string         msg;
-    };
-    m_tq->produce(task_t(&lambda_t::exe, new lambda_t(this, msg_)));
+    m_tq->produce(task_binder_t::gen(&socket_impl_t::send_impl, this, msg_));
 }
 
 void socket_impl_t::send_impl(const string& src_buff_)
