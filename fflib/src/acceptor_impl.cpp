@@ -133,7 +133,7 @@ int acceptor_impl_t::handle_epoll_read()
     return 0;
 }
 
-int acceptor_impl_t::handle_epoll_error()
+int acceptor_impl_t::handle_epoll_del()
 {
     return 0;
 }

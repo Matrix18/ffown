@@ -193,8 +193,8 @@ void log_t::mod_class(const string& class_, bool flag_)
 		pset->erase(class_);
 	}
 
-	ATOMIC_SET(&m_enable_class_set, pset);
 	m_class_set_history.push_back(pset);
+	ATOMIC_SET(&m_enable_class_set, pset);
 }
 
 bool log_t::is_level_enabled(int level_)

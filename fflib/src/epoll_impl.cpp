@@ -8,7 +8,7 @@
 #include <assert.h>
 
 #include "utility/socket_op.h"
-#include "epoll_fd_i.h"
+#include "netbase.h"
 #include "detail/epoll_impl.h"
 
 using namespace ff;
@@ -52,7 +52,7 @@ int epoll_impl_t::event_loop()
         for (i = 0; i < nfds; ++i)
         {
             epoll_event& cur_ev = ev_set[i];
-            epoll_fd_i* fd_ptr = (epoll_fd_i*)cur_ev.data.ptr;
+            fd_i* fd_ptr	    = (fd_i*)cur_ev.data.ptr;
             if (cur_ev.data.ptr == this)//! iterupte event
             {
             	if (false == m_running)
@@ -95,7 +95,7 @@ int epoll_impl_t::close()
     return 0;
 }
 
-int epoll_impl_t::register_fd(epoll_fd_i* fd_ptr_)
+int epoll_impl_t::register_fd(fd_i* fd_ptr_)
 {
     struct epoll_event ee = { 0, { 0 } };
 
@@ -105,7 +105,7 @@ int epoll_impl_t::register_fd(epoll_fd_i* fd_ptr_)
     return ::epoll_ctl(m_efd, EPOLL_CTL_ADD, fd_ptr_->socket(), &ee);
 }
 
-int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
+int epoll_impl_t::unregister_fd(fd_i* fd_ptr_)
 {
 	int ret = 0;
 	if (fd_ptr_->socket() > 0)
@@ -124,7 +124,7 @@ int epoll_impl_t::unregister_fd(epoll_fd_i* fd_ptr_)
     return ret;
 }
 
-int epoll_impl_t::mod_fd(epoll_fd_i* fd_ptr_)
+int epoll_impl_t::mod_fd(fd_i* fd_ptr_)
 {
     struct epoll_event ee = { 0, { 0 } };
 
@@ -137,7 +137,7 @@ int epoll_impl_t::mod_fd(epoll_fd_i* fd_ptr_)
 void epoll_impl_t::fd_del_callback()
 {
     lock_guard_t lock(m_mutex);
-    list<epoll_fd_i*>::iterator it = m_error_fd_set.begin();
+    list<fd_i*>::iterator it = m_error_fd_set.begin();
     for (; it != m_error_fd_set.end(); ++it)
     {
         (*it)->handle_epoll_del();
